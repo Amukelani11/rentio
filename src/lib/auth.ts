@@ -16,9 +16,9 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
     }
 
     // Set RLS context variables for the session
-    await supabase.rpc('set_config', { name: 'app.current_user_id', value: session.user.id })
+    try { await supabase.rpc('set_config', { name: 'app.current_user_id', value: session.user.id } as any) } catch {}
     const userRoles = session.user.user_metadata?.roles || []
-    await supabase.rpc('set_config', { name: 'app.current_user_role', value: userRoles.includes('ADMIN') ? 'ADMIN' : userRoles[0] || 'CUSTOMER' })
+    try { await supabase.rpc('set_config', { name: 'app.current_user_role', value: userRoles.includes('ADMIN') ? 'ADMIN' : userRoles[0] || 'CUSTOMER' } as any) } catch {}
 
     // Use the server-side supabase client for all DB operations (do NOT use service role here)
     const admin = supabase
@@ -35,7 +35,7 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
         auth_email: session.user.email,
         auth_name: session.user.user_metadata?.name || session.user.email,
         auth_avatar: session.user.user_metadata?.avatar_url || null,
-      })
+      } as any)
       if (syncError) throw syncError
       const newUser = Array.isArray(syncData) ? syncData[0] : syncData
 
@@ -44,14 +44,15 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
 
       // Create profile (upsert to handle duplicates gracefully)
       try {
-        const profileRes = await admin.from('profiles').upsert([{ 
-          user_id: newUser.id, 
-          currency: 'ZAR', 
-          language: 'en-ZA', 
-          timezone: 'Africa/Johannesburg' 
-        }], {
-          onConflict: 'user_id'
-        })
+        const profileRes: any = await (admin as any).from('profiles').upsert(
+          [{ 
+            user_id: (newUser as any).id, 
+            currency: 'ZAR', 
+            language: 'en-ZA', 
+            timezone: 'Africa/Johannesburg' 
+          }],
+          { onConflict: 'user_id', ignoreDuplicates: false } as any
+        )
         if (profileRes.error) {
           console.debug('[auth] DEBUG upsert profile failed', profileRes.error)
         }
@@ -60,7 +61,7 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
       }
 
       // Fetch created user and roles (best-effort from auth metadata)
-      const createdUserRes = await admin.from('users').select('*').eq('id', newUser.id).single()
+      const createdUserRes: any = await admin.from('users').select('*').eq('id', (newUser as any).id).single()
       let rolesList: Role[] = []
       const metaRoles = session.user.user_metadata?.roles
       rolesList = Array.isArray(metaRoles) && metaRoles.length > 0 ? metaRoles : []
@@ -68,7 +69,7 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
       // Get profile data including is_admin for new user
       let isAdmin = false
       try {
-        const profileRes = await admin.from('profiles').select('is_admin').eq('user_id', newUser.id).single()
+        const profileRes: any = await admin.from('profiles').select('is_admin').eq('user_id', (newUser as any).id).single()
         if (!profileRes.error && profileRes.data) {
           isAdmin = Boolean(profileRes.data.is_admin)
         }
@@ -77,12 +78,12 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
       }
 
       return {
-        id: createdUserRes.data.id,
-        email: createdUserRes.data.email,
-        name: createdUserRes.data.name,
-        avatar: createdUserRes.data.avatar,
+        id: createdUserRes.data?.id,
+        email: createdUserRes.data?.email,
+        name: createdUserRes.data?.name,
+        avatar: createdUserRes.data?.avatar,
         roles: rolesList,
-        kycStatus: createdUserRes.data.kyc_status,
+        kycStatus: createdUserRes.data?.kyc_status,
         isAdmin: isAdmin,
       }
     }
@@ -95,7 +96,7 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
     // Get profile data including is_admin using regular client (not admin)
     let isAdmin = false
     try {
-      const profileRes = await supabase.from('profiles').select('is_admin').eq('user_id', user.id).single()
+      const profileRes: any = await supabase.from('profiles').select('is_admin').eq('user_id', (user as any).id).single()
       if (!profileRes.error && profileRes.data) {
         isAdmin = Boolean(profileRes.data.is_admin)
       }
@@ -104,12 +105,12 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
     }
 
     return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      avatar: user.avatar,
+      id: (user as any).id,
+      email: (user as any).email,
+      name: (user as any).name,
+      avatar: (user as any).avatar,
       roles: rolesList,
-      kycStatus: user.kyc_status,
+      kycStatus: (user as any).kyc_status,
       isAdmin: isAdmin,
     }
   } catch (error) {

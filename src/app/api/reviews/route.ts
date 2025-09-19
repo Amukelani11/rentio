@@ -74,8 +74,9 @@ export async function GET(request: NextRequest) {
     ])
 
     // Calculate rating distribution
-    const distribution = [5, 4, 3, 2, 1].map(rating => {
-      const count = ratingDistribution.find(r => r.rating === rating)?._count.rating || 0
+    const distribution = [5, 4, 3, 2, 1].map((rating) => {
+      const match = (ratingDistribution as any[]).find((r: any) => r.rating === rating)
+      const count = match?._count?.rating || 0
       return {
         rating,
         count,

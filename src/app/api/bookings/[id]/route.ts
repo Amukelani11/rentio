@@ -55,7 +55,7 @@ export async function GET(
     // Check permissions
     const isOwner = booking.listing?.user_id === user.id || booking.listing?.business_id === user.id
     const isRenter = booking.renter_id === user.id
-    const isAdmin = user.is_admin || false
+    const isAdmin = (user as any).is_admin ?? user.isAdmin ?? false
 
     if (!isOwner && !isRenter && !isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
@@ -108,7 +108,7 @@ export async function PUT(
     // Check permissions
     const isOwner = booking.listing?.user_id === user.id || booking.listing?.business_id === user.id
     const isRenter = booking.renter_id === user.id
-    const isAdmin = user.is_admin || false
+    const isAdmin = (user as any).is_admin ?? user.isAdmin ?? false
 
     if (!isOwner && !isRenter && !isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
@@ -332,7 +332,7 @@ export async function DELETE(
     }
 
     // Check permissions
-    const isAdmin = user.is_admin || false
+    const isAdmin = (user as any).is_admin ?? user.isAdmin ?? false
     if (!isAdmin) {
       return NextResponse.json({ error: 'Only admin can delete bookings' }, { status: 403 })
     }

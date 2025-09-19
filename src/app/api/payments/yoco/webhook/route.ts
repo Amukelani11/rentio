@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
 
     // Find the payment record by Yoco checkout ID from metadata
 
+    let paymentRec: any = null
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
       .select(`
@@ -115,7 +116,9 @@ export async function POST(request: NextRequest) {
       .eq('checkout_id', yocoCheckoutId)
       .single()
 
-    if (paymentError || !payment) {
+    if (!paymentError && payment) {
+      paymentRec = payment
+    } else {
       console.error('Payment not found by checkout_id, trying provider_id:', paymentError, 'checkoutId:', yocoCheckoutId)
 
       // Try with provider_id as fallback
@@ -137,10 +140,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Use the second result if first failed
-      payment = payment2
+      paymentRec = payment2
     }
 
-    console.log('✅ Payment found:', payment.id, 'for booking:', payment.booking_id, 'eventType:', eventType, 'status:', status)
+    const paymentObj = paymentRec
+    console.log('✅ Payment found:', paymentObj.id, 'for booking:', paymentObj.booking_id, 'eventType:', eventType, 'status:', status)
 
     // Update payment status - Yoco uses 'succeeded' for successful payments
     const paymentStatus = status === 'succeeded' ? 'COMPLETED' : 'FAILED'
@@ -150,7 +154,7 @@ export async function POST(request: NextRequest) {
         status: paymentStatus,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', payment.id)
+      .eq('id', paymentObj.id)
 
     if (updatePaymentError) {
       console.error('Update payment error:', updatePaymentError)
@@ -161,7 +165,7 @@ export async function POST(request: NextRequest) {
       console.log('🎉 Payment succeeded! Updating booking status...')
 
       // Check if booking requires lister confirmation
-      const requiresConfirmation = payment.metadata?.requires_confirmation || !eventData.metadata?.instant_book
+      const requiresConfirmation = paymentObj.metadata?.requires_confirmation || !eventData.metadata?.instant_book
 
       if (requiresConfirmation) {
         // For bookings requiring confirmation, set status to PENDING (awaiting lister approval)
@@ -171,7 +175,7 @@ export async function POST(request: NextRequest) {
             status: 'PENDING',
             payment_status: 'COMPLETED',
           })
-          .eq('id', payment.booking_id)
+          .eq('id', paymentObj.booking_id)
 
         if (updateBookingError) {
           console.error('❌ Update booking error:', updateBookingError)
@@ -181,8 +185,8 @@ export async function POST(request: NextRequest) {
         console.log('✅ Booking status updated to PENDING (awaiting lister confirmation)!')
 
         // Notify the lister about pending booking confirmation
-        const ownerId = payment.booking?.listing?.user_id || payment.booking?.listing?.business_id
-        const listingTitle = payment.booking?.listing?.title || 'Unknown Item'
+        const ownerId = paymentObj.booking?.listing?.user_id || paymentObj.booking?.listing?.business_id
+        const listingTitle = paymentObj.booking?.listing?.title || 'Unknown Item'
         if (ownerId) {
           await supabase
             .from('notifications')
@@ -192,7 +196,7 @@ export async function POST(request: NextRequest) {
               title: 'New Booking Request',
               message: `You have a new booking request for "${listingTitle}" that requires your confirmation`,
               data: {
-                bookingId: payment.booking_id,
+                bookingId: paymentObj.booking_id,
               },
               channels: ['EMAIL', 'PUSH'],
             })
@@ -202,23 +206,23 @@ export async function POST(request: NextRequest) {
         await supabase
           .from('notifications')
           .insert({
-            user_id: payment.booking.renter_id,
+            user_id: paymentObj.booking.renter_id,
             type: 'BOOKING_CONFIRMED',
             title: 'Payment Complete - Awaiting Confirmation',
             message: `Your payment for "${listingTitle}" is complete. The listing owner will review your booking request shortly.`,
             data: {
-              bookingId: payment.booking_id,
+              bookingId: paymentObj.booking_id,
             },
             channels: ['PUSH'],
           })
 
         // Email renter payment receipt and status
         try {
-          const renterEmail = payment.booking?.renter?.email || null
-          const renterName = payment.booking?.renter?.name || 'there'
-          const amountStr = `R ${(payment.amount || payment.booking?.total_amount || 0).toFixed?.(2) || String(payment.amount)}`
+          const renterEmail = paymentObj.booking?.renter?.email || null
+          const renterName = paymentObj.booking?.renter?.name || 'there'
+          const amountStr = `R ${(paymentObj.amount || paymentObj.booking?.total_amount || 0).toFixed?.(2) || String(paymentObj.amount)}`
           if (renterEmail) {
-            await sendEmail({ to: renterEmail, subject: 'Payment received', html: paymentReceiptEmail({ name: renterName, amount: amountStr, bookingNumber: payment.booking?.booking_number, provider: 'YOCO' }) })
+            await sendEmail({ to: renterEmail, subject: 'Payment received', html: paymentReceiptEmail({ name: renterName, amount: amountStr, bookingNumber: paymentObj.booking?.booking_number, provider: 'YOCO' }) })
             await sendEmail({ to: renterEmail, subject: 'Booking confirmed', html: bookingStatusEmail({ name: renterName, listingTitle: listingTitle, status: requiresConfirmation ? 'PENDING' : 'CONFIRMED' }) })
           }
         } catch (e) { console.debug('[email] webhook renter receipt skipped', e) }
@@ -231,7 +235,7 @@ export async function POST(request: NextRequest) {
             payment_status: 'COMPLETED',
             confirmed_at: new Date().toISOString(),
           })
-          .eq('id', payment.booking_id)
+          .eq('id', paymentObj.booking_id)
 
         if (updateBookingError) {
           console.error('❌ Update booking error:', updateBookingError)
@@ -244,15 +248,15 @@ export async function POST(request: NextRequest) {
         const { data: existingConversation } = await supabase
           .from('conversations')
           .select('id')
-          .eq('booking_id', payment.booking_id)
+          .eq('booking_id', paymentObj.booking_id)
           .single()
 
         if (!existingConversation) {
-          const listingTitle = payment.booking?.listing?.title || 'Unknown Item'
+          const listingTitle = paymentObj.booking?.listing?.title || 'Unknown Item'
           const { data: conversation, error: conversationError } = await supabase
             .from('conversations')
             .insert({
-              booking_id: payment.booking_id,
+              booking_id: paymentObj.booking_id,
               title: `Chat about ${listingTitle}`,
             })
             .select()
@@ -260,12 +264,12 @@ export async function POST(request: NextRequest) {
 
           if (!conversationError && conversation) {
             // Add participants to conversation
-            const ownerId = payment.booking?.listing?.user_id || payment.booking?.listing?.business_id
+            const ownerId = paymentObj.booking?.listing?.user_id || paymentObj.booking?.listing?.business_id
             if (ownerId) {
               await supabase
                 .from('conversation_participants')
                 .insert([
-                  { conversation_id: conversation.id, user_id: payment.booking.renter_id },
+                  { conversation_id: conversation.id, user_id: paymentObj.booking.renter_id },
                   { conversation_id: conversation.id, user_id: ownerId },
                 ])
             }
@@ -273,8 +277,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Create notifications for instant booking
-        const ownerId = payment.booking?.listing?.user_id || payment.booking?.listing?.business_id
-        const listingTitle = payment.booking?.listing?.title || 'Unknown Item'
+        const ownerId = paymentObj.booking?.listing?.user_id || paymentObj.booking?.listing?.business_id
+        const listingTitle = paymentObj.booking?.listing?.title || 'Unknown Item'
         if (ownerId) {
           await supabase
             .from('notifications')
@@ -284,7 +288,7 @@ export async function POST(request: NextRequest) {
               title: 'New Booking Confirmed',
               message: `You have a new confirmed booking for "${listingTitle}"`,
               data: {
-                bookingId: payment.booking_id,
+                bookingId: paymentObj.booking_id,
               },
               channels: ['EMAIL', 'PUSH'],
             })
@@ -294,12 +298,12 @@ export async function POST(request: NextRequest) {
         await supabase
           .from('notifications')
           .insert({
-            user_id: payment.booking.renter_id,
+            user_id: paymentObj.booking.renter_id,
             type: 'BOOKING_CONFIRMED',
             title: 'Booking Confirmed',
             message: `Your booking for "${listingTitle}" has been confirmed`,
             data: {
-              bookingId: payment.booking_id,
+              bookingId: paymentObj.booking_id,
             },
             channels: ['PUSH'],
           })
@@ -313,31 +317,31 @@ export async function POST(request: NextRequest) {
           payment_status: 'FAILED',
           cancelled_at: new Date().toISOString(),
         })
-        .eq('id', payment.booking_id)
+        .eq('id', paymentObj.booking_id)
 
       if (updateBookingError) {
         console.error('Update booking error:', updateBookingError)
       }
 
       // Notify the renter about payment failure
-      const listingTitle = payment.booking?.listing?.title || 'Unknown Item'
+      const listingTitle = paymentObj.booking?.listing?.title || 'Unknown Item'
       await supabase
         .from('notifications')
         .insert({
-          user_id: payment.booking.renter_id,
+          user_id: paymentObj.booking.renter_id,
           type: 'BOOKING_CANCELLED',
           title: 'Payment Failed',
           message: `Payment failed for your booking of "${listingTitle}"`,
           data: {
-            bookingId: payment.booking_id,
+            bookingId: paymentObj.booking_id,
           },
           channels: ['PUSH'],
         })
 
       // Email renter payment failed
       try {
-        const renterEmail = payment.booking?.renter?.email || null
-        const renterName = payment.booking?.renter?.name || 'there'
+        const renterEmail = paymentObj.booking?.renter?.email || null
+        const renterName = paymentObj.booking?.renter?.name || 'there'
         if (renterEmail) {
           await sendEmail({ to: renterEmail, subject: 'Payment failed', html: bookingStatusEmail({ name: renterName, listingTitle, status: 'CANCELLED', note: 'Payment failed. Please try again.' }) })
         }

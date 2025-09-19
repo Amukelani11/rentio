@@ -57,14 +57,14 @@ export async function POST(
     // Check if payment is completed (required for rejection with refund)
     const hasCompletedPayment = booking.payments &&
       booking.payments.length > 0 &&
-      booking.payments.some(payment => payment.status === 'COMPLETED')
+      booking.payments.some((payment: any) => payment.status === 'COMPLETED')
 
     if (!hasCompletedPayment) {
       return NextResponse.json({ error: 'Booking cannot be rejected without a completed payment' }, { status: 400 })
     }
 
     // Get the completed payment record
-    const completedPayment = booking.payments.find(payment => payment.status === 'COMPLETED')
+    const completedPayment = booking.payments.find((payment: any) => payment.status === 'COMPLETED')
 
     // Update booking status to cancelled
     const { data: updatedBooking, error: updateError } = await supabase

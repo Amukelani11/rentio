@@ -1,3 +1,5 @@
+"use client"
+
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'

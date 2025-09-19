@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
-import { UserRole } from '@prisma/client'
+// Removed Prisma client types to avoid dependency during Supabase migration
 
 export async function POST(
   request: NextRequest,

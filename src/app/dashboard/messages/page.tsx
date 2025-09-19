@@ -277,7 +277,7 @@ export default function MessagesPage() {
   };
 
   const isMessageRead = (message: Message) => {
-    if (message.senderId === user?.id) {
+    if (message.sender?.id === user?.id) {
       return message.readReceipts.some(r => r.userId !== user?.id && r.read);
     }
     return false;
@@ -409,8 +409,8 @@ export default function MessagesPage() {
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {(realtimeMessages.length > 0 ? realtimeMessages : messages).map((message) => {
-                  const isOwn = message.sender.id === user?.id;
+                {(realtimeMessages.length > 0 ? realtimeMessages : messages).map((message: any) => {
+                  const isOwn = message.sender?.id === user?.id;
                   return (
                     <div
                       key={message.id}
@@ -430,7 +430,7 @@ export default function MessagesPage() {
                           isOwn ? 'justify-end' : 'justify-start'
                         }`}>
                           <span className="text-xs text-gray-500">
-                            {formatTime(message.createdAt)}
+                              {formatTime(message.createdAt)}
                           </span>
                           {isOwn && (
                             <span className="text-xs text-gray-500">

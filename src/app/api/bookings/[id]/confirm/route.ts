@@ -50,7 +50,7 @@ export async function POST(
     // Check if payment is completed
     const hasCompletedPayment = booking.payments &&
       booking.payments.length > 0 &&
-      booking.payments.some(payment => payment.status === 'COMPLETED')
+      booking.payments.some((payment: any) => payment.status === 'COMPLETED')
 
     if (!hasCompletedPayment) {
       return NextResponse.json({ error: 'Booking cannot be confirmed until payment is completed' }, { status: 400 })

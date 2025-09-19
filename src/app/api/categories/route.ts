@@ -67,25 +67,47 @@ export async function POST(request: NextRequest) {
     // Generate slug if not provided
     const categorySlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
-    // Check if slug already exists
-    const existingCategory = await findOne('categories', { slug: categorySlug })
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
+    }
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    if (existingCategory) {
+    // Check if slug already exists
+    const { data: existing, error: existErr } = await admin
+      .from('categories')
+      .select('id')
+      .eq('slug', categorySlug)
+      .maybeSingle()
+
+    if (existErr) {
+      console.error('Check category exists error', existErr)
+      return NextResponse.json({ error: 'Failed to create category' }, { status: 500 })
+    }
+
+    if (existing) {
       return NextResponse.json({ error: 'Category with this slug already exists' }, { status: 400 })
     }
 
-    const category = await insert('categories', {
-      name,
-      description,
-      icon,
-      slug: categorySlug,
-      parent_id: parentId,
-    })
+    const { data: created, error: insertErr } = await admin
+      .from('categories')
+      .insert([{
+        name,
+        description,
+        icon,
+        slug: categorySlug,
+        parent_id: parentId || null,
+      }])
+      .select('*')
+      .single()
 
-    return NextResponse.json({
-      success: true,
-      data: category,
-    })
+    if (insertErr) {
+      console.error('Insert category error', insertErr)
+      return NextResponse.json({ error: 'Failed to create category' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, data: created })
   } catch (error) {
     console.error('Create category error:', error)
     return NextResponse.json(

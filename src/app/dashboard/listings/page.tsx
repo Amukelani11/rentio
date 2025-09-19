@@ -45,6 +45,7 @@ interface Listing {
     name: string;
     icon?: string;
   };
+  images?: string[];
   createdAt: string;
   updatedAt: string;
 }

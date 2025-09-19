@@ -268,7 +268,7 @@ export default function BookingDetailPage() {
   };
 
   const isOwner = user && booking && (
-    booking.listing.user?.id === user.id || booking.listing.business?.id === user.id
+    (booking.listing as any).user?.id === user.id || (booking.listing as any).business?.id === user.id
   );
   const isRenter = user && booking && booking.renter.id === user.id;
 

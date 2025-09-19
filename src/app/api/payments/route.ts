@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
           where: { id: bookingId },
           data: {
             paymentStatus: 'COMPLETED',
-            status: listing.instantBook ? 'CONFIRMED' : 'PENDING', // Auto-confirm if instant book
+            status: booking.listing.instantBook ? 'CONFIRMED' : 'PENDING', // Auto-confirm if instant book
           },
         })
 

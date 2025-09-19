@@ -28,11 +28,12 @@ export async function GET(request: NextRequest) {
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
     const admin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : supabaseAuth
 
-    // Get listings first
-    let query = admin.from('listings').select('*')
+    // Build base query with select to enable filters and count
+    let query = admin.from('listings').select('*', { count: 'exact' })
 
     // Filter by user's listings
-    if (user.custom_claims?.roles?.includes?.(UserRole.BUSINESS_LISTER) || user?.role === UserRole.BUSINESS_LISTER) {
+    const isBusiness = Array.isArray(user.roles) ? user.roles.includes(UserRole.BUSINESS_LISTER) : false
+    if (isBusiness) {
       query = query.eq('business_id', user.id)
     } else {
       query = query.eq('user_id', user.id)
@@ -42,17 +43,17 @@ export async function GET(request: NextRequest) {
       query = query.eq('status', status)
     }
 
-    // Apply ordering and pagination
-    query = query.order('created_at', { ascending: false }).range(skip, skip + limit - 1)
-
-    const { data: items, count, error } = await query.select('*', { count: 'exact' })
+    // Apply ordering, pagination and execute
+    const { data: items, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(skip, skip + limit - 1)
     if (error) {
       console.error('Supabase listings GET error', error)
       return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 })
     }
 
     // Get all categories at once to avoid N+1 queries
-    const categoryIds = [...new Set((items || []).map(item => item.category_id).filter(Boolean))]
+    const categoryIds = Array.from(new Set((items || []).map((item: any) => item.category_id).filter(Boolean)))
     console.log('Category IDs to fetch:', categoryIds)
     
     // Fetch categories via the route handler client so RLS applies consistently
@@ -179,14 +180,15 @@ export async function POST(request: NextRequest) {
 
     const statusToSave = (body.status === 'ACTIVE') ? 'PENDING' : (body.status || 'DRAFT')
 
+    const isBusinessForPost = Array.isArray(user.roles) ? user.roles.includes(UserRole.BUSINESS_LISTER) : false
     const dataToInsert: any = {
       title,
       slug,
       description,
       category_id: categoryId,
       // If business lister, assign business_id, otherwise assign user_id
-      user_id: user.role === UserRole.BUSINESS_LISTER ? null : dbUserId,
-      business_id: user.role === UserRole.BUSINESS_LISTER ? dbUserId : null,
+      user_id: isBusinessForPost ? null : dbUserId,
+      business_id: isBusinessForPost ? dbUserId : null,
       price_daily: parseFloat(priceDaily),
       price_weekly: priceWeekly ? parseFloat(priceWeekly) : null,
       weekly_discount: weeklyDiscount || 0,
