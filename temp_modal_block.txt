@@ -1,0 +1,42 @@
+/* OTP Modal */}
+      {otpModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-white/40 bg-white/80 p-6 shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-white/10">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-50">Enter verification code</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-slate-200">We emailed a 6‑digit code to {email}. Enter it below to continue.</p>
+            {otpError && (
+              <Alert variant="destructive" className="mt-3">
+                <AlertDescription>{otpError}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleVerifyOtp} className="mt-4 space-y-4">
+              <div>
+                <Label htmlFor="otp">One-time code</Label>
+                <Input
+                  id="otp"
+                  ref={otpInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Button type="button" variant="ghost" onClick={() => setOtpModalOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={verifying}>
+                  {verifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Verify & continue
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+

@@ -1,0 +1,8 @@
+{
+  "webhookId": "msg_32kB8pOXYWuBy1FpEUeCIiW3wbv",
+  "timestamp": "1757954862",
+  "signature": "v1,Y9Pw0PWUtpxqTDaTLyff4jcNhG0N5T7RjkghH9SSUkg=",
+  "payload": "{\"createdDate\":\"2025-09-15T16:42:12.944957Z\",\"id\":\"evt_2LNQWnvKvbrFoaDfAo8HQ12x\",\"payload\":{\"amount\":135125,\"createdDate\":\"2025-09-15T16:41:59.032237Z\",\"currency\":\"ZAR\",\"id\":\"p_maEqGn5NeYe1t72Io2BH8bxD\",\"metadata\":{\"bookingId\":\"00261fe0-b4a2-4d83-8b06-5dacb3dbd625\",\"checkoutId\":\"ch_28EjY6GPeKJYIwceYetMBQLa\",\"domain\":\"06e7f58df8ad.ngrok-free.app\",\"endDate\":\"2025-09-22T22:00:00.000Z\",\"listingTitle\":\"drill\",\"productType\":\"checkout\",\"startDate\":\"2025-09-15T22:00:00.000Z\",\"userId\":\"b3d85691-8ef9-462d-8688-3c3d2a26112b\"},\"mode\":\"test\",\"paymentMethodDetails\":{\"card\":{\"expiryMonth\":1,\"expiryYear\":29,\"maskedCard\":\"************1111\",\"scheme\":\"visa\"},\"type\":\"card\"},\"status\":\"succeeded\",\"type\":\"payment\"},\"type\":\"payment.succeeded\"}",
+  "expectedSignature": null,
+  "timestampMs": 1757954864791
+}

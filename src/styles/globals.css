@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Use HSL values for Tailwind CSS variables */
+    --background: 210 40% 98%; /* slate-50 */
+    --foreground: 240 7% 13%; /* charcoal-500 */
+
+    --card: 210 40% 98%; /* slate-50 */
+    --card-foreground: 240 7% 13%; /* charcoal-500 */
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 7% 13%;
+
+    /* Dark coral for primary/accent/ring */
+    --primary: 358 78% 55%; /* coral-600 (#E53237) */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 9% 23%; /* graphite-500 */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 98%; /* slate-50 */
+    --muted-foreground: 220 9% 46%; /* charcoal-400 */
+
+    --accent: 358 78% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%; /* slate-200 */
+    --input: 214 32% 91%;
+    --ring: 358 78% 55%;
+
+    --radius: 0.75rem; /* 12px */
+  }
+
+  .dark {
+    --background: 240 7% 13%; /* charcoal-500 */
+    --foreground: 210 40% 98%; /* slate-50 */
+
+    --card: 213 14% 20%; /* graphite-600 */
+    --card-foreground: 210 40% 98%;
+
+    --popover: 213 14% 20%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 358 78% 55%; /* coral-600 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 213 9% 26%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 213 14% 20%;
+    --muted-foreground: 218 11% 65%;
+
+    --accent: 358 78% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 213 9% 28%;
+    --input: 213 9% 28%;
+    --ring: 358 78% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Fallback minimal styles in case Tailwind isn't built */
+html, body {
+  background: #f5f7fa;
+  color: #1f1f23;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: #E53237; }
+
+
+@layer components {
+  .container {
+    @apply mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+  
+  .btn-outline {
+    @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+  
+  .btn-ghost {
+    @apply btn hover:bg-accent hover:text-accent-foreground;
+  }
+  
+  .input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .card {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+}
