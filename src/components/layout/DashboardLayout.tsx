@@ -83,35 +83,32 @@ export default function DashboardLayout({ children, user, showHeader = true }: P
         { href: '/dashboard/messages', label: 'Messages', icon: MessageCircle }
       )
       // If not a lister yet, show quick entry to create a listing
-      if (!(user.roles.includes(UserRole.INDIVIDUAL_LISTER) || user.roles.includes(UserRole.BUSINESS_LISTER))) {
+      const isLister = user.roles.includes(UserRole.INDIVIDUAL_LISTER) || user.roles.includes(UserRole.BUSINESS_LISTER)
+      if (!isLister) {
         baseItems.push({ href: '/dashboard/listings', label: 'List Item', icon: Package })
+        // Wallet visible only for non-listers
+        baseItems.push({ href: '/dashboard/wallet', label: 'Wallet', icon: DollarSign })
       }
-      baseItems.push({ href: '/dashboard/wallet', label: 'Wallet', icon: DollarSign })
     }
 
-    // Individual Lister links
+    // Individual Lister links (hide Listings/Wallet in sidebar)
     if (user.roles && user.roles.includes(UserRole.INDIVIDUAL_LISTER)) {
       baseItems.push(
-        { href: '/dashboard/listings', label: 'Listings', icon: Package },
-        { href: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
-        { href: '/dashboard/earnings', label: 'Earnings', icon: DollarSign },
-        { href: '/dashboard/wallet', label: 'Wallet', icon: DollarSign }
+        { href: '/dashboard/bookings', label: 'Bookings', icon: Calendar }
       )
     }
 
-    // Business Lister links
+    // Business Lister links (hide Listings/Wallet in sidebar)
     if (user.roles && user.roles.includes(UserRole.BUSINESS_LISTER)) {
       baseItems.push(
         { href: '/dashboard/business', label: 'Business Profile', icon: Building },
         { href: '/dashboard/inventory', label: 'Inventory', icon: PackagePlus },
-        { href: '/dashboard/listings', label: 'Listings', icon: Package },
         { href: '/dashboard/calendar', label: 'Calendar', icon: Calendar },
         { href: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
         { href: '/dashboard/pricing', label: 'Pricing', icon: DollarSign },
         { href: '/dashboard/alerts', label: 'Alerts', icon: AlertTriangle },
         { href: '/dashboard/team', label: 'Team', icon: TeamIcon },
-        { href: '/dashboard/earnings', label: 'Earnings', icon: DollarSign },
-        { href: '/dashboard/wallet', label: 'Wallet', icon: DollarSign }
+        { href: '/dashboard/earnings', label: 'Earnings', icon: DollarSign }
       )
     }
 
