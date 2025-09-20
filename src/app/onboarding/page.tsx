@@ -34,7 +34,7 @@ export default function OnboardingSelector() {
 
           <Link href="/onboarding/business" className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-charcoal-600 dark:bg-charcoal-600">
             <div className="relative h-40 w-full overflow-hidden rounded-xl bg-white/60">
-              <Image src="/assets/businessshelve.png" alt="Business onboarding" fill className="object-contain" />
+          <img src="/assets/businessshelve.png" alt="Business onboarding" className="absolute inset-0 h-full w-full object-contain" />
             </div>
             <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-slate-50">I run a Rental Business</h3>
             <p className="text-sm text-gray-600 dark:text-slate-200">Manage inventory, team, and packages</p>

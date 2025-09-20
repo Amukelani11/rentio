@@ -40,13 +40,10 @@ export default function SiteHeader() {
             <div className="flex items-center gap-8">
               <Link href="/" className="block">
                 <span className="sr-only">Rentio</span>
-                <Image
+                <img
                   src="/assets/rentiologo.png"
                   alt="Rentio"
-                  width={120}
-                  height={32}
                   className={`${scrolled ? 'h-6' : 'h-8'} w-auto object-contain`}
-                  priority
                 />
               </Link>
               <nav className="hidden md:flex items-center gap-6 text-sm">

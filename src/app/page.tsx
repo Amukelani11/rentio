@@ -123,7 +123,7 @@ export default function HomePage() {
           <div className="relative mx-auto aspect-[4/3] w-full min-h-[380px] sm:min-h-[440px] md:min-h-[520px] overflow-hidden rounded-3xl">
             {/* Soft coral background shape */}
             <div className="pointer-events-none absolute -right-10 -top-10 h-[520px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(229,50,55,0.22),rgba(229,50,55,0.0))] blur-2xl" />
-            <Image src="/assets/rhero.png" alt="People renting items" fill className="object-cover" />
+            <img src="/assets/rhero.png" alt="People renting items" className="absolute inset-0 h-full w-full object-cover" />
           </div>
         </div>
       </section>
@@ -147,7 +147,7 @@ export default function HomePage() {
               href={`/browse?category=${encodeURIComponent(name.toLowerCase())}`}
               className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-charcoal-600 dark:bg-charcoal-600"
             >
-              <Image src={img} alt={name} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+              <img src={img} alt={name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-black/0" />
               <div className="absolute bottom-3 left-3 rounded-md bg-white/90 px-2 py-1 text-sm font-medium text-gray-900 shadow-sm backdrop-blur">
                 {name}
@@ -166,7 +166,7 @@ export default function HomePage() {
             </div>
             <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl">
               <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-[radial-gradient(closest-side,rgba(229,50,55,0.18),rgba(229,50,55,0))] blur-xl" />
-              <Image src="/assets/rcamera.png" alt="List your items" fill className="object-cover" />
+              <img src="/assets/rcamera.png" alt="List your items" className="absolute inset-0 h-full w-full object-cover" />
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function HomePage() {
               ].map(({ img, title, desc }) => (
                 <div key={title} className="relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-charcoal-600 dark:bg-charcoal-600">
                   <div className="mx-auto -mt-2 mb-4 h-24 w-24 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-charcoal-600">
-                    <Image src={img} alt={title} width={96} height={96} className="h-24 w-24 object-cover" />
+                  <img src={img} alt={title} width={96} height={96} className="h-24 w-24 object-cover" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-50">{title}</h3>
                   <p className="mt-2 text-sm text-gray-600 dark:text-slate-200">{desc}</p>
@@ -221,7 +221,7 @@ export default function HomePage() {
         <div className="container">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 text-center">
             <div className="relative -mb-1 h-12 w-12 overflow-hidden rounded-xl">
-              <Image src="/assets/envelope.svg" alt="Newsletter" width={48} height={48} />
+              <img src="/assets/envelope.svg" alt="Newsletter" width={48} height={48} />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-50">Join our newsletter</h3>
             <p className="text-sm text-gray-600 dark:text-slate-200">Get product updates, launch news, and rental tips.</p>
