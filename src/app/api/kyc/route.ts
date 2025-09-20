@@ -54,33 +54,51 @@ export async function GET(request: NextRequest) {
 
     // Now fetch user data for each verification
     const verificationsWithUsers = await Promise.all(
-      (verifications || []).map(async (verification) => {
+      (verifications || []).map(async (v: any) => {
         // Get user data
-        const { data: userData } = await dbClient
+        const { data: u } = await dbClient
           .from('users')
           .select('id, name, email, kyc_status, email_verified, phone_verified, avatar, created_at')
-          .eq('id', verification.user_id)
+          .eq('id', v.user_id)
           .single()
 
         // Get reviewer data if exists
-        let reviewerData = null
-        if (verification.reviewer_id) {
+        let reviewerData: any = null
+        if (v.reviewer_id) {
           const { data: reviewer } = await dbClient
             .from('users')
             .select('id, name')
-            .eq('id', verification.reviewer_id)
+            .eq('id', v.reviewer_id)
             .single()
           reviewerData = reviewer
         }
 
         return {
-          ...verification,
-          user: userData,
-          reviewer: reviewerData
+          id: v.id,
+          type: v.type,
+          status: v.status,
+          documents: v.documents || [],
+          additionalInfo: v.additional_info || null,
+          rejectionReason: v.rejection_reason || null,
+          notes: v.notes || null,
+          createdAt: v.created_at,
+          reviewedAt: v.reviewed_at || null,
+          reviewer: reviewerData ? { name: reviewerData.name } : undefined,
+          user: u ? {
+            id: u.id,
+            name: u.name || u.email,
+            email: u.email,
+            kyc_status: u.kyc_status,
+            email_verified: u.email_verified,
+            phone_verified: u.phone_verified,
+            avatar: u.avatar || null,
+            created_at: u.created_at,
+          } : null,
         }
       })
     )
 
+    console.log('[api/kyc] items:', verificationsWithUsers?.length || 0, 'count:', count)
     return NextResponse.json({
       success: true,
       data: {
