@@ -22,12 +22,15 @@ import {
 } from 'lucide-react';
 import { Role } from '@/lib/types';
 
+type RuleType = 'WEEKEND' | 'HOLIDAY' | 'SEASONAL' | 'CUSTOM'
+type AdjType = 'PERCENTAGE' | 'FIXED_AMOUNT'
+
 interface PricingRule {
   id: string;
   name: string;
   description: string;
-  rule_type: 'WEEKEND' | 'HOLIDAY' | 'SEASONAL' | 'CUSTOM';
-  adjustment_type: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  rule_type: RuleType;
+  adjustment_type: AdjType;
   adjustment_value: number;
   start_date?: string;
   end_date?: string;
@@ -49,8 +52,8 @@ export default function PricingPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    rule_type: 'WEEKEND' as const,
-    adjustment_type: 'PERCENTAGE' as const,
+    rule_type: 'WEEKEND' as RuleType,
+    adjustment_type: 'PERCENTAGE' as AdjType,
     adjustment_value: 0,
     start_date: '',
     end_date: '',
@@ -96,15 +99,25 @@ export default function PricingPage() {
 
   const handleSubmit = async () => {
     try {
-      const payload = {
+      const payload: any = {
         ...formData,
         max_stay_days: formData.max_stay_days ? parseInt(formData.max_stay_days) : null,
         weekend_days: formData.rule_type === 'WEEKEND' ? formData.weekend_days : null,
-        holiday_date: formData.rule_type === 'HOLIDAY' ? formData.holiday_date : null,
-        is_recurring_holiday: formData.rule_type === 'HOLIDAY' ? formData.is_recurring_holiday : null,
-        start_date: formData.rule_type === 'SEASONAL' ? formData.start_date : null,
-        end_date: formData.rule_type === 'SEASONAL' ? formData.end_date : null
       };
+      if (formData.rule_type === 'HOLIDAY') {
+        payload.holiday_date = formData.holiday_date
+        payload.is_recurring_holiday = formData.is_recurring_holiday
+      } else {
+        payload.holiday_date = null
+        payload.is_recurring_holiday = null
+      }
+      if (formData.rule_type === 'SEASONAL') {
+        payload.start_date = formData.start_date
+        payload.end_date = formData.end_date
+      } else {
+        payload.start_date = null
+        payload.end_date = null
+      }
 
       const response = await fetch('/api/business/pricing', {
         method: 'POST',
@@ -129,8 +142,8 @@ export default function PricingPage() {
     setFormData({
       name: rule.name,
       description: rule.description,
-      rule_type: rule.rule_type,
-      adjustment_type: rule.adjustment_type,
+      rule_type: rule.rule_type as RuleType,
+      adjustment_type: rule.adjustment_type as AdjType,
       adjustment_value: rule.adjustment_value,
       start_date: rule.start_date || '',
       end_date: rule.end_date || '',

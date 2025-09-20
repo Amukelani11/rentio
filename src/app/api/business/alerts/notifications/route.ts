@@ -34,6 +34,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Business profile not found' }, { status: 404 })
     }
 
+    // Resolve alert IDs for this business
+    const { data: alertRows } = await serviceClient
+      .from('stock_alerts')
+      .select('id')
+      .eq('business_id', business.id)
+
+    const alertIds = (alertRows || []).map((r: any) => r.id)
+
     // Get alert notifications with stock alert details
     const { data: notifications, error: notificationsError } = await serviceClient
       .from('alert_notifications')
@@ -48,12 +56,7 @@ export async function GET(request: NextRequest) {
           )
         )
       `)
-      .in('stock_alert_id', (
-        serviceClient
-          .from('stock_alerts')
-          .select('id')
-          .eq('business_id', business.id)
-      ))
+      .in('stock_alert_id', alertIds.length ? alertIds : ['00000000-0000-0000-0000-000000000000'])
       .order('created_at', { ascending: false })
       .limit(100)
 
