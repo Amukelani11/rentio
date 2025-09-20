@@ -2,6 +2,7 @@
 const nextConfig = {
   images: {
     domains: ['localhost'],
+    unoptimized: true,
   },
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
