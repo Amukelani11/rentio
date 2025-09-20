@@ -20,6 +20,11 @@ export async function middleware(req: NextRequest) {
   // NOTE: we use a direct SELECT (read-only) instead of calling the RPC which may perform
   // an INSERT and thus fail inside read-only transactions (error 25006).
   if (session && session.user && !skipCookie) {
+    // If user already has any role assigned, allow access without forcing onboarding
+    const metaRoles = Array.isArray(session.user.user_metadata?.roles) ? session.user.user_metadata.roles : []
+    if (metaRoles.length > 0 && !currentPath.startsWith('/onboarding')) {
+      return res
+    }
     try {
       const { data: row, error: readErr } = await supabase
         .from('onboarding_progress')

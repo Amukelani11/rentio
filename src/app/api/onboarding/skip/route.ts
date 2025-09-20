@@ -21,9 +21,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'RPC error', details: completeRes.error.message }, { status: 500 })
     }
 
-    // Set a short-lived cookie so middleware can allow the immediate redirect to /dashboard
+    // Set a cookie so middleware can allow redirect to /dashboard and avoid loops
+    // Keep it for 30 days
     const res = NextResponse.json({ success: true })
-    res.cookies.set('onboarding_skipped', String(flow), { path: '/', maxAge: 60 })
+    res.cookies.set('onboarding_skipped', String(flow), { path: '/', maxAge: 60 * 60 * 24 * 30 })
     return res
   } catch (e: any) {
     console.error('onboarding/skip exception', e)
