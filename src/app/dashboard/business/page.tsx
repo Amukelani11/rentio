@@ -589,9 +589,7 @@ export default function BusinessProfilePage() {
                   )}
                 </div>
                 {editing && (
-                  <Button variant="outline" size="sm" className="mt-2">
-                    Change Logo
-                  </Button>
+                  <UploadButton type="logo" onUploaded={(url) => handleInputChange('logo_url' as any, url)} />
                 )}
               </div>
               <div>
@@ -607,9 +605,7 @@ export default function BusinessProfilePage() {
                   )}
                 </div>
                 {editing && (
-                  <Button variant="outline" size="sm" className="mt-2">
-                    Change Cover
-                  </Button>
+                  <UploadButton type="cover" onUploaded={(url) => handleInputChange('cover_image_url' as any, url)} />
                 )}
               </div>
             </div>
@@ -618,4 +614,35 @@ export default function BusinessProfilePage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function UploadButton({ type, onUploaded }: { type: 'logo' | 'cover'; onUploaded: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+  const inputId = `upload-${type}`
+  const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('type', type)
+      const res = await fetch('/api/business/media', { method: 'POST', body })
+      const json = await res.json()
+      if (json?.url) onUploaded(json.url)
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      <input id={inputId} type="file" accept="image/*" className="hidden" onChange={onChange} />
+      <label htmlFor={inputId}>
+        <Button variant="outline" size="sm" disabled={uploading}>
+          {uploading ? 'Uploading…' : type === 'logo' ? 'Change Logo' : 'Change Cover'}
+        </Button>
+      </label>
+    </div>
+  )
 }
