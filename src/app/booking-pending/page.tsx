@@ -1,15 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { CheckCircle, Clock, Mail, User, ArrowRight, Calendar, MapPin, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Lazily create the Supabase client at runtime to avoid build-time env checks
+// and allow the page to render even if env vars are not present at build time.
+const useSupabaseClient = () => {
+  return useMemo(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !anon) return null
+    try {
+      return createClient(url, anon)
+    } catch {
+      return null
+    }
+  }, [])
+}
 
 interface BookingDetails {
   id: string
@@ -52,6 +64,7 @@ export default function BookingPendingPage() {
   const [payment, setPayment] = useState<PaymentDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const supabase = useSupabaseClient()
 
   const bookingId = searchParams.get('bookingId')
   const sessionId = searchParams.get('session_id')
@@ -60,6 +73,12 @@ export default function BookingPendingPage() {
     const fetchBookingDetails = async () => {
       if (!bookingId && !sessionId) {
         setError('No booking information provided')
+        setLoading(false)
+        return
+      }
+
+      if (!supabase) {
+        setError('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
         setLoading(false)
         return
       }
@@ -123,7 +142,7 @@ export default function BookingPendingPage() {
     }
 
     fetchBookingDetails()
-  }, [bookingId, sessionId])
+  }, [bookingId, sessionId, supabase])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-ZA', {

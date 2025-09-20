@@ -1,15 +1,25 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { CheckCircle, Calendar, MapPin, CreditCard, Mail, User, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+const useSupabaseClient = () => {
+  return useMemo(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !anon) return null
+    try {
+      return createClient(url, anon)
+    } catch {
+      return null
+    }
+  }, [])
+}
 
 interface BookingDetails {
   id: string
@@ -53,6 +63,7 @@ export default function BookingConfirmationPage() {
   const [payment, setPayment] = useState<PaymentDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const supabase = useSupabaseClient()
 
   const bookingId = searchParams.get('bookingId')
   const sessionId = searchParams.get('session_id')
@@ -69,7 +80,7 @@ export default function BookingConfirmationPage() {
         // Try client-side lookup first (anon Supabase client). This avoids waiting on /api/auth/user.
         let targetBookingId = bookingId
 
-        if (!targetBookingId && sessionId) {
+        if (!targetBookingId && sessionId && supabase) {
           const { data: paymentMatch, error: paymentErr } = await supabase
             .from('payments')
             .select('booking_id')
@@ -81,7 +92,7 @@ export default function BookingConfirmationPage() {
           }
         }
 
-        if (targetBookingId) {
+        if (targetBookingId && supabase) {
           const { data: bookingData, error: bookingError } = await supabase
             .from('bookings')
             .select(`*, listing:listings(*), renter:users!renter_id(*)`)
@@ -131,7 +142,7 @@ export default function BookingConfirmationPage() {
     }
 
     fetchBookingDetails()
-  }, [bookingId, sessionId])
+  }, [bookingId, sessionId, supabase])
 
   const [confirmAttempted, setConfirmAttempted] = useState(false)
 
