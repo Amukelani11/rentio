@@ -1,11 +1,13 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Home, Package, Calendar, MessageCircle, DollarSign, Settings, Shield, Users, Star } from 'lucide-react'
+import { Home, Package, Calendar, MessageCircle, DollarSign, Settings, Shield, Users, Star, Building, Users as TeamIcon, PackagePlus, AlertTriangle, LogOut } from 'lucide-react'
 import { Role as UserRole } from '@/lib/types'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 type Props = {
   children: React.ReactNode
@@ -15,6 +17,56 @@ type Props = {
 
 export default function DashboardLayout({ children, user, showHeader = true }: Props) {
   const pathname = usePathname()
+  const router = useRouter()
+  const [showBusinessPrompt, setShowBusinessPrompt] = useState(false)
+  const [countdown, setCountdown] = useState(3)
+
+  useEffect(() => {
+    const checkBusinessProfile = async () => {
+      try {
+        if (!user) return
+        const isBusiness = Array.isArray(user.roles) && user.roles.includes(UserRole.BUSINESS_LISTER)
+        const onBusinessPage = pathname?.startsWith('/dashboard/business')
+        if (!isBusiness || onBusinessPage) return
+
+        const res = await fetch('/api/business/profile', { cache: 'no-store' })
+        if (!res.ok) return
+        const json = await res.json()
+        const hasBusiness = Boolean(json?.business?.id)
+        if (!hasBusiness) {
+          setShowBusinessPrompt(true)
+        }
+      } catch {}
+    }
+    checkBusinessProfile()
+  }, [user, pathname])
+
+  useEffect(() => {
+    if (!showBusinessPrompt) return
+    setCountdown(3)
+    const id = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(id)
+          router.push('/dashboard/business')
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [showBusinessPrompt, router])
+
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClientComponentClient()
+      await supabase.auth.signOut()
+      router.push('/auth/signin')
+      router.refresh()
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
 
   const getNavItems = () => {
     const baseItems: { href: string; label: string; icon: any }[] = [
@@ -37,11 +89,27 @@ export default function DashboardLayout({ children, user, showHeader = true }: P
       baseItems.push({ href: '/dashboard/wallet', label: 'Wallet', icon: DollarSign })
     }
 
-    // Lister links
-    if (user.roles && (user.roles.includes(UserRole.INDIVIDUAL_LISTER) || user.roles.includes(UserRole.BUSINESS_LISTER))) {
+    // Individual Lister links
+    if (user.roles && user.roles.includes(UserRole.INDIVIDUAL_LISTER)) {
       baseItems.push(
         { href: '/dashboard/listings', label: 'Listings', icon: Package },
         { href: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
+        { href: '/dashboard/earnings', label: 'Earnings', icon: DollarSign },
+        { href: '/dashboard/wallet', label: 'Wallet', icon: DollarSign }
+      )
+    }
+
+    // Business Lister links
+    if (user.roles && user.roles.includes(UserRole.BUSINESS_LISTER)) {
+      baseItems.push(
+        { href: '/dashboard/business', label: 'Business Profile', icon: Building },
+        { href: '/dashboard/inventory', label: 'Inventory', icon: PackagePlus },
+        { href: '/dashboard/listings', label: 'Listings', icon: Package },
+        { href: '/dashboard/calendar', label: 'Calendar', icon: Calendar },
+        { href: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
+        { href: '/dashboard/pricing', label: 'Pricing', icon: DollarSign },
+        { href: '/dashboard/alerts', label: 'Alerts', icon: AlertTriangle },
+        { href: '/dashboard/team', label: 'Team', icon: TeamIcon },
         { href: '/dashboard/earnings', label: 'Earnings', icon: DollarSign },
         { href: '/dashboard/wallet', label: 'Wallet', icon: DollarSign }
       )
@@ -82,9 +150,10 @@ export default function DashboardLayout({ children, user, showHeader = true }: P
                   </NavItem>
                 ))}
               </div>
-              <div className="mt-auto pt-4">
+              <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
                 <NavItem href="/dashboard/settings" icon={Settings} active={pathname?.startsWith('/dashboard/settings')}>Settings</NavItem>
                 <NavItem href="/dashboard/kyc" icon={Shield} active={pathname?.startsWith('/dashboard/kyc')}>Verification</NavItem>
+                <SignOutItem />
               </div>
             </nav>
           </div>
@@ -94,6 +163,26 @@ export default function DashboardLayout({ children, user, showHeader = true }: P
           {children}
         </main>
       </div>
+
+      {showBusinessPrompt && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-charcoal-700">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-slate-50">Complete your business profile</h2>
+            <p className="mt-2 text-gray-600 dark:text-slate-200">
+              You have the Business role but no business profile yet. We'll take you there to finish setup.
+            </p>
+            <div className="mt-4 flex items-center justify-between text-sm text-gray-500 dark:text-slate-300">
+              <span>Redirecting in {countdown}s…</span>
+              <button
+                onClick={() => router.push('/dashboard/business')}
+                className="inline-flex items-center rounded-lg bg-coral-600 px-3 py-2 font-medium text-white hover:bg-coral-700"
+              >
+                Go now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -112,5 +201,30 @@ function NavItem({ href, icon: Icon, children, active }: { href: string; icon: R
       <Icon className="h-4 w-4" />
       <span>{children}</span>
     </Link>
+  )
+}
+
+function SignOutItem() {
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClientComponentClient()
+      await supabase.auth.signOut()
+      window.location.href = '/signin'
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleSignOut}
+      className={cn(
+        'mb-1 flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors w-full text-left',
+        'text-gray-900 hover:bg-slate-100 hover:text-gray-900 dark:text-slate-100 dark:hover:bg-charcoal-600/60'
+      )}
+    >
+      <LogOut className="h-4 w-4" />
+      <span>Sign Out</span>
+    </button>
   )
 }
