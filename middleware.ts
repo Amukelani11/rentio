@@ -32,7 +32,10 @@ export async function middleware(req: NextRequest) {
       } catch {}
     }
     console.log('[mw] onboarding check', { path: currentPath, skipCookie: !!skipCookie, roles: metaRoles })
-    if (metaRoles.length > 0 && !currentPath.startsWith('/onboarding')) {
+    if (metaRoles.length > 0) {
+      if (currentPath.startsWith('/onboarding')) {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
       return res
     }
     try {
