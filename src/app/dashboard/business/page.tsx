@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
   Building,
   MapPin,
@@ -214,6 +216,28 @@ export default function BusinessProfilePage() {
       });
     }
   };
+
+  const timeOptions = (() => {
+    const arr: string[] = []
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const hh = String(h).padStart(2, '0')
+        const mm = String(m).padStart(2, '0')
+        arr.push(`${hh}:${mm}`)
+      }
+    }
+    return arr
+  })()
+
+  const parseHours = (v: string | undefined) => {
+    if (!v || v.toLowerCase() === 'closed') return { closed: true, open: '09:00', close: '17:00' }
+    const parts = v.split('-')
+    const open = parts[0]?.trim() || '09:00'
+    const close = parts[1]?.trim() || '17:00'
+    return { closed: false, open, close }
+  }
+
+  const formatHours = (closed: boolean, open: string, close: string) => (closed ? 'Closed' : `${open}-${close}`)
 
   if (loading) {
     return (
@@ -475,20 +499,66 @@ export default function BusinessProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(business?.business_hours || defaultBusinessHours).map(([day, hours]) => (
-                <div key={day}>
-                  <Label className="capitalize">{day}</Label>
-                  {editing ? (
-                    <Input
-                      value={hours}
-                      onChange={(e) => handleBusinessHoursChange(day, e.target.value)}
-                      placeholder="09:00-17:00 or Closed"
-                    />
-                  ) : (
-                    <p className="mt-1">{hours}</p>
-                  )}
-                </div>
-              ))}
+              {Object.entries(business?.business_hours || defaultBusinessHours).map(([day, hours]) => {
+                const parsed = parseHours(hours as string)
+                return (
+                  <div key={day} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="capitalize">{day}</Label>
+                      {editing && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span>Closed</span>
+                          <Switch
+                            checked={parsed.closed}
+                            onCheckedChange={(checked) => handleBusinessHoursChange(day, formatHours(checked, parsed.open, parsed.close))}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {editing ? (
+                      parsed.closed ? (
+                        <p className="mt-1 text-gray-500">Closed</p>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <Select
+                              value={parsed.open}
+                              onValueChange={(val) => handleBusinessHoursChange(day, formatHours(false, val, parsed.close))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Open" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timeOptions.map((t) => (
+                                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <span className="text-sm text-gray-500">to</span>
+                          <div className="flex-1">
+                            <Select
+                              value={parsed.close}
+                              onValueChange={(val) => handleBusinessHoursChange(day, formatHours(false, parsed.open, val))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Close" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timeOptions.map((t) => (
+                                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      )
+                    ) : (
+                      <p className="mt-1">{hours}</p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
