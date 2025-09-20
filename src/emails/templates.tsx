@@ -51,3 +51,38 @@ export function supportTicketEmail(opts: { name: string; ticketId: string; statu
   const body = `<h1 style="margin:0 0 8px;font-size:22px">Support ticket ${opts.status}</h1><p style="margin:0 0 12px;color:#334155">Hi ${opts.name}, your ticket #${opts.ticketId} is now ${opts.status}.</p>${opts.message ? `<p style="margin:0;color:${subText}">${opts.message}</p>` : ''}`
   return baseLayout(`Support ticket ${opts.status}`, body)
 }
+
+export function stockAlertEmail(opts: {
+  recipientName: string
+  businessName: string
+  itemName: string
+  sku?: string
+  currentQuantity: number
+  alertType: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'REORDER_POINT' | 'MAINTENANCE_DUE'
+  thresholdText?: string
+  manageUrl?: string
+}) {
+  const badgeColor = opts.alertType === 'OUT_OF_STOCK' ? '#dc2626' : opts.alertType === 'LOW_STOCK' ? '#f59e0b' : '#2563eb'
+  const title = `Inventory Alert: ${opts.alertType.replaceAll('_',' ')}`
+  const body = `
+    <h1 style="margin:0 0 8px;font-size:22px">${title}</h1>
+    <p style="margin:0 0 12px;color:#334155">Hi ${opts.recipientName},</p>
+    <p style="margin:0 0 12px;color:#334155">Your business <strong>${opts.businessName}</strong> has an inventory alert.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin-top:12px;background:#f8fafc;border-radius:12px;overflow:hidden">
+      <tbody>
+        <tr>
+          <td style="padding:16px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="background:${badgeColor};color:#fff;padding:2px 10px;border-radius:9999px;font-size:12px">${opts.alertType.replaceAll('_',' ')}</span>
+              ${opts.thresholdText ? `<span style="background:#e2e8f0;color:#0f172a;padding:2px 10px;border-radius:9999px;font-size:12px">${opts.thresholdText}</span>` : ''}
+            </div>
+            <div style="margin-top:10px;font-weight:600">${opts.itemName}${opts.sku ? ` <span style="color:${subText};font-weight:400">(SKU: ${opts.sku})</span>` : ''}</div>
+            <div style="margin-top:6px;color:${subText}">Current quantity: <strong>${opts.currentQuantity}</strong></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    ${opts.manageUrl ? `<a href="${opts.manageUrl}" style="display:inline-block;margin-top:16px;background:${brandColor};color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none">Review inventory</a>` : ''}
+  `
+  return baseLayout(title, body)
+}
