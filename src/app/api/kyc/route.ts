@@ -20,8 +20,22 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * limit
     const to = from + limit - 1
 
+    // For admins, use service role client to bypass RLS for wide queries
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const dbClient = (user.isAdmin && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
+      ? createRouteHandlerServiceClient()
+      : supabase
+
+    function createRouteHandlerServiceClient() {
+      // createClient requires URL + service key; can't use route handler cookie client
+      // We'll instantiate a standalone service client
+      const { createClient } = require('@supabase/supabase-js')
+      return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    }
+
     // First, get the verifications
-    let query = supabase
+    let query = dbClient
       .from('kyc_verifications')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -48,7 +62,7 @@ export async function GET(request: NextRequest) {
     const verificationsWithUsers = await Promise.all(
       (verifications || []).map(async (verification) => {
         // Get user data
-        const { data: userData } = await supabase
+        const { data: userData } = await dbClient
           .from('users')
           .select('id, name, email, kyc_status, email_verified, phone_verified, avatar, created_at')
           .eq('id', verification.user_id)
@@ -57,7 +71,7 @@ export async function GET(request: NextRequest) {
         // Get reviewer data if exists
         let reviewerData = null
         if (verification.reviewer_id) {
-          const { data: reviewer } = await supabase
+          const { data: reviewer } = await dbClient
             .from('users')
             .select('id, name')
             .eq('id', verification.reviewer_id)

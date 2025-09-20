@@ -66,104 +66,41 @@ export default function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [verificationFilter, setVerificationFilter] = useState('ALL');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, roleFilter, statusFilter, verificationFilter, page]);
 
   const fetchUsers = async () => {
     try {
-      // Mock data for user management
-      setUsers([
-        {
-          id: '1',
-          name: 'Sarah Johnson',
-          email: 'sarah.j@email.com',
-          phone: '+27 83 123 4567',
-          roles: ['CUSTOMER', 'INDIVIDUAL_LISTER'],
-          verified: true,
-          kycVerified: true,
-          status: 'ACTIVE',
-          createdAt: '2023-06-15T10:30:00Z',
-          lastLogin: '2024-01-15T08:30:00Z',
-          stats: {
-            totalListings: 12,
-            activeListings: 8,
-            totalBookings: 25,
-            completedBookings: 23,
-            totalSpent: 15420,
-            totalEarned: 28500,
-            averageRating: 4.8,
-            totalReviews: 18,
-          },
-        },
-        {
-          id: '2',
-          name: 'Mike Chen',
-          email: 'mike@techrentals.com',
-          phone: '+27 72 987 6543',
-          roles: ['BUSINESS_LISTER'],
-          verified: true,
-          kycVerified: false,
-          status: 'ACTIVE',
-          createdAt: '2023-08-20T14:15:00Z',
-          lastLogin: '2024-01-14T16:45:00Z',
-          stats: {
-            totalListings: 45,
-            activeListings: 38,
-            totalBookings: 156,
-            completedBookings: 142,
-            totalSpent: 0,
-            totalEarned: 185000,
-            averageRating: 4.6,
-            totalReviews: 89,
-          },
-        },
-        {
-          id: '3',
-          name: 'Emma Wilson',
-          email: 'emma.w@email.com',
-          phone: '+27 61 456 7890',
-          roles: ['CUSTOMER'],
-          verified: false,
-          kycVerified: false,
-          status: 'SUSPENDED',
-          createdAt: '2024-01-10T09:20:00Z',
-          lastLogin: '2024-01-12T11:30:00Z',
-          stats: {
-            totalListings: 0,
-            activeListings: 0,
-            totalBookings: 3,
-            completedBookings: 1,
-            totalSpent: 2850,
-            totalEarned: 0,
-            averageRating: 0,
-            totalReviews: 0,
-          },
-        },
-      ]);
+      setLoading(true);
+      const params = new URLSearchParams({
+        search: searchTerm,
+        role: roleFilter,
+        status: statusFilter,
+        verification: verificationFilter,
+        page: String(page),
+        limit: String(pageSize),
+      });
+      const res = await fetch(`/api/admin/users?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setUsers(data.data.items as User[]);
+      setTotal(data.data.total as number);
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsers([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone?.includes(searchTerm);
-    
-    const matchesRole = roleFilter === 'ALL' || user.roles.includes(roleFilter);
-    const matchesStatus = statusFilter === 'ALL' || user.status === statusFilter;
-    const matchesVerification = verificationFilter === 'ALL' || 
-      (verificationFilter === 'VERIFIED' && user.verified && user.kycVerified) ||
-      (verificationFilter === 'PARTIAL' && user.verified && !user.kycVerified) ||
-      (verificationFilter === 'UNVERIFIED' && !user.verified);
-
-    return matchesSearch && matchesRole && matchesStatus && matchesVerification;
-  });
+  const filteredUsers = users; // server filters applied
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -202,22 +139,8 @@ export default function AdminUsersPage() {
 
   const handleUserAction = async (userId: string, action: string) => {
     try {
-      // Mock action handling
+      // TODO: wire to admin action endpoints (suspend/ban/activate)
       console.log(`User ${action}: ${userId}`);
-      
-      // Update user status in local state
-      if (action === 'suspend' || action === 'ban' || action === 'activate') {
-        setUsers(prev => prev.map(user => {
-          if (user.id === userId) {
-            return {
-              ...user,
-              status: action === 'activate' ? 'ACTIVE' : 
-                     action === 'suspend' ? 'SUSPENDED' : 'BANNED'
-            };
-          }
-          return user;
-        }));
-      }
     } catch (error) {
       console.error('Error handling user action:', error);
     }
@@ -225,7 +148,7 @@ export default function AdminUsersPage() {
 
   const getStats = () => {
     return {
-      total: users.length,
+      total,
       active: users.filter(u => u.status === 'ACTIVE').length,
       suspended: users.filter(u => u.status === 'SUSPENDED').length,
       banned: users.filter(u => u.status === 'BANNED').length,
@@ -327,12 +250,12 @@ export default function AdminUsersPage() {
                 <Input
                   placeholder="Search users..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                   className="pl-10"
                 />
               </div>
               <div className="flex gap-2">
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setPage(1); }}>
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -344,7 +267,7 @@ export default function AdminUsersPage() {
                     <SelectItem value="CUSTOMER">Customer</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -355,7 +278,7 @@ export default function AdminUsersPage() {
                     <SelectItem value="BANNED">Banned</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={verificationFilter} onValueChange={setVerificationFilter}>
+                <Select value={verificationFilter} onValueChange={(v) => { setVerificationFilter(v); setPage(1); }}>
                   <SelectTrigger className="w-36">
                     <SelectValue />
                   </SelectTrigger>
@@ -519,6 +442,15 @@ export default function AdminUsersPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-gray-600">Page {page} of {Math.max(1, Math.ceil(total / pageSize))}</div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</Button>
+            <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / pageSize)} onClick={() => setPage(p => p + 1)}>Next</Button>
+          </div>
+        </div>
 
         {/* User Detail Modal */}
         {selectedUser && (
