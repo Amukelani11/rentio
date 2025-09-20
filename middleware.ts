@@ -31,6 +31,7 @@ export async function middleware(req: NextRequest) {
         metaRoles = (rows || []).map((r: any) => r.role)
       } catch {}
     }
+    console.log('[mw] onboarding check', { path: currentPath, skipCookie: !!skipCookie, roles: metaRoles })
     if (metaRoles.length > 0 && !currentPath.startsWith('/onboarding')) {
       return res
     }
@@ -114,6 +115,7 @@ export async function middleware(req: NextRequest) {
       currentPath.startsWith(route)
     )?.[1]
 
+    console.log('[mw] protected route', { path: currentPath, requiredRoles, userRoles })
     if (requiredRoles && !requiredRoles.some(role => userRoles.includes(role))) {
       // Redirect to unauthorized page if user doesn't have required role
       return NextResponse.redirect(new URL('/unauthorized', req.url))

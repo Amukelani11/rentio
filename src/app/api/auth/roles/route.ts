@@ -17,14 +17,18 @@ export async function POST(request: Request) {
     const meta = user.user_metadata || {}
     const roles: string[] = Array.isArray(meta.roles) ? meta.roles : []
     if (roles.includes(role)) {
+      console.log('[roles] already has role', { userId: user.id, role, roles })
       return NextResponse.json({ error: 'User already has this role' }, { status: 400 })
     }
     const newRoles = [...roles, role]
+    console.log('[roles] updating roles', { userId: user.id, add: role, newRoles })
     const { error: updateError } = await supabase.auth.updateUser({ data: { roles: newRoles } })
     if (updateError) {
+      console.error('[roles] updateUser error', updateError)
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
+    console.log('[roles] success', { userId: user.id, newRoles })
     return NextResponse.json({ 
       success: true, 
       message: `Role ${role} added successfully` 
