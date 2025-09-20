@@ -20,8 +20,17 @@ export async function middleware(req: NextRequest) {
   // NOTE: we use a direct SELECT (read-only) instead of calling the RPC which may perform
   // an INSERT and thus fail inside read-only transactions (error 25006).
   if (session && session.user && !skipCookie) {
-    // If user already has any role assigned, allow access without forcing onboarding
-    const metaRoles = Array.isArray(session.user.user_metadata?.roles) ? session.user.user_metadata.roles : []
+    // If user already has any role assigned (metadata or DB), allow access without forcing onboarding
+    let metaRoles = Array.isArray(session.user.user_metadata?.roles) ? session.user.user_metadata.roles : []
+    if (metaRoles.length === 0) {
+      try {
+        const { data: rows } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+        metaRoles = (rows || []).map((r: any) => r.role)
+      } catch {}
+    }
     if (metaRoles.length > 0 && !currentPath.startsWith('/onboarding')) {
       return res
     }
@@ -85,7 +94,20 @@ export async function middleware(req: NextRequest) {
 
     // Get user roles from database (you'll need to implement this)
     // For now, we'll check the user's metadata or use a simpler approach
-    const userRoles = session.user.user_metadata?.roles || []
+    let userRoles = Array.isArray(session.user.user_metadata?.roles) ? session.user.user_metadata.roles : []
+    if (userRoles.length === 0) {
+      try {
+        const { data: rows } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+        userRoles = (rows || []).map((r: any) => r.role)
+      } catch {}
+    }
+    if (userRoles.length === 0) {
+      // Treat as CUSTOMER by default to allow basic dashboard access
+      userRoles = [Role.CUSTOMER]
+    }
     
     // Check required roles for the current route
     const requiredRoles = Object.entries(protectedRoutes).find(([route]) => 
