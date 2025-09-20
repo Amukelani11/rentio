@@ -2,9 +2,6 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import RFind from '../../../public/assets/rfind.png'
-import RCamera from '../../../public/assets/rcamera.png'
-import BusinessShelve from '../../../public/assets/businessshelve.png'
 import { Button } from '@/components/ui/button'
 
 export default function OnboardingSelector() {
@@ -19,7 +16,7 @@ export default function OnboardingSelector() {
         <div className="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-3">
           <Link href="/onboarding/renter" className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-charcoal-600 dark:bg-charcoal-600">
             <div className="relative h-40 w-full overflow-hidden rounded-xl bg-white/60">
-              <Image src={RFind} alt="Find and book" fill className="object-contain" />
+              <img src="/assets/rfind.png" alt="Find and book" className="absolute inset-0 h-full w-full object-contain" />
             </div>
             <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-slate-50">I want to Rent Items</h3>
             <p className="text-sm text-gray-600 dark:text-slate-200">Find & book things nearby</p>
@@ -28,7 +25,7 @@ export default function OnboardingSelector() {
 
           <Link href="/onboarding/lister" className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-charcoal-600 dark:bg-charcoal-600">
             <div className="relative h-40 w-full overflow-hidden rounded-xl bg-white/60">
-              <Image src={RCamera} alt="Earn with your stuff" fill className="object-contain" />
+              <img src="/assets/rcamera.png" alt="Earn with your stuff" className="absolute inset-0 h-full w-full object-contain" />
             </div>
             <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-slate-50">I want to List Items</h3>
             <p className="text-sm text-gray-600 dark:text-slate-200">Earn with my stuff</p>
@@ -37,7 +34,7 @@ export default function OnboardingSelector() {
 
           <Link href="/onboarding/business" className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-charcoal-600 dark:bg-charcoal-600">
             <div className="relative h-40 w-full overflow-hidden rounded-xl bg-white/60">
-              <Image src={BusinessShelve} alt="Business onboarding" fill className="object-contain" />
+              <img src="/assets/businessshelve.png" alt="Business onboarding" className="absolute inset-0 h-full w-full object-contain" />
             </div>
             <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-slate-50">I run a Rental Business</h3>
             <p className="text-sm text-gray-600 dark:text-slate-200">Manage inventory, team, and packages</p>

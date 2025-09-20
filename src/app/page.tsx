@@ -4,16 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import HeroImg from '../../public/assets/rhero.png'
-import RDrill from '../../public/assets/rdrill.png'
-import RTent from '../../public/assets/rtent.png'
-import RDress from '../../public/assets/rdress.png'
-import RTrailer from '../../public/assets/rtrailer.png'
-import RCamera from '../../public/assets/rcamera.png'
-import RFind from '../../public/assets/rfind.png'
-import RPay from '../../public/assets/rpay.png'
-import RGetReturn from '../../public/assets/rget and return.png'
-import Envelope from '../../public/assets/envelope.svg'
+// use public/ string paths instead of static imports to avoid module resolution issues in Netlify
 import {
   Search,
   MapPin,
@@ -133,7 +124,7 @@ export default function HomePage() {
             <div className="relative mx-auto aspect-[4/3] w-full min-h-[380px] sm:min-h-[440px] md:min-h-[520px] overflow-hidden rounded-3xl">
             {/* Soft coral background shape */}
             <div className="pointer-events-none absolute -right-10 -top-10 h-[520px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(229,50,55,0.22),rgba(229,50,55,0.0))] blur-2xl" />
-              <Image src={HeroImg} alt="People renting items" fill className="absolute inset-0 object-cover" priority />
+              <img src="/assets/rhero.png" alt="People renting items" className="absolute inset-0 h-full w-full object-cover" />
           </div>
         </div>
       </section>
@@ -145,19 +136,19 @@ export default function HomePage() {
 
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
           {[
-            { name: 'Tools', img: RDrill },
-            { name: 'Tents', img: RTent },
-            { name: 'Dresses', img: RDress },
-            { name: 'Trailers', img: RTrailer },
-            { name: 'Cameras', img: RCamera },
-            { name: 'Electronics', img: RCamera },
+            { name: 'Tools', img: '/assets/rdrill.png' },
+            { name: 'Tents', img: '/assets/rtent.png' },
+            { name: 'Dresses', img: '/assets/rdress.png' },
+            { name: 'Trailers', img: '/assets/rtrailer.png' },
+            { name: 'Cameras', img: '/assets/rcamera.png' },
+            { name: 'Electronics', img: '/assets/rcamera.png' },
           ].map(({ name, img }) => (
             <Link
               key={name}
               href={`/browse?category=${encodeURIComponent(name.toLowerCase())}`}
               className="group relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-charcoal-600 dark:bg-charcoal-600"
             >
-              <Image src={img} alt={name} fill className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-105" />
+              <img src={img} alt={name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-black/0" />
               <div className="absolute bottom-3 left-3 rounded-md bg-white/90 px-2 py-1 text-sm font-medium text-gray-900 shadow-sm backdrop-blur">
                 {name}
@@ -176,7 +167,7 @@ export default function HomePage() {
             </div>
             <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl">
               <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-[radial-gradient(closest-side,rgba(229,50,55,0.18),rgba(229,50,55,0))] blur-xl" />
-              <Image src={RCamera} alt="List your items" fill className="absolute inset-0 object-cover" />
+              <img src="/assets/rcamera.png" alt="List your items" className="absolute inset-0 h-full w-full object-cover" />
             </div>
           </div>
         </div>
@@ -191,13 +182,13 @@ export default function HomePage() {
             <div className="pointer-events-none absolute left-[10%] right-[10%] top-20 hidden h-0.5 bg-slate-200 md:block dark:bg-charcoal-600" />
             <div className="grid gap-6 md:grid-cols-3">
                 {[
-                { img: RFind, title: 'Search & find', desc: 'Browse thousands of items near you.' },
-                { img: RPay, title: 'Book & pay', desc: 'Secure checkout with deposits and protection.' },
-                { img: RGetReturn, title: 'Enjoy & return', desc: "Use it, then return when you’re done." },
+                { img: '/assets/rfind.png', title: 'Search & find', desc: 'Browse thousands of items near you.' },
+                { img: '/assets/rpay.png', title: 'Book & pay', desc: 'Secure checkout with deposits and protection.' },
+                { img: '/assets/rget%20and%20return.png', title: 'Enjoy & return', desc: "Use it, then return when you’re done." },
               ].map(({ img, title, desc }) => (
                 <div key={title} className="relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-charcoal-600 dark:bg-charcoal-600">
                   <div className="mx-auto -mt-2 mb-4 h-24 w-24 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-charcoal-600">
-                  <Image src={img} alt={title} width={96} height={96} className="h-24 w-24 object-cover" />
+                  <img src={img} alt={title} width={96} height={96} className="h-24 w-24 object-cover" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-50">{title}</h3>
                   <p className="mt-2 text-sm text-gray-600 dark:text-slate-200">{desc}</p>
@@ -231,7 +222,7 @@ export default function HomePage() {
         <div className="container">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 text-center">
             <div className="relative -mb-1 h-12 w-12 overflow-hidden rounded-xl">
-              <Image src={Envelope} alt="Newsletter" width={48} height={48} />
+              <img src="/assets/envelope.svg" alt="Newsletter" width={48} height={48} />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-50">Join our newsletter</h3>
             <p className="text-sm text-gray-600 dark:text-slate-200">Get product updates, launch news, and rental tips.</p>
