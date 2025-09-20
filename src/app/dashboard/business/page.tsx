@@ -578,34 +578,52 @@ export default function BusinessProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label>Logo</Label>
-                <div className="mt-2 flex items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg">
-                  {business?.logo_url ? (
-                    <img src={business.logo_url} alt="Business logo" className="w-full h-full object-cover rounded-lg" />
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                      <p className="text-xs text-gray-500 mt-1">Upload Logo</p>
-                    </div>
-                  )}
-                </div>
+                <UploadButton.Area clickableId="upload-logo">
+                  <div className="mt-2 flex items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer">
+                    {business?.logo_url ? (
+                      <img src={business.logo_url} alt="Business logo" className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                        <p className="text-xs text-gray-600 mt-1">Add Logo</p>
+                      </div>
+                    )}
+                  </div>
+                </UploadButton.Area>
+                <p className="mt-2 text-xs text-gray-500">PNG or JPG, 512x512+ recommended. Max 2MB.</p>
                 {editing && (
-                  <UploadButton type="logo" onUploaded={(url) => handleInputChange('logo_url' as any, url)} />
+                  <UploadButton
+                    type="logo"
+                    inputId="upload-logo"
+                    onUploaded={(url) => handleInputChange('logo_url' as any, url)}
+                    existingUrl={business?.logo_url}
+                    maxSizeBytes={2 * 1024 * 1024}
+                  />
                 )}
               </div>
               <div>
                 <Label>Cover Image</Label>
-                <div className="mt-2 flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg">
-                  {business?.cover_image_url ? (
-                    <img src={business.cover_image_url} alt="Cover image" className="w-full h-full object-cover rounded-lg" />
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                      <p className="text-xs text-gray-500 mt-1">Upload Cover Image</p>
-                    </div>
-                  )}
-                </div>
+                <UploadButton.Area clickableId="upload-cover">
+                  <div className="mt-2 flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer">
+                    {business?.cover_image_url ? (
+                      <img src={business.cover_image_url} alt="Cover image" className="w-full h-full object-cover rounded-lg" />
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                        <p className="text-xs text-gray-600 mt-1">Add Cover Image</p>
+                      </div>
+                    )}
+                  </div>
+                </UploadButton.Area>
+                <p className="mt-2 text-xs text-gray-500">PNG or JPG, 1600x400+ recommended. Max 5MB.</p>
                 {editing && (
-                  <UploadButton type="cover" onUploaded={(url) => handleInputChange('cover_image_url' as any, url)} />
+                  <UploadButton
+                    type="cover"
+                    inputId="upload-cover"
+                    onUploaded={(url) => handleInputChange('cover_image_url' as any, url)}
+                    existingUrl={business?.cover_image_url}
+                    maxSizeBytes={5 * 1024 * 1024}
+                  />
                 )}
               </div>
             </div>
@@ -616,12 +634,17 @@ export default function BusinessProfilePage() {
   );
 }
 
-function UploadButton({ type, onUploaded }: { type: 'logo' | 'cover'; onUploaded: (url: string) => void }) {
+function UploadButton({ type, onUploaded, inputId, existingUrl, maxSizeBytes }: { type: 'logo' | 'cover'; onUploaded: (url: string) => void; inputId?: string; existingUrl?: string; maxSizeBytes?: number }) {
   const [uploading, setUploading] = useState(false)
-  const inputId = `upload-${type}`
+  const id = inputId || `upload-${type}`
   const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (maxSizeBytes && file.size > maxSizeBytes) {
+      alert('File too large')
+      e.target.value = ''
+      return
+    }
     setUploading(true)
     try {
       const body = new FormData()
@@ -637,12 +660,20 @@ function UploadButton({ type, onUploaded }: { type: 'logo' | 'cover'; onUploaded
   }
   return (
     <div className="mt-2 flex items-center gap-2">
-      <input id={inputId} type="file" accept="image/*" className="hidden" onChange={onChange} />
-      <label htmlFor={inputId}>
+      <input id={id} type="file" accept="image/*" className="hidden" onChange={onChange} />
+      <label htmlFor={id}>
         <Button variant="outline" size="sm" disabled={uploading}>
-          {uploading ? 'Uploading…' : type === 'logo' ? 'Change Logo' : 'Change Cover'}
+          {uploading ? 'Uploading…' : existingUrl ? (type === 'logo' ? 'Change Logo' : 'Change Cover') : (type === 'logo' ? 'Add Logo' : 'Add Cover')}
         </Button>
       </label>
+    </div>
+  )
+}
+
+UploadButton.Area = function Area({ children, clickableId }: { children: React.ReactNode; clickableId: string }) {
+  return (
+    <div onClick={() => document.getElementById(clickableId)?.click()}>
+      {children}
     </div>
   )
 }
