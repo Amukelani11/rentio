@@ -201,3 +201,5 @@ CREATE POLICY "Admin can view all stock alerts" ON stock_alerts
     );
 
 
+
+

@@ -6,3 +6,5 @@ ALTER TABLE businesses
   ADD COLUMN IF NOT EXISTS postal_code TEXT;
 
 
+
+

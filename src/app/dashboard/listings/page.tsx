@@ -80,6 +80,12 @@ export default function ListingsPage() {
         const listingsData = await listingsResponse.json();
         setListings(listingsData.data.items);
         setTotalPages(listingsData.data.totalPages);
+      } else {
+        const errorData = await listingsResponse.json();
+        if (errorData.error === 'Business profile not found. Please complete your business profile first.') {
+          // Show message for business users who need to complete their profile
+          console.warn('Business profile not found');
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error);

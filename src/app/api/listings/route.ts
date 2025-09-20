@@ -34,7 +34,28 @@ export async function GET(request: NextRequest) {
     // Filter by user's listings
     const isBusiness = Array.isArray(user.roles) ? user.roles.includes(UserRole.BUSINESS_LISTER) : false
     if (isBusiness) {
-      query = query.eq('business_id', user.id)
+      // For business users, get their business ID first
+      const { data: business } = await admin
+        .from('businesses')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (business) {
+        query = query.eq('business_id', business.id)
+      } else {
+        // Business user without business profile - return empty results
+        return NextResponse.json({
+          success: true,
+          data: {
+            items: [],
+            total: 0,
+            page,
+            pageSize: limit,
+            totalPages: 0,
+          },
+        })
+      }
     } else {
       query = query.eq('user_id', user.id)
     }
@@ -181,14 +202,32 @@ export async function POST(request: NextRequest) {
     const statusToSave = (body.status === 'ACTIVE') ? 'PENDING' : (body.status || 'DRAFT')
 
     const isBusinessForPost = Array.isArray(user.roles) ? user.roles.includes(UserRole.BUSINESS_LISTER) : false
+    let businessId: string | null = null
+    let userId: string | null = dbUserId
+
+    if (isBusinessForPost) {
+      // For business users, get their business ID
+      const { data: business } = await admin
+        .from('businesses')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (business) {
+        businessId = business.id
+        userId = null
+      } else {
+        return NextResponse.json({ error: 'Business profile not found. Please complete your business profile first.' }, { status: 400 })
+      }
+    }
+
     const dataToInsert: any = {
       title,
       slug,
       description,
       category_id: categoryId,
-      // If business lister, assign business_id, otherwise assign user_id
-      user_id: isBusinessForPost ? null : dbUserId,
-      business_id: isBusinessForPost ? dbUserId : null,
+      user_id: userId,
+      business_id: businessId,
       price_daily: parseFloat(priceDaily),
       price_weekly: priceWeekly ? parseFloat(priceWeekly) : null,
       weekly_discount: weeklyDiscount || 0,

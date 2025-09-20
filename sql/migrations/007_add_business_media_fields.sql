@@ -5,3 +5,5 @@ ALTER TABLE businesses
   ADD COLUMN IF NOT EXISTS cover_image_url TEXT;
 
 
+
+

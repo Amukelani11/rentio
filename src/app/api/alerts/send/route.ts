@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { data: owner, error: ownerErr } = await supabase
       .from('users')
       .select('email, name')
-      .eq('id', alert.business.user_id)
+      .eq('id', (alert as any).business.user_id)
       .single()
 
     if (ownerErr || !owner?.email) return NextResponse.json({ error: 'Owner email not found' }, { status: 404 })
@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
     // Compose email
     const html = stockAlertEmail({
       recipientName: owner.name || owner.email,
-      businessName: alert.business.name,
-      itemName: alert.item.name || alert.item.listing?.title || 'Inventory Item',
-      sku: alert.item.sku || undefined,
-      currentQuantity: alert.item.quantity ?? 0,
+      businessName: (alert as any).business.name,
+      itemName: (alert as any).item.name || (alert as any).item.listing?.title || 'Inventory Item',
+      sku: (alert as any).item.sku || undefined,
+      currentQuantity: (alert as any).item.quantity ?? 0,
       alertType: alert.alert_type,
       thresholdText:
         (alert.threshold_quantity ? `Qty ≤ ${alert.threshold_quantity}` : undefined) ||
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (alert.notify_email) {
       await sendEmail({
         to: owner.email,
-        subject: `Inventory Alert: ${alert.alert_type} - ${alert.item.name || alert.item.listing?.title || 'Item'}`,
+        subject: `Inventory Alert: ${alert.alert_type} - ${(alert as any).item.name || (alert as any).item.listing?.title || 'Item'}`,
         html,
       })
     }
@@ -79,5 +79,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+
 
 

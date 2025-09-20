@@ -20,6 +20,7 @@ Rentio is a peer-to-peer and business rental marketplace for South Africa built 
 - Database schema migrations should be managed via SQL migration files in `/sql` directory
 - Database connection uses Supabase JS client instead of Drizzle (Drizzle has been removed)
 - Database utilities are located in `src/lib/db.ts` (shim that throws errors for Drizzle usage)
+- **Note**: The SQL_MIGRATION_GUIDE.md references Drizzle helper functions that have been removed. Use direct Supabase JS client calls instead.
 
 ### Database Setup
 - Use `node setup-database.js` to initialize database schema
@@ -101,6 +102,7 @@ src/
 3. Server components get auth user via `getAuthUser()` in `src/lib/auth.ts`
 4. User onboarding is enforced before accessing protected routes via middleware
 5. Client components use auth context for user state
+6. **Important**: The middleware.ts file checks `onboarding_progress` table and redirects users to complete onboarding if not finished
 
 ### Auth System Details
 - User creation syncs Supabase auth with local database
@@ -186,3 +188,4 @@ Required environment variables:
 - **Payments**: Multiple payment providers (Stripe, Yoco, PayFast, PayStack) with escrow system
 - **Database Migration**: Conversion from Prisma to raw SQL (see SQL_MIGRATION_GUIDE.md)
 - **Middleware**: Comprehensive route protection with onboarding flow enforcement
+- **Onboarding**: Mandatory onboarding flow with three paths (Renter, Individual Lister, Business Lister) tracked in `onboarding_progress` table

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const supabase = createRouteHandlerClient({ cookies })
     const user = await getAuthUser(supabase)
 
-    if (!user || !user.roles.includes('BUSINESS_LISTER')) {
+    if (!user || !user.roles.includes('BUSINESS_LISTER' as any)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const supabase = createRouteHandlerClient({ cookies })
     const user = await getAuthUser(supabase)
 
-    if (!user || !user.roles.includes('BUSINESS_LISTER')) {
+    if (!user || !user.roles.includes('BUSINESS_LISTER' as any)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
