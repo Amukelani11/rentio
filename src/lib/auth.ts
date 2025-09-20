@@ -88,10 +88,19 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
       }
     }
 
-    // Get user roles from auth metadata (avoid RLS issues on user_roles).
+    // Get user roles from auth metadata; if empty, fall back to DB user_roles (RLS allows own read)
     let rolesList: Role[] = []
     const metaRoles = session.user.user_metadata?.roles
     rolesList = Array.isArray(metaRoles) ? metaRoles : []
+    if (rolesList.length === 0) {
+      try {
+        const { data: rows } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', (user as any).id)
+        rolesList = (rows || []).map((r: any) => r.role)
+      } catch {}
+    }
 
     // Get profile data including is_admin using regular client (not admin)
     let isAdmin = false
