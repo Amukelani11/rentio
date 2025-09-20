@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { getAuthUser } from '@/lib/auth'
 
@@ -24,15 +25,8 @@ export async function GET(request: NextRequest) {
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
     const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
     const dbClient = (user.isAdmin && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
-      ? createRouteHandlerServiceClient()
+      ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
       : supabase
-
-    function createRouteHandlerServiceClient() {
-      // createClient requires URL + service key; can't use route handler cookie client
-      // We'll instantiate a standalone service client
-      const { createClient } = require('@supabase/supabase-js')
-      return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    }
 
     // First, get the verifications
     let query = dbClient
