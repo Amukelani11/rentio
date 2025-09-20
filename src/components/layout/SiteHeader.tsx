@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
+import RentioLogo from '../../../public/assets/rentiologo.png'
 
 export default function SiteHeader() {
   const pathname = usePathname()
@@ -40,10 +41,12 @@ export default function SiteHeader() {
             <div className="flex items-center gap-8">
               <Link href="/" className="block">
                 <span className="sr-only">Rentio</span>
-                <img
-                  src="/assets/rentiologo.png"
+                <Image
+                  src={RentioLogo}
                   alt="Rentio"
-                  className={`${scrolled ? 'h-6' : 'h-8'} w-auto object-contain`}
+                  height={scrolled ? 24 : 32}
+                  className="w-auto object-contain"
+                  priority
                 />
               </Link>
               <nav className="hidden md:flex items-center gap-6 text-sm">
