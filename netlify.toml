@@ -5,11 +5,17 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Ensure requests to /assets/* are served as static files without interference
+# Static file handling
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+# Fallback for static assets
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
   status = 200
-  force = true
+  force = false
 
 
