@@ -165,7 +165,7 @@ export default function ListingDetailPage() {
   
   return {
     name: listingData?.user?.name || listingData?.business?.name || 'Owner',
-    avatar: listingData?.user?.avatar || listingData?.business?.logo,
+    avatar: listingData?.user?.avatar || listingData?.business?.logo_url,
     type: listingData?.business ? 'business' : 'individual',
     averageRating: listingData?.user?.average_rating || listingData?.business?.average_rating || 0,
     totalReviews: listingData?.user?.total_reviews || listingData?.business?.total_reviews || 0,
@@ -383,7 +383,7 @@ export default function ListingDetailPage() {
                       <img 
                         src={ownerInfo.avatar} 
                         alt={ownerInfo.name}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full ${ownerInfo.type === 'business' ? 'object-contain p-2' : 'object-cover'}`}
                       />
                     ) : (
                       <User className="h-8 w-8 text-gray-400" />
