@@ -1,3 +1,5 @@
+'use client'
+
 import { Phone, Mail, MapPin, Clock, MessageSquare, Users, Building2, Star, CheckCircle, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
