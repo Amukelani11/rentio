@@ -256,7 +256,7 @@ export default function ListingDetailPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             {/* Image Gallery */}
             <Card>
               <div 
@@ -605,10 +605,11 @@ export default function ListingDetailPage() {
               </TabsContent>
             </Tabs>
           </div>
-        </div>
 
-        {/* Booking Section */}
-        <div className="mt-8 lg:max-w-4xl mx-auto">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
+              {/* Booking Section */}
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">
@@ -749,8 +750,10 @@ export default function ListingDetailPage() {
                 </div>
               </CardContent>
             </Card>
+            </div>
           </div>
         </div>
+      </div>
       {composeOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
