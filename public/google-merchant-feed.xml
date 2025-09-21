@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+  <channel>
+    <title>Rentio - South African Rental Marketplace</title>
+    <link>https://rentio.co.za</link>
+    <description>Rentio is South Africa's leading peer-to-peer rental marketplace. Rent items from neighbors and local businesses with secure payments and KYC verification.</description>
+    <language>en</language>
+    <lastBuildDate>2024-12-01T00:00:00+02:00</lastBuildDate>
+
+    <!-- Main Services - Rental Categories -->
+    <item>
+      <g:id>service-tools-rentals</g:id>
+      <g:title>Tool Rentals South Africa | Rentio</g:title>
+      <g:description>Rent power tools, hand tools, and construction equipment from local owners. Affordable daily and weekly rates with secure payments.</g:description>
+      <g:link>https://rentio.co.za/browse?category=tools</g:link>
+      <g:image_link>https://rentio.co.za/images/tools-category.jpg</g:image_link>
+      <g:condition>new</g:condition>
+      <g:price>50.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Home &gt; Tools &amp; Hardware</g:google_product_category>
+      <g:product_type>Tools &gt; Rentals</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Tools</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-electronics-rentals</g:id>
+      <g:title>Electronics Rentals South Africa | Rentio</g:title>
+      <g:description>Rent cameras, laptops, phones, and audio equipment. Latest technology at affordable prices with insurance included.</g:description>
+      <g:link>https://rentio.co.za/browse?category=electronics</g:link>
+      <g:image_link>https://rentio.co.za/images/electronics-category.jpg</g:image_link>
+      <g:condition>new</g:condition>
+      <g:price>100.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Electronics</g:google_product_category>
+      <g:product_type>Electronics &gt; Rentals</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Electronics</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-furniture-rentals</g:id>
+      <g:title>Furniture Rentals South Africa | Rentio</g:title>
+      <g:description>Rent home furniture, office furniture, and event furniture. Short and long-term rentals available nationwide.</g:description>
+      <g:link>https://rentio.co.za/browse?category=furniture</g:link>
+      <g:image_link>https://rentio.co.za/images/furniture-category.jpg</g:image_link>
+      <g:condition>refurbished</g:condition>
+      <g:price>200.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Home &gt; Furniture</g:google_product_category>
+      <g:product_type>Furniture &gt; Rentals</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Furniture</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-party-equipment-rentals</g:id>
+      <g:title>Party Equipment Rentals South Africa | Rentio</g:title>
+      <g:description>Rent party tents, chairs, tables, sound systems, and decor. Perfect for weddings, birthdays, and corporate events.</g:description>
+      <g:link>https://rentio.co.za/browse?category=party</g:link>
+      <g:image_link>https://rentio.co.za/images/party-category.jpg</g:image_link>
+      <g:condition>new</g:condition>
+      <g:price>150.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Home &gt; Event &amp; Party Supplies</g:google_product_category>
+      <g:product_type>Party Supplies &gt; Rentals</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Party Equipment</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-camera-rentals</g:id>
+      <g:title>Camera & Photography Rentals South Africa | Rentio</g:title>
+      <g:description>Professional cameras, lenses, drones, and photography equipment. Daily, weekly, and monthly rental options available.</g:description>
+      <g:link>https://rentio.co.za/browse?category=camera</g:link>
+      <g:image_link>https://rentio.co.za/images/camera-category.jpg</g:image_link>
+      <g:condition>new</g:condition>
+      <g:price>300.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Electronics &gt; Cameras &amp; Optics</g:google_product_category>
+      <g:product_type>Cameras &gt; Rentals</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Camera Equipment</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-sports-rentals</g:id>
+      <g:title>Sports Equipment Rentals South Africa | Rentio</g:title>
+      <g:description>Rent bicycles, camping gear, fitness equipment, and outdoor adventure gear. Explore South Africa affordably.</g:description>
+      <g:link>https://rentio.co.za/browse?category=sports</g:link>
+      <g:image_link>https://rentio.co.za/images/sports-category.jpg</g:image_link>
+      <g:condition>refurbished</g:condition>
+      <g:price>80.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Sports &gt; Sporting Goods</g:google_product_category>
+      <g:product_type>Sports &gt; Rentals</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Sports Equipment</g:custom_label_1>
+    </item>
+
+    <!-- Business Services -->
+    <item>
+      <g:id>business-account-free</g:id>
+      <g:title>Free Individual Account | Rentio</g:title>
+      <g:description>Start renting or listing items for free. 5% service fee on successful rentals. Perfect for occasional users.</g:description>
+      <g:link>https://rentio.co.za/business</g:link>
+      <g:image_link>https://rentio.co.za/images/business-free.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Membership</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Business Service</g:custom_label_0>
+      <g:custom_label_1>Free Account</g:custom_label_1>
+      <g:shipping>0:0:ZAR</g:shipping>
+    </item>
+
+    <item>
+      <g:id>business-account-premium</g:id>
+      <g:title>Business Account Premium | Rentio</g:title>
+      <g:description>Professional rental business tools with team management, advanced analytics, and reduced fees. R199/month + 3% per transaction.</g:description>
+      <g:link>https://rentio.co.za/business</g:link>
+      <g:image_link>https://rentio.co.za/images/business-premium.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>199.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Business Subscription</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Business Service</g:custom_label_0>
+      <g:custom_label_1>Premium Account</g:custom_label_1>
+      <g:subscription_period>month</g:subscription_period>
+    </item>
+
+    <!-- Main Pages as Services -->
+    <item>
+      <g:id>service-homepage</g:id>
+      <g:title>Rentio - South African Rental Marketplace</g:title>
+      <g:description>South Africa's trusted peer-to-peer rental marketplace. Rent anything from tools to furniture with secure payments and KYC verification.</g:description>
+      <g:link>https://rentio.co.za</g:link>
+      <g:image_link>https://rentio.co.za/images/og-homepage.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Marketplace</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Main Page</g:custom_label_0>
+      <g:custom_label_1>Homepage</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-safety-guide</g:id>
+      <g:title>Safety Guide for Rentals | Rentio</g:title>
+      <g:description>Comprehensive safety guidelines for secure peer-to-peer rentals in South Africa. Learn how to protect yourself and build trust.</g:description>
+      <g:link>https://rentio.co.za/safety</g:link>
+      <g:image_link>https://rentio.co.za/images/safety-guide.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Safety Guide</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Footer Page</g:custom_label_0>
+      <g:custom_label_1>Safety</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-fees-pricing</g:id>
+      <g:title>Fees & Pricing | Rentio</g:title>
+      <g:description>Transparent pricing structure for Rentio's rental marketplace. 5% service fee on successful rentals. No hidden costs.</g:description>
+      <g:link>https://rentio.co.za/fees</g:link>
+      <g:image_link>https://rentio.co.za/images/fees-pricing.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Pricing Information</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Footer Page</g:custom_label_0>
+      <g:custom_label_1>Fees & Pricing</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-business-accounts</g:id>
+      <g:title>Business Accounts | Rentio</g:title>
+      <g:description>Professional rental business solutions for South African companies. Manage teams, inventory, and grow your rental business.</g:description>
+      <g:link>https://rentio.co.za/business</g:link>
+      <g:image_link>https://rentio.co.za/images/business-accounts.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Business Services</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Footer Page</g:custom_label_0>
+      <g:custom_label_1>Business Accounts</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-contact-support</g:id>
+      <g:title>Contact Support | Rentio</g:title>
+      <g:description>Get in touch with Rentio's online support team. We're here to help with all your rental marketplace questions and support needs.</g:description>
+      <g:link>https://rentio.co.za/contact</g:link>
+      <g:image_link>https://rentio.co.za/images/contact-support.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Customer Support</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Footer Page</g:custom_label_0>
+      <g:custom_label_1>Contact Support</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-terms-of-service</g:id>
+      <g:title>Terms of Service | Rentio</g:title>
+      <g:description>Comprehensive terms of service for Rentio's peer-to-peer rental marketplace. Understand your rights and responsibilities.</g:description>
+      <g:link>https://rentio.co.za/terms</g:link>
+      <g:image_link>https://rentio.co.za/images/terms-service.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Legal Terms</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Footer Page</g:custom_label_0>
+      <g:custom_label_1>Terms of Service</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-privacy-policy</g:id>
+      <g:title>Privacy Policy | Rentio</g:title>
+      <g:description>Rentio's privacy policy compliant with POPIA. Learn how we collect, use, and protect your personal information in South Africa.</g:description>
+      <g:link>https://rentio.co.za/privacy</g:link>
+      <g:image_link>https://rentio.co.za/images/privacy-policy.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Privacy Policy</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Footer Page</g:custom_label_0>
+      <g:custom_label_1>Privacy Policy</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-help-center</g:id>
+      <g:title>Help Center | Rentio</g:title>
+      <g:description>Comprehensive help center for Rentio's rental marketplace. Find answers to common questions, troubleshooting guides, and support resources.</g:description>
+      <g:link>https://rentio.co.za/help</g:link>
+      <g:image_link>https://rentio.co.za/images/help-center.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>0.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Help Center</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Footer Page</g:custom_label_0>
+      <g:custom_label_1>Help Center</g:custom_label_1>
+    </item>
+
+    <!-- Additional Services -->
+    <item>
+      <g:id>service-secure-rentals</g:id>
+      <g:title>Secure Rental Service | Rentio</g:title>
+      <g:description>Secure peer-to-peer rentals with KYC verification, escrow payments, and comprehensive insurance coverage.</g:description>
+      <g:link>https://rentio.co.za/how-it-works</g:link>
+      <g:image_link>https://rentio.co.za/images/secure-rentals.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>5.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Secure Rentals</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Secure Rentals</g:custom_label_1>
+    </item>
+
+    <item>
+      <g:id>service-insurance-coverage</g:id>
+      <g:title>Rental Insurance Coverage | Rentio</g:title>
+      <g:description>Comprehensive insurance coverage for all rentals through Rentio. Protection against damage, theft, and liability.</g:description>
+      <g:link>https://rentio.co.za/how-it-works</g:link>
+      <g:image_link>https://rentio.co.za/images/insurance-coverage.jpg</g:image_link>
+      <g:condition>service</g:condition>
+      <g:price>25.00 ZAR</g:price>
+      <g:availability>in stock</g:availability>
+      <g:google_product_category>Services</g:google_product_category>
+      <g:product_type>Services &gt; Insurance</g:product_type>
+      <g:brand>Rentio Marketplace</g:brand>
+      <g:online_only>true</g:online_only>
+      <g:adult>false</g:adult>
+      <g:is_bundle>false</g:is_bundle>
+      <g:custom_label_0>Service</g:custom_label_0>
+      <g:custom_label_1>Insurance</g:custom_label_1>
+    </item>
+
+  </channel>
+</rss>

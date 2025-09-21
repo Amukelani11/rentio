@@ -2,9 +2,61 @@ import { FileText, Shield, Users, CreditCard, MapPin, AlertTriangle, CheckCircle
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import PageSEO from '@/components/SEO/PageSEO'
 
 export default function TermsPage() {
+  const faqData = [
+    {
+      question: "What are the main terms of using Rentio?",
+      answer: "The main terms include eligibility requirements (18+ years old), proper account registration, following listing guidelines, secure payment processing, and maintaining professional conduct with other users."
+    },
+    {
+      question: "What items are prohibited from being rented on Rentio?",
+      answer: "Prohibited items include illegal goods, weapons, stolen property, hazardous materials, prescription medications, and any items that violate South African law or platform policies."
+    },
+    {
+      question: "How does Rentio handle payment disputes?",
+      answer: "Rentio provides a structured dispute resolution process. Users can report issues, which are reviewed by our team. We may hold payments in escrow until disputes are resolved fairly."
+    },
+    {
+      question: "What are my responsibilities as a user?",
+      answer: "Users must provide accurate information, maintain professional communication, follow safety guidelines, comply with South African laws, and respect the rights and property of others."
+    },
+    {
+      question: "How can I terminate my Rentio account?",
+      answer: "You can terminate your account by contacting support. Active rentals must be completed, and any pending payments or disputes must be resolved before account closure."
+    }
+  ]
+
   return (
+    <>
+      <PageSEO
+        title="Terms of Service | Rentio"
+        description="Comprehensive terms of service for Rentio's peer-to-peer rental marketplace in South Africa. Understand your rights and responsibilities."
+        keywords={[
+          "rental terms of service",
+          "peer to peer rental terms",
+          "south african rental agreement",
+          "rental platform terms",
+          "rental marketplace policies",
+          "rental user agreement",
+          "rental terms and conditions",
+          "south african rental terms",
+          "rental platform policies",
+          "rental marketplace rules"
+        ]}
+        canonical="https://rentio.co.za/terms"
+        openGraph={{
+          type: 'article',
+          title: 'Terms of Service | Rentio',
+          description: 'Comprehensive terms of service for Rentio\'s peer-to-peer rental marketplace.',
+        }}
+        faq={faqData}
+        breadcrumbs={[
+          { name: 'Home', url: 'https://rentio.co.za' },
+          { name: 'Terms of Service', url: 'https://rentio.co.za/terms' }
+        ]}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white">

@@ -1,6 +1,7 @@
 import { Shield, Lock, Eye, Database, Share2, Trash2, Settings, Globe, Mail, Phone, MapPin, User, CreditCard, Camera, MessageSquare, Edit, Pause, Download, X, Brain, Users, FileText } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import PageSEO from '@/components/SEO/PageSEO'
 
 export default function PrivacyPolicyPage() {
   const dataCategories = [
@@ -190,7 +191,58 @@ export default function PrivacyPolicyPage() {
     }
   ]
 
+  const faqData = [
+    {
+      question: "What personal information does Rentio collect?",
+      answer: "Rentio collects contact information, profile details, identification documents for KYC verification, payment information, location data, and communications necessary for rental transactions and platform security."
+    },
+    {
+      question: "How does Rentio protect my personal data?",
+      answer: "We use industry-standard encryption, secure servers, regular security audits, access controls, and comply with POPIA. Your data is stored securely and only accessible to authorized personnel."
+    },
+    {
+      question: "Does Rentio share my information with third parties?",
+      answer: "We only share necessary information with payment processors, identity verification services, and as required by law. We never sell your personal information to third parties for marketing purposes."
+    },
+    {
+      question: "How can I access or delete my personal data?",
+      answer: "You can access, update, or delete your personal information through your account settings or by contacting our data protection officer at privacy@rentio.co.za."
+    },
+    {
+      question: "Is Rentio compliant with South African privacy laws?",
+      answer: "Yes, Rentio is fully compliant with the Protection of Personal Information Act (POPIA) and other relevant South African privacy regulations."
+    }
+  ]
+
   return (
+    <>
+      <PageSEO
+        title="Privacy Policy | Rentio"
+        description="Rentio's comprehensive privacy policy compliant with POPIA. Learn how we collect, use, and protect your personal information in South Africa."
+        keywords={[
+          "rentio privacy policy",
+          "south african privacy policy",
+          "popia compliance rental",
+          "rental marketplace privacy",
+          "peer to peer rental privacy",
+          "data protection south africa",
+          "rental platform privacy",
+          "personal information protection",
+          "rental data security",
+          "south african rental privacy"
+        ]}
+        canonical="https://rentio.co.za/privacy"
+        openGraph={{
+          type: 'article',
+          title: 'Privacy Policy | Rentio',
+          description: 'Rentio\'s comprehensive privacy policy compliant with POPIA and South African data protection laws.',
+        }}
+        faq={faqData}
+        breadcrumbs={[
+          { name: 'Home', url: 'https://rentio.co.za' },
+          { name: 'Privacy Policy', url: 'https://rentio.co.za/privacy' }
+        ]}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">

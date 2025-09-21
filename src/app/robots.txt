@@ -1,0 +1,115 @@
+# Rentio Robots.txt - South African Rental Marketplace
+# Website: https://rentio.co.za
+
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Allow all search engines to access important directories
+User-agent: Googlebot
+Allow: /
+Allow: /browse/
+Allow: /help/
+Allow: /safety/
+Allow: /fees/
+Allow: /business/
+Allow: /contact/
+Allow: /terms/
+Allow: /privacy/
+
+# Block access to sensitive areas
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /onboarding/
+Disallow: /_next/
+Disallow: /static/
+Disallow: *.json$
+Disallow: *.js$
+Disallow: *.css$
+
+# Block common bot directories
+Disallow: /cgi-bin/
+Disallow: /tmp/
+Disallow: /cache/
+
+# Specific bot settings
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+# Image and media indexing
+User-agent: Googlebot-Image
+Allow: /assets/
+Allow: /images/
+Allow: /uploads/
+
+# Sitemap location
+Sitemap: https://rentio.co.za/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Additional directives for better SEO
+# Allow search engines to crawl CSS and JS files for proper rendering
+User-agent: *
+Allow: *.css$
+Allow: *.js$
+
+# Block access to development and testing environments
+Disallow: /dev/
+Disallow: /staging/
+Disallow: /test/
+
+# Block access to user profile and sensitive data
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /account/
+Disallow: /messages/
+Disallow: /notifications/
+
+# Allow search engines to find important pages but block duplicate content
+Disallow: /browse?sort=
+Disallow: /browse?filter=
+Disallow: /browse?page=2
+Disallow: /browse?page=3
+Disallow: /browse?page=4
+Disallow: /browse?page=5
+
+# Environmental variables and config files
+Disallow: *.env$
+Disallow: *.config$
+Disallow: /config/
+
+# Log files
+Disallow: *.log$
+Disallow: /logs/
+
+# Temporary files
+Disallow: /tmp/
+Disallow: /temp/
+
+# Backup files
+Disallow: *.bak$
+Disallow: *.backup$
+
+# Version control
+Disallow: /.git/
+Disallow: /.svn/
+
+# SEO optimization: Allow important structured data
+Allow: /api/schema/
+Allow: /api/structured-data/
+
+# Performance optimization
+Allow: /_next/static/
+Allow: /static/

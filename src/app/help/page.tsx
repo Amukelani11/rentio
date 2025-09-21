@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import PageSEO from '@/components/SEO/PageSEO'
 
 export default function HelpCenterPage() {
   const helpCategories = [
@@ -270,7 +271,58 @@ export default function HelpCenterPage() {
     }
   ]
 
+  const faqData = [
+    {
+      question: "How do I get started with Rentio?",
+      answer: "Getting started is easy! Sign up for an account, complete your profile verification, and you can start browsing listings or create your first rental listing. Our onboarding process will guide you through each step."
+    },
+    {
+      question: "What payment methods does Rentio accept?",
+      answer: "Rentio accepts various payment methods including credit/debit cards, EFT, Yoco, PayFast, and PayStack. All payments are processed securely through our encrypted payment system."
+    },
+    {
+      question: "How does the rental process work?",
+      answer: "Browse listings, select your rental period, book the item, complete payment through our secure system, arrange pickup or delivery with the lister, enjoy your rental, and return the item in good condition."
+    },
+    {
+      question: "What should I do if I have a problem with a rental?",
+      answer: "Contact the lister first to resolve the issue. If that doesn't work, use our dispute resolution system or contact support. We have processes in place to handle various rental issues fairly."
+    },
+    {
+      question: "How does Rentio ensure user safety?",
+      answer: "We implement KYC verification, secure payment processing, user reviews, identity verification, and comprehensive safety guidelines. All users are verified before they can complete transactions."
+    }
+  ]
+
   return (
+    <>
+      <PageSEO
+        title="Help Center | Rentio"
+        description="Comprehensive help center for Rentio's peer-to-peer rental marketplace. Find answers to common questions, troubleshooting guides, and support resources."
+        keywords={[
+          "rental help center",
+          "peer to peer rental help",
+          "south african rental support",
+          "rental marketplace assistance",
+          "rental troubleshooting",
+          "rental platform help",
+          "rental faq",
+          "rental user guide",
+          "rental support south africa",
+          "rental marketplace help"
+        ]}
+        canonical="https://rentio.co.za/help"
+        openGraph={{
+          type: 'article',
+          title: 'Help Center | Rentio',
+          description: 'Comprehensive help center for Rentio\'s peer-to-peer rental marketplace with FAQs and guides.',
+        }}
+        faq={faqData}
+        breadcrumbs={[
+          { name: 'Home', url: 'https://rentio.co.za' },
+          { name: 'Help Center', url: 'https://rentio.co.za/help' }
+        ]}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-coral-600 to-coral-700 text-white">

@@ -3,9 +3,61 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import PageSEO from '@/components/SEO/PageSEO'
 
 export default function BusinessPage() {
+  const faqData = [
+    {
+      question: "What is a Business account on Rentio?",
+      answer: "A Business account is designed for companies and professional listers who want to manage multiple listings, team members, and access advanced business tools for their rental operations."
+    },
+    {
+      question: "How much does a Business account cost?",
+      answer: "Business accounts cost R199 per month plus a 3% transaction fee on successful rentals. This is lower than the standard 5% fee for individual accounts."
+    },
+    {
+      question: "What features are included in the Business account?",
+      answer: "Business accounts include team management, advanced analytics, priority support, custom branding options, inventory management, and API access for integrations."
+    },
+    {
+      question: "Can I add team members to my Business account?",
+      answer: "Yes, Business accounts allow you to add multiple team members with different permission levels, from administrators to customer service representatives."
+    },
+    {
+      question: "What if I need more advanced features?",
+      answer: "We offer Enterprise accounts with custom pricing for larger businesses that need additional features, dedicated support, and custom integrations."
+    }
+  ]
+
   return (
+    <>
+      <PageSEO
+        title="Business Accounts | Rentio"
+        description="Professional rental business solutions for South African companies. Manage teams, inventory, and grow your rental business with Rentio's business tools."
+        keywords={[
+          "business rental accounts south africa",
+          "rental business tools",
+          "professional rental management",
+          "rental business platform",
+          "corporate rental solutions",
+          "rental business pricing",
+          "rental team management",
+          "rental business software",
+          "south african rental business",
+          "rental business growth"
+        ]}
+        canonical="https://rentio.co.za/business"
+        openGraph={{
+          type: 'article',
+          title: 'Business Accounts | Rentio',
+          description: 'Professional rental business solutions for South African companies.',
+        }}
+        faq={faqData}
+        breadcrumbs={[
+          { name: 'Home', url: 'https://rentio.co.za' },
+          { name: 'Business', url: 'https://rentio.co.za/business' }
+        ]}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">

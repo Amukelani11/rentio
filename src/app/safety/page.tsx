@@ -2,9 +2,61 @@ import { Shield, Users, MapPin, Camera, MessageSquare, Clock, CheckCircle, Alert
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import PageSEO from '@/components/SEO/PageSEO'
 
 export default function SafetyPage() {
+  const faqData = [
+    {
+      question: "What safety measures does Rentio have in place?",
+      answer: "Rentio implements KYC verification, secure payment processing, escrow protection, and a comprehensive review system to ensure safe transactions."
+    },
+    {
+      question: "How do I know if a user is trustworthy?",
+      answer: "Check their profile completion, verification status, reviews from other users, and how long they've been active on the platform."
+    },
+    {
+      question: "What should I do if I feel unsafe during a rental?",
+      answer: "Trust your instincts. Contact our support team immediately, document any issues, and use our in-app reporting system to flag concerns."
+    },
+    {
+      question: "Are payments protected on Rentio?",
+      answer: "Yes, all payments are processed through our secure system with escrow protection. Funds are only released to the lister after successful completion of the rental."
+    },
+    {
+      question: "How should I handle item returns?",
+      answer: "Meet in safe, public locations when possible. Inspect items thoroughly together, document the condition with photos, and ensure both parties agree on the return condition."
+    }
+  ]
+
   return (
+    <>
+      <PageSEO
+        title="Safety Tips & Guidelines | Rentio"
+        description="Comprehensive safety guidelines for secure peer-to-peer rentals in South Africa. Learn how to protect yourself and build trust in the rental community."
+        keywords={[
+          "rental safety tips",
+          "peer to peer rental safety",
+          "secure rentals south africa",
+          "rental marketplace safety",
+          "KYC verification",
+          "rental protection",
+          "safe rental transactions",
+          "rental scam prevention",
+          "rental guidelines",
+          "rental security tips"
+        ]}
+        canonical="https://rentio.co.za/safety"
+        openGraph={{
+          type: 'article',
+          title: 'Safety Tips & Guidelines | Rentio',
+          description: 'Comprehensive safety guidelines for secure peer-to-peer rentals in South Africa.',
+        }}
+        faq={faqData}
+        breadcrumbs={[
+          { name: 'Home', url: 'https://rentio.co.za' },
+          { name: 'Safety', url: 'https://rentio.co.za/safety' }
+        ]}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-coral-600 to-coral-700 text-white">

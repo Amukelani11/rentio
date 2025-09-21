@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { useState } from 'react'
+import PageSEO from '@/components/SEO/PageSEO'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -29,6 +30,29 @@ export default function ContactPage() {
       [e.target.name]: e.target.value
     })
   }
+
+  const faqData = [
+    {
+      question: "How can I contact Rentio support?",
+      answer: "You can contact us via email at support@rentio.co.za, through our help center, or by using the contact form on this page. We respond to all inquiries within 24 hours."
+    },
+    {
+      question: "What is your response time for support requests?",
+      answer: "We aim to respond to all support inquiries within 24 hours. For urgent issues, we typically respond much faster. Premium business account holders receive priority support."
+    },
+    {
+      question: "Do you have phone support available?",
+      answer: "Currently, we provide online-only support through email, our help center, and in-app messaging. This allows us to maintain detailed records and provide consistent, high-quality support."
+    },
+    {
+      question: "How do I report a problem with a rental?",
+      answer: "Use the contact form to report any issues with rentals. Please include as much detail as possible, including the rental ID, description of the issue, and any relevant screenshots or documentation."
+    },
+    {
+      question: "Can I visit your office in person?",
+      answer: "Rentio operates as an online-only marketplace without physical office locations. All support and services are provided through our digital platforms for efficiency and accessibility."
+    }
+  ]
 
   const contactInfo = [
     {
@@ -74,6 +98,34 @@ export default function ContactPage() {
   ]
 
   return (
+    <>
+      <PageSEO
+        title="Contact Us | Rentio"
+        description="Get in touch with Rentio's online support team. We're here to help with all your peer-to-peer rental marketplace questions and support needs."
+        keywords={[
+          "rentio contact",
+          "rental marketplace support",
+          "south african rental support",
+          "rental platform help",
+          "peer to peer rental assistance",
+          "rental customer service",
+          "rental dispute resolution",
+          "rental marketplace contact",
+          "online rental support",
+          "rental help center"
+        ]}
+        canonical="https://rentio.co.za/contact"
+        openGraph={{
+          type: 'article',
+          title: 'Contact Us | Rentio',
+          description: 'Get in touch with Rentio\'s online support team for all your rental marketplace needs.',
+        }}
+        faq={faqData}
+        breadcrumbs={[
+          { name: 'Home', url: 'https://rentio.co.za' },
+          { name: 'Contact', url: 'https://rentio.co.za/contact' }
+        ]}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-coral-600 to-coral-700 text-white">

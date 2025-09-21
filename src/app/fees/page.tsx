@@ -2,9 +2,61 @@ import { Coins, Percent, CreditCard, Users, Building2, TrendingUp, Calculator, I
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import PageSEO from '@/components/SEO/PageSEO'
 
 export default function FeesPage() {
+  const faqData = [
+    {
+      question: "What percentage does Rentio charge for rentals?",
+      answer: "Rentio charges a 5% service fee on successful rentals. This fee covers platform maintenance, payment processing, customer support, and security features."
+    },
+    {
+      question: "Are there any hidden fees?",
+      answer: "No, Rentio is transparent about all fees. We only charge a 5% service fee on successful rentals. There are no listing fees, monthly subscriptions, or hidden charges."
+    },
+    {
+      question: "When are fees charged?",
+      answer: "Fees are only charged when a rental is successfully completed and the renter confirms they received the item in good condition."
+    },
+    {
+      question: "Do listers pay any fees?",
+      answer: "Yes, listers pay the 5% service fee on successful rentals. This is automatically deducted from the rental payment when the transaction is completed."
+    },
+    {
+      question: "Is there a fee for business accounts?",
+      answer: "Business accounts have different pricing tiers. Individual/Free accounts pay 5% per transaction, Business accounts pay R199/month + 3% per transaction, and Enterprise accounts have custom pricing."
+    }
+  ]
+
   return (
+    <>
+      <PageSEO
+        title="Fees & Pricing | Rentio"
+        description="Transparent pricing structure for Rentio's peer-to-peer rental marketplace in South Africa. No hidden fees, just 5% service fee on successful rentals."
+        keywords={[
+          "rental fees south africa",
+          "peer to peer rental pricing",
+          "rental marketplace fees",
+          "rental service charges",
+          "rental commission rates",
+          "rental platform pricing",
+          "south african rental costs",
+          "rental transaction fees",
+          "rental pricing structure",
+          "rental marketplace costs"
+        ]}
+        canonical="https://rentio.co.za/fees"
+        openGraph={{
+          type: 'article',
+          title: 'Fees & Pricing | Rentio',
+          description: 'Transparent pricing structure for Rentio\'s peer-to-peer rental marketplace in South Africa.',
+        }}
+        faq={faqData}
+        breadcrumbs={[
+          { name: 'Home', url: 'https://rentio.co.za' },
+          { name: 'Fees & Pricing', url: 'https://rentio.co.za/fees' }
+        ]}
+      />
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-coral-600 to-coral-700 text-white">
