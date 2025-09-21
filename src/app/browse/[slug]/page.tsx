@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { MapPin, Star, Truck, Image as ImageIcon, Heart, Share2, Calendar, User, CheckCircle, Shield, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { MapPin, Star, Truck, Image as ImageIcon, Heart, Share2, Calendar, User, CheckCircle, Shield, ChevronLeft, ChevronRight, X, Clock } from 'lucide-react'
 import Image from 'next/image'
 import Head from 'next/head'
 import DateRangePicker from '@/components/ui/date-range-picker'
@@ -256,7 +256,7 @@ export default function ListingDetailPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-3 space-y-6">
             {/* Image Gallery */}
             <Card>
               <div 
@@ -605,22 +605,23 @@ export default function ListingDetailPage() {
               </TabsContent>
             </Tabs>
           </div>
+        </div>
 
-          {/* Booking Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
-              <CardHeader>
-                <CardTitle className="text-2xl">
-                  {formatPrice(typeof (listing as any)?.priceDaily === 'number' ? (listing as any).priceDaily : parseFloat((listing as any)?.price_daily || '0'))}
-                  <span className="text-lg font-normal text-gray-600">/day</span>
-                </CardTitle>
-                {( (listing as any)?.priceWeekly || (listing as any)?.price_weekly ) && (
-                  <CardDescription>
-                    Save {(listing as any)?.weeklyDiscount ?? (listing as any)?.weekly_discount ?? 0}% with weekly rentals - {formatPrice((listing as any)?.priceWeekly ?? parseFloat((listing as any)?.price_weekly || '0'))}/week
-                  </CardDescription>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
+        {/* Booking Section */}
+        <div className="mt-8 lg:max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">
+                {formatPrice(typeof (listing as any)?.priceDaily === 'number' ? (listing as any).priceDaily : parseFloat((listing as any)?.price_daily || '0'))}
+                <span className="text-lg font-normal text-gray-600">/day</span>
+              </CardTitle>
+              {( (listing as any)?.priceWeekly || (listing as any)?.price_weekly ) && (
+                <CardDescription>
+                  Save {(listing as any)?.weeklyDiscount ?? (listing as any)?.weekly_discount ?? 0}% with weekly rentals - {formatPrice((listing as any)?.priceWeekly ?? parseFloat((listing as any)?.price_weekly || '0'))}/week
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
                 {/* Date Selection */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Rental Dates</label>
@@ -750,7 +751,6 @@ export default function ListingDetailPage() {
             </Card>
           </div>
         </div>
-      </div>
       {composeOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
