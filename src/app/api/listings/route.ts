@@ -31,34 +31,41 @@ export async function GET(request: NextRequest) {
     // Build base query with select to enable filters and count
     let query = admin.from('listings').select('*', { count: 'exact' })
 
-    // Filter by user's listings
-    const isBusiness = Array.isArray(user.roles) ? user.roles.includes(UserRole.BUSINESS_LISTER) : false
-    if (isBusiness) {
-      // For business users, get their business ID first
-      const { data: business } = await admin
-        .from('businesses')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
+    // Check if user is admin
+    const isAdmin = Array.isArray(user.roles) && user.roles.includes(UserRole.ADMIN)
+    console.log('User roles:', user.roles, 'isAdmin:', isAdmin)
+    
+    // Filter by user's listings (unless admin)
+    if (!isAdmin) {
+      const isBusiness = Array.isArray(user.roles) ? user.roles.includes(UserRole.BUSINESS_LISTER) : false
+      if (isBusiness) {
+        // For business users, get their business ID first
+        const { data: business } = await admin
+          .from('businesses')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
 
-      if (business) {
-        query = query.eq('business_id', business.id)
+        if (business) {
+          query = query.eq('business_id', business.id)
+        } else {
+          // Business user without business profile - return empty results
+          return NextResponse.json({
+            success: true,
+            data: {
+              items: [],
+              total: 0,
+              page,
+              pageSize: limit,
+              totalPages: 0,
+            },
+          })
+        }
       } else {
-        // Business user without business profile - return empty results
-        return NextResponse.json({
-          success: true,
-          data: {
-            items: [],
-            total: 0,
-            page,
-            pageSize: limit,
-            totalPages: 0,
-          },
-        })
+        query = query.eq('user_id', user.id)
       }
-    } else {
-      query = query.eq('user_id', user.id)
     }
+    // If admin, don't filter by user - show all listings
 
     if (status !== 'ALL') {
       query = query.eq('status', status)
@@ -72,6 +79,8 @@ export async function GET(request: NextRequest) {
       console.error('Supabase listings GET error', error)
       return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 })
     }
+
+    console.log('Listings fetched:', items?.length || 0, 'total count:', count)
 
     // Get all categories at once to avoid N+1 queries
     const categoryIds = Array.from(new Set((items || []).map((item: any) => item.category_id).filter(Boolean)))
