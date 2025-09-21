@@ -73,7 +73,7 @@ export default function ListerOnboarding() {
     }
 
     localStorage.removeItem(STORAGE_KEY)
-    router.push('/list-item')
+    router.push('/dashboard/listings/new')
   }
 
   return (

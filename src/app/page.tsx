@@ -115,7 +115,7 @@ export default function HomePage() {
                 <Link href="/auth/signup">Start renting</Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <Link href="/list-item">List an item</Link>
+                <Link href="/dashboard/listings/new">List an item</Link>
               </Button>
             </div>
           </div>
@@ -163,7 +163,7 @@ export default function HomePage() {
             <div>
               <h3 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-slate-50">Earn with your stuff</h3>
               <p className="mt-2 text-gray-600 dark:text-slate-200">List your first item today and start making extra income.</p>
-              <div className="mt-4"><Button size="lg" asChild><Link href="/list-item">List an item</Link></Button></div>
+              <div className="mt-4"><Button size="lg" asChild><Link href="/dashboard/listings/new">List an item</Link></Button></div>
             </div>
             <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl">
               <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-[radial-gradient(closest-side,rgba(229,50,55,0.18),rgba(229,50,55,0))] blur-xl" />
@@ -258,7 +258,7 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold">For listers</h4>
               <ul className="mt-3 space-y-2 text-gray-400">
-                <li><Link href="/list-item" className="hover:text-white">List an item</Link></li>
+                <li><Link href="/dashboard/listings/new" className="hover:text-white">List an item</Link></li>
                 <li><Link href="/business" className="hover:text-white">Business accounts</Link></li>
                 <li><Link href="/fees" className="hover:text-white">Fees & pricing</Link></li>
               </ul>
@@ -285,7 +285,7 @@ export default function HomePage() {
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 rounded-2xl border border-white/40 bg-white/60 px-4 py-3 text-gray-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:text-slate-50">
             <span className="text-sm md:text-base">Got something to rent? List it in minutes.</span>
             <Button asChild>
-              <Link href="/list-item">List an item</Link>
+              <Link href="/dashboard/listings/new">List an item</Link>
             </Button>
           </div>
         </div>

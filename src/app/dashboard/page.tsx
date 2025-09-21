@@ -221,7 +221,7 @@ export default function Dashboard() {
                   Listings
                 </Button>
               ) : (
-                <Button onClick={() => router.push('/list-item')} className="whitespace-nowrap bg-coral-600 hover:bg-coral-700 text-white">
+                <Button onClick={() => router.push('/dashboard/listings/new')} className="whitespace-nowrap bg-coral-600 hover:bg-coral-700 text-white">
                   List Item
                 </Button>
               )}

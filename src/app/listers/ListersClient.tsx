@@ -36,7 +36,7 @@ export default function ListersClient() {
             </p>
             <div className="mt-6">
               <Button size="lg" asChild>
-                <Link href="/list-item">List an Item for Free</Link>
+                <Link href="/dashboard/listings/new">List an Item for Free</Link>
               </Button>
             </div>
           </div>
@@ -199,7 +199,7 @@ export default function ListersClient() {
             <p className="mt-2 text-gray-600 dark:text-slate-200">It’s free to list and only takes a few minutes.</p>
             <div className="mt-4">
               <Button size="lg" asChild>
-                <Link href="/list-item">Start Listing Today — It’s Free</Link>
+                <Link href="/dashboard/listings/new">Start Listing Today — It's Free</Link>
               </Button>
             </div>
           </div>
@@ -215,7 +215,7 @@ export default function ListersClient() {
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 rounded-2xl border border-white/40 bg-white/60 px-4 py-3 text-gray-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_8px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:text-slate-50">
             <span className="text-sm md:text-base">Ready to earn? List your first item today.</span>
             <Button asChild>
-              <Link href="/list-item">List an Item</Link>
+              <Link href="/dashboard/listings/new">List an Item</Link>
             </Button>
           </div>
         </div>

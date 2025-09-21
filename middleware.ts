@@ -79,8 +79,8 @@ export async function middleware(req: NextRequest) {
     '/dashboard': [Role.CUSTOMER, Role.INDIVIDUAL_LISTER, Role.BUSINESS_LISTER, Role.ADMIN],
     '/dashboard/individual': [Role.INDIVIDUAL_LISTER, Role.ADMIN],
     '/dashboard/business': [Role.BUSINESS_LISTER, Role.ADMIN],
+    '/dashboard/listings/new': [Role.INDIVIDUAL_LISTER, Role.BUSINESS_LISTER, Role.ADMIN],
     '/admin': [Role.ADMIN],
-    '/list-item': [Role.INDIVIDUAL_LISTER, Role.BUSINESS_LISTER, Role.ADMIN],
   }
 
   // Check if current path is protected (reuse currentPath)
