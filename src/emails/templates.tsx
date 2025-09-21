@@ -72,6 +72,27 @@ export function ratingRequestEmail(opts: { renterName: string; listingTitle: str
   return baseLayout(title, body)
 }
 
+export function newBookingNotificationEmail(opts: { 
+  ownerName: string; 
+  renterName: string; 
+  renterEmail: string;
+  renterPhone: string;
+  listingTitle: string; 
+  startDate: string; 
+  endDate: string; 
+  total: string;
+  bookingNumber?: string;
+  requiresConfirmation: boolean;
+}) {
+  const title = 'New Booking Received! 🎉'
+  const statusMessage = opts.requiresConfirmation 
+    ? 'This booking requires your confirmation. Please review the details and respond to the renter.'
+    : 'This booking has been automatically confirmed as an instant booking.'
+  
+  const body = `<h1 style="margin:0 0 8px;font-size:22px">${title}</h1><p style="margin:0 0 16px;color:#334155">Hi ${opts.ownerName},</p><p style="margin:0 0 16px;color:#334155">Great news! You've received a new booking${opts.bookingNumber ? ` (#${opts.bookingNumber})` : ''} for your listing.</p><div style="background:#f8fafc;border-radius:12px;padding:16px;margin:16px 0"><div style="font-weight:600;font-size:16px;margin-bottom:8px">${opts.listingTitle}</div><div style="color:#475569;margin-bottom:4px"><strong>Renter:</strong> ${opts.renterName}</div><div style="color:#475569;margin-bottom:4px"><strong>Email:</strong> ${opts.renterEmail}</div><div style="color:#475569;margin-bottom:4px"><strong>Phone:</strong> ${opts.renterPhone}</div><div style="color:#475569;margin-bottom:4px"><strong>Dates:</strong> ${opts.startDate} → ${opts.endDate}</div><div style="color:#475569;margin-bottom:8px"><strong>Total Payment:</strong> ${opts.total}</div><div style="padding:12px;background:${opts.requiresConfirmation ? '#fef3c7' : '#dcfce7'};border-radius:8px;font-size:14px;color:${opts.requiresConfirmation ? '#92400e' : '#166534'}">${statusMessage}</div></div><p style="margin:16px 0;color:#475569">Please contact the renter to arrange pickup/delivery details and provide any additional instructions.</p><a href="${SITE_URL}/dashboard/bookings" style="display:inline-block;background:${brandColor};color:#fff;padding:14px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:16px">View Booking Details</a><p style="margin:24px 0 0;color:#475569;font-size:13px">Questions? Reply to this email or visit our <a href="${SITE_URL}/support" style="color:${brandColor};text-decoration:none">Help Center</a>.</p>`
+  return baseLayout(title, body)
+}
+
 export function stockAlertEmail(opts: {
   recipientName: string
   businessName: string

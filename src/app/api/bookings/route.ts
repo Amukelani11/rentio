@@ -216,19 +216,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
     }
 
-    // Fire-and-forget booking confirmation email to renter
-    try {
-      const html = bookingConfirmationEmail({
-        renterName: user.name || user.email,
-        listingTitle: listing.title,
-        startDate: new Date(startDate).toLocaleDateString('en-ZA'),
-        endDate: new Date(endDate).toLocaleDateString('en-ZA'),
-        total: `R ${totalAmount.toFixed(2)}`,
-      })
-      await sendEmail({ to: user.email, subject: 'Your Rentio booking is confirmed', html })
-    } catch (e) {
-      console.debug('[email] booking confirmation skipped', e)
-    }
+    // Note: Booking confirmation email will be sent after payment is confirmed via webhook
 
     // Return booking data for payment processing
     return NextResponse.json({

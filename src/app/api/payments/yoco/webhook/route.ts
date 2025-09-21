@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 import { sendEmail } from '@/lib/resend'
-import { paymentReceiptEmail, bookingStatusEmail } from '@/emails/templates'
+import { paymentReceiptEmail, bookingStatusEmail, bookingConfirmationEmail, newBookingNotificationEmail } from '@/emails/templates'
 
 function verifyWebhookSignature(payload: string, signature: string, secret: string, webhookId: string, timestamp: string): boolean {
   try {
@@ -216,16 +216,89 @@ export async function POST(request: NextRequest) {
             channels: ['PUSH'],
           })
 
-        // Email renter payment receipt and status
+        // Email renter payment receipt and booking status
         try {
           const renterEmail = paymentObj.booking?.renter?.email || null
           const renterName = paymentObj.booking?.renter?.name || 'there'
           const amountStr = `R ${(paymentObj.amount || paymentObj.booking?.total_amount || 0).toFixed?.(2) || String(paymentObj.amount)}`
           if (renterEmail) {
-            await sendEmail({ to: renterEmail, subject: 'Payment received', html: paymentReceiptEmail({ name: renterName, amount: amountStr, bookingNumber: paymentObj.booking?.booking_number, provider: 'YOCO' }) })
-            await sendEmail({ to: renterEmail, subject: 'Booking confirmed', html: bookingStatusEmail({ name: renterName, listingTitle: listingTitle, status: requiresConfirmation ? 'PENDING' : 'CONFIRMED' }) })
+            // Send payment receipt
+            await sendEmail({ 
+              to: renterEmail, 
+              subject: 'Payment Received', 
+              html: paymentReceiptEmail({ 
+                name: renterName, 
+                amount: amountStr, 
+                bookingNumber: paymentObj.booking?.booking_number, 
+                provider: 'YOCO' 
+              }) 
+            })
+            
+            // Send booking confirmation with proper status
+            if (requiresConfirmation) {
+              await sendEmail({ 
+                to: renterEmail, 
+                subject: 'Booking Awaiting Confirmation', 
+                html: bookingStatusEmail({ 
+                  name: renterName, 
+                  listingTitle: listingTitle, 
+                  status: 'PENDING',
+                  note: 'Your payment has been received. The listing owner will review your booking request shortly.' 
+                }) 
+              })
+            } else {
+              // Send proper booking confirmation for instant bookings
+              await sendEmail({ 
+                to: renterEmail, 
+                subject: 'Booking Confirmed!', 
+                html: bookingConfirmationEmail({ 
+                  renterName, 
+                  listingTitle, 
+                  startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
+                  endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
+                  total: amountStr 
+                }) 
+              })
+            }
           }
-        } catch (e) { console.debug('[email] webhook renter receipt skipped', e) }
+        } catch (e) { console.debug('[email] webhook renter emails skipped', e) }
+
+        // Email business/lister about new booking
+        try {
+          const ownerId = paymentObj.booking?.listing?.user_id || paymentObj.booking?.listing?.business_id
+          if (ownerId) {
+            // Get owner email and name
+            const { data: owner } = await supabase
+              .from('users')
+              .select('email, name')
+              .eq('id', ownerId)
+              .single()
+              
+            if (owner?.email) {
+              const renterName = paymentObj.booking?.renter?.name || 'Customer'
+              const renterEmail = paymentObj.booking?.renter?.email || 'Not provided'
+              const renterPhone = paymentObj.booking?.contact_phone || 'Not provided'
+              const amountStr = `R ${(paymentObj.amount || paymentObj.booking?.total_amount || 0).toFixed?.(2) || String(paymentObj.amount)}`
+              
+              await sendEmail({ 
+                to: owner.email, 
+                subject: `New Booking Received - ${listingTitle}`, 
+                html: newBookingNotificationEmail({ 
+                  ownerName: owner.name || 'there',
+                  renterName,
+                  renterEmail,
+                  renterPhone,
+                  listingTitle, 
+                  startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
+                  endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
+                  total: amountStr,
+                  bookingNumber: paymentObj.booking?.booking_number,
+                  requiresConfirmation
+                }) 
+              })
+            }
+          }
+        } catch (e) { console.debug('[email] webhook owner notification skipped', e) }
       } else {
         // For instant bookings, confirm immediately
         const { error: updateBookingError } = await supabase
@@ -307,6 +380,72 @@ export async function POST(request: NextRequest) {
             },
             channels: ['PUSH'],
           })
+
+        // Send emails for instant bookings
+        try {
+          const renterEmail = paymentObj.booking?.renter?.email || null
+          const renterName = paymentObj.booking?.renter?.name || 'there'
+          const amountStr = `R ${(paymentObj.amount || paymentObj.booking?.total_amount || 0).toFixed?.(2) || String(paymentObj.amount)}`
+          
+          if (renterEmail) {
+            // Send payment receipt
+            await sendEmail({ 
+              to: renterEmail, 
+              subject: 'Payment Received', 
+              html: paymentReceiptEmail({ 
+                name: renterName, 
+                amount: amountStr, 
+                bookingNumber: paymentObj.booking?.booking_number, 
+                provider: 'YOCO' 
+              }) 
+            })
+            
+            // Send booking confirmation for instant booking
+            await sendEmail({ 
+              to: renterEmail, 
+              subject: 'Booking Confirmed!', 
+              html: bookingConfirmationEmail({ 
+                renterName, 
+                listingTitle, 
+                startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
+                endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
+                total: amountStr 
+              }) 
+            })
+          }
+
+          // Email business/lister about new instant booking
+          if (ownerId) {
+            // Get owner email and name
+            const { data: owner } = await supabase
+              .from('users')
+              .select('email, name')
+              .eq('id', ownerId)
+              .single()
+              
+            if (owner?.email) {
+              const renterEmail_safe = paymentObj.booking?.renter?.email || 'Not provided'
+              const renterPhone = paymentObj.booking?.contact_phone || 'Not provided'
+              
+              await sendEmail({ 
+                to: owner.email, 
+                subject: `New Booking Confirmed - ${listingTitle}`, 
+                html: newBookingNotificationEmail({ 
+                  ownerName: owner.name || 'there',
+                  renterName,
+                  renterEmail: renterEmail_safe,
+                  renterPhone,
+                  listingTitle, 
+                  startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
+                  endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
+                  total: amountStr,
+                  bookingNumber: paymentObj.booking?.booking_number,
+                  requiresConfirmation: false
+                }) 
+              })
+            }
+          }
+        } catch (e) { console.debug('[email] instant booking emails skipped', e) }
       }
     } else {
       // Payment failed - update booking status
