@@ -438,5 +438,6 @@ export default function SafetyPage() {
         </div>
       </div>
     </div>
+  </>
   )
 }

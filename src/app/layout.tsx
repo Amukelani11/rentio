@@ -4,7 +4,7 @@ import '../styles/globals.css'
 import SiteHeader from '@/components/layout/SiteHeader'
 import RatingModalWrapper from '@/components/RatingModalWrapper'
 import { createMetadata, createWebSiteSchema, createOrganizationSchema, createLocalBusinessSchema } from '@/lib/seo'
-import { JsonLd } from '@/components/SEO/JsonLd'
+import JsonLd from '@/components/SEO/JsonLd'
 
 const inter = Inter({ subsets: ['latin'] })
 

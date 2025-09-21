@@ -444,5 +444,6 @@ export default function FeesPage() {
         </div>
       </div>
     </div>
+  </>
   )
 }

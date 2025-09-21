@@ -633,5 +633,6 @@ export default function TermsPage() {
         </div>
       </div>
     </div>
+  </>
   )
 }

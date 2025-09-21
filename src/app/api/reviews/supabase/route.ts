@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
 
     const totalReviews = ratingData?.length || 0
     const averageRating = totalReviews > 0 && ratingData
-      ? ratingData.reduce((sum, r) => sum + r.rating, 0) / totalReviews 
+      ? ratingData.reduce((sum, r) => sum + r.rating, 0) / totalReviews
       : 0
 
     // Calculate rating distribution

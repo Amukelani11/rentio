@@ -132,7 +132,11 @@ export default function SEOMetadata({
 
       {/* Structured Data */}
       {schemaData?.map((schema, index) => (
-        <StructuredData key={index} data={schema} />
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
       ))}
 
       {/* Verification Tags */}

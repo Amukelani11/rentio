@@ -93,7 +93,7 @@ export function createMetadata({
       title: openGraph.title || fullTitle,
       description: openGraph.description || metaDescription,
       url: openGraph.url || canonical,
-      type: openGraph.type || 'website',
+      type: (openGraph.type === 'product' ? 'website' : openGraph.type) || 'website',
       locale: openGraph.locale || 'en_ZA',
       siteName: openGraph.siteName || siteConfig.name,
       images: openGraph.images || [
@@ -270,12 +270,13 @@ export function createFAQSchema(faqs: Array<{ question: string; answer: string }
 
 // Structured data component for Next.js
 export function StructuredData({ data }: { data: Record<string, any> }) {
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
-  )
+  return {
+    type: 'script',
+    props: {
+      type: 'application/ld+json',
+      dangerouslySetInnerHTML: { __html: JSON.stringify(data) }
+    }
+  }
 }
 
 // Generate dynamic keywords based on content

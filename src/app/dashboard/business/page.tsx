@@ -45,6 +45,7 @@ interface BusinessData {
     sunday: string;
   };
   delivery_radius: number;
+  logo?: string;
   status: string;
   verified: boolean;
   logo_url?: string;

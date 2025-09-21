@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, Fragment } from 'react'
 import Head from 'next/head'
-import { JsonLd } from './JsonLd'
+import JsonLd from './JsonLd'
 import { siteConfig } from '@/lib/site-config'
 
 interface ListingSEOProps {
@@ -227,12 +227,12 @@ export default function ListingSEO({ listing, baseUrl = 'https://rentio.co.za' }
       <meta property="og:price:currency" content="ZAR" />
 
       {openGraphData.images.map((image, index) => (
-        <React.Fragment key={index}>
+        <Fragment key={index}>
           <meta property="og:image" content={image.url} />
           <meta property="og:image:width" content={image.width.toString()} />
           <meta property="og:image:height" content={image.height.toString()} />
           <meta property="og:image:alt" content={image.alt} />
-        </React.Fragment>
+        </Fragment>
       ))}
 
       {/* Twitter Card Tags */}

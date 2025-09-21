@@ -1,6 +1,6 @@
 import React from 'react'
 import Head from 'next/head'
-import { JsonLd } from './JsonLd'
+import JsonLd from './JsonLd'
 import { siteConfig } from '@/lib/site-config'
 
 interface PageSEOProps {

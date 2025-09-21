@@ -580,5 +580,6 @@ export default function HelpCenterPage() {
         </div>
       </div>
     </div>
+  </>
   )
 }
