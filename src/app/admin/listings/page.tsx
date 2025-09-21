@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Search, Eye, CheckCircle, XCircle, Ban } from 'lucide-react'
 import { Role } from '@/lib/types'
@@ -18,6 +19,9 @@ export default function AdminListingsPage() {
   const [detailsLoading, setDetailsLoading] = useState(false)
   const [q, setQ] = useState('')
   const [tab, setTab] = useState<'ALL'|'ACTIVE'|'INACTIVE'|'SUSPENDED'>('ALL')
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [rejectionNote, setRejectionNote] = useState('')
+  const [rejectingId, setRejectingId] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -120,7 +124,7 @@ export default function AdminListingsPage() {
                         <CardTitle>Listing Details</CardTitle>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" onClick={() => moderate(selectedListing.id, 'ACTIVE')}>Approve</Button>
-                          <Button size="sm" variant="outline" onClick={() => rejectListing(selectedListing.id)}>Reject</Button>
+                          <Button size="sm" variant="outline" onClick={() => openRejectDialog(selectedListing.id)}>Reject</Button>
                           <Button size="sm" variant="outline" onClick={() => setSelectedListing(null)}>Close</Button>
                         </div>
                       </div>
@@ -163,11 +167,49 @@ export default function AdminListingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Rejection Dialog */}
+      {showRejectDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Reject Listing</h3>
+            <p className="text-gray-600 mb-4">
+              Please provide feedback to help the user improve their listing:
+            </p>
+            <Textarea
+              value={rejectionNote}
+              onChange={(e) => setRejectionNote(e.target.value)}
+              placeholder="Explain what needs to be updated (e.g., clearer photos, better description, pricing issues...)"
+              rows={4}
+              className="mb-4"
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRejectDialog(false)
+                  setRejectingId(null)
+                  setRejectionNote('')
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmReject}
+                disabled={!rejectionNote.trim()}
+              >
+                Reject Listing
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   )
 
-  async function moderate(id: string, status: string) {
-    await fetch(`/api/listings/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) })
+  async function moderate(id: string, status: string, note?: string) {
+    await fetch(`/api/listings/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, note }) })
     fetchItems()
   }
 
@@ -191,9 +233,20 @@ export default function AdminListingsPage() {
     }
   }
 
-  async function rejectListing(id: string) {
-    await moderate(id, 'REJECTED')
-    setSelectedListing(null)
+  function openRejectDialog(id: string) {
+    setRejectingId(id)
+    setRejectionNote('')
+    setShowRejectDialog(true)
+  }
+
+  async function confirmReject() {
+    if (rejectingId) {
+      await moderate(rejectingId, 'REJECTED', rejectionNote)
+      setShowRejectDialog(false)
+      setRejectingId(null)
+      setRejectionNote('')
+      setSelectedListing(null)
+    }
   }
 
   async function removeListing(id: string) {
