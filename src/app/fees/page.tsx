@@ -64,7 +64,7 @@ export default function FeesPage() {
                   <Building2 className="h-6 w-6 mr-2" />
                   For Listers
                 </CardTitle>
-                <CardDescription>5% service fee on rental amount</CardDescription>
+                <CardDescription>15% service fee on rental amount</CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-gray-600">
@@ -142,17 +142,31 @@ export default function FeesPage() {
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="text-center mb-3">
+                  <h4 className="font-semibold text-gray-700">Example Calculation</h4>
+                  <p className="text-sm text-gray-600">R100/day × 7 days × 1 item</p>
+                </div>
                 <div className="flex justify-between">
-                  <span>Subtotal:</span>
+                  <span>Rental Subtotal:</span>
                   <span className="font-medium" id="subtotal">R700</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Service Fee (5%):</span>
-                  <span className="font-medium text-coral-600" id="serviceFee">R35</span>
+                  <span>Renter Service Fee (5%):</span>
+                  <span className="font-medium text-coral-600" id="renterFee">R35</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between font-bold text-lg">
-                  <span>Total:</span>
-                  <span id="total">R735</span>
+                  <span>Total for Renter:</span>
+                  <span id="renterTotal">R735</span>
+                </div>
+                <div className="border-t pt-3 bg-blue-50 -mx-4 px-4 py-3 mt-4">
+                  <div className="flex justify-between">
+                    <span>Lister Service Fee (15%):</span>
+                    <span className="font-medium text-blue-600" id="listerFee">R105</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Lister Receives:</span>
+                    <span id="listerTotal">R595</span>
+                  </div>
                 </div>
               </div>
 
@@ -170,15 +184,15 @@ export default function FeesPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
               <CardContent className="p-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <CreditCard className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <h3 className="font-semibold mb-2">Payment Processing</h3>
                 <p className="text-gray-600 text-sm mb-3">
-                  2.5% + R2.50 per transaction
+                  No additional fees
                 </p>
                 <p className="text-xs text-gray-500">
-                  Charged by payment providers for secure transaction processing
+                  Payment processing is included in our service fee
                 </p>
               </CardContent>
             </Card>
@@ -280,88 +294,7 @@ export default function FeesPage() {
           </Card>
         </div>
 
-        {/* Business Pricing */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold mb-8 text-center">Business Accounts</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-2 border-blue-200">
-              <CardHeader>
-                <CardTitle className="flex items-center text-blue-600">
-                  <Building2 className="h-6 w-6 mr-2" />
-                  Individual Listers
-                </CardTitle>
-                <CardDescription>Perfect for personal rentals</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-4">Free</div>
-                <ul className="space-y-2 text-sm text-gray-600 mb-4">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Unlimited listings</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Basic analytics</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Standard support</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>5% service fee</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-purple-200 relative">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                POPULAR
-              </div>
-              <CardHeader>
-                <CardTitle className="flex items-center text-purple-600">
-                  <Users className="h-6 w-6 mr-2" />
-                  Business Accounts
-                </CardTitle>
-                <CardDescription>For professional rental businesses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-4">R199<span className="text-lg font-normal">/month</span></div>
-                <ul className="space-y-2 text-sm text-gray-600 mb-4">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Everything in Individual</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Team management (5 users)</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Advanced analytics</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Priority support</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Custom branding</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Reduced service fee (4%)</span>
-                  </li>
-                </ul>
-                <Button className="w-full" asChild>
-                  <Link href="/business">Start Free Trial</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
+  
         {/* Payment Methods */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold mb-8 text-center">Accepted Payment Methods</h2>
@@ -434,7 +367,7 @@ export default function FeesPage() {
               <CardContent>
                 <p className="text-gray-600">
                   Service fees are refundable if a booking is cancelled according to our cancellation policy.
-                  Payment processing fees are non-refundable as they're charged by third-party providers.
+                  Since payment processing is included in our service fee, there are no additional charges.
                 </p>
               </CardContent>
             </Card>
