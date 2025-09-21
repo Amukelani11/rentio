@@ -114,7 +114,7 @@ export default function HowItWorksPage() {
         {/* For Renters Section */}
         <div className="mb-16">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">For Renters</Badge>
+            <Badge className="mb-4 bg-coral-100 text-coral-700 hover:bg-coral-100">For Renters</Badge>
             <h2 className="text-3xl font-bold mb-4">Rent Anything You Need</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               From tools to tents, cameras to costumes - find what you need nearby and save money on things you'll only use occasionally.
@@ -125,13 +125,13 @@ export default function HowItWorksPage() {
             {renterSteps.map((step, index) => (
               <div key={index} className="flex flex-col md:flex-row items-start gap-6">
                 <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <step.icon className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center">
+                    <step.icon className="h-8 w-8 text-coral-600" />
                   </div>
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center mb-2">
-                    <span className="bg-blue-600 text-white text-sm font-bold px-2 py-1 rounded-full mr-3">
+                    <span className="bg-coral-600 text-white text-sm font-bold px-2 py-1 rounded-full mr-3">
                       {index + 1}
                     </span>
                     <h3 className="text-xl font-semibold">{step.title}</h3>
@@ -140,7 +140,7 @@ export default function HowItWorksPage() {
                   <div className="grid grid-cols-2 gap-2">
                     {step.details.map((detail, idx) => (
                       <div key={idx} className="flex items-center text-sm text-gray-500">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-coral-500 mr-2 flex-shrink-0" />
                         {detail}
                       </div>
                     ))}
@@ -157,7 +157,7 @@ export default function HowItWorksPage() {
 
           <div className="text-center mt-12">
             <Link href="/browse">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Button size="lg" className="bg-coral-600 hover:bg-coral-700">
                 Start Browsing Items
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -168,7 +168,7 @@ export default function HowItWorksPage() {
         {/* For Listers Section */}
         <div className="mb-16">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-green-100 text-green-700 hover:bg-green-100">For Listers</Badge>
+            <Badge className="mb-4 bg-coral-100 text-coral-700 hover:bg-coral-100">For Listers</Badge>
             <h2 className="text-3xl font-bold mb-4">Earn Money from Your Stuff</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Turn your unused items into recurring income. List anything from power tools to party equipment and start earning today.
@@ -179,13 +179,13 @@ export default function HowItWorksPage() {
             {listerSteps.map((step, index) => (
               <div key={index} className="flex flex-col md:flex-row items-start gap-6">
                 <div className="flex-shrink-0">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                    <step.icon className="h-8 w-8 text-green-600" />
+                  <div className="w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center">
+                    <step.icon className="h-8 w-8 text-coral-600" />
                   </div>
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center mb-2">
-                    <span className="bg-green-600 text-white text-sm font-bold px-2 py-1 rounded-full mr-3">
+                    <span className="bg-coral-600 text-white text-sm font-bold px-2 py-1 rounded-full mr-3">
                       {index + 1}
                     </span>
                     <h3 className="text-xl font-semibold">{step.title}</h3>
@@ -194,7 +194,7 @@ export default function HowItWorksPage() {
                   <div className="grid grid-cols-2 gap-2">
                     {step.details.map((detail, idx) => (
                       <div key={idx} className="flex items-center text-sm text-gray-500">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-coral-500 mr-2 flex-shrink-0" />
                         {detail}
                       </div>
                     ))}
@@ -211,7 +211,7 @@ export default function HowItWorksPage() {
 
           <div className="text-center mt-12">
             <Link href="/list-item">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700">
+              <Button size="lg" className="bg-coral-600 hover:bg-coral-700">
                 Start Listing Items
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -245,7 +245,7 @@ export default function HowItWorksPage() {
 
         {/* Business Solutions */}
         <div className="mb-16">
-          <Card className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+          <Card className="bg-gradient-to-r from-coral-600 to-coral-700 text-white">
             <CardContent className="p-8">
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div>
@@ -253,10 +253,10 @@ export default function HowItWorksPage() {
                     <Building2 className="h-8 w-8 mr-3" />
                     <h3 className="text-2xl font-bold">Business Solutions</h3>
                   </div>
-                  <p className="text-purple-100 mb-6">
+                  <p className="text-coral-100 mb-6">
                     Run a rental business? Get advanced tools for inventory management, team accounts, bulk uploads, and analytics.
                   </p>
-                  <ul className="space-y-2 text-purple-100 mb-6">
+                  <ul className="space-y-2 text-coral-100 mb-6">
                     <li className="flex items-center">
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Bulk inventory uploads
@@ -351,7 +351,7 @@ export default function HowItWorksPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/browse">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Button size="lg" className="bg-coral-600 hover:bg-coral-700">
                 Browse Items to Rent
               </Button>
             </Link>
