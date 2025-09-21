@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { createBusinessSlug } from '@/lib/utils/slugify'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -164,7 +165,7 @@ export default function ListingDetailPage() {
   
   return {
     name: listingData?.user?.name || listingData?.business?.name || 'Owner',
-    avatar: listingData?.user?.avatar || listingData?.business?.logo_url,
+    avatar: listingData?.user?.avatar || listingData?.business?.logo,
     type: listingData?.business ? 'business' : 'individual',
     averageRating: listingData?.user?.average_rating || listingData?.business?.average_rating || 0,
     totalReviews: listingData?.user?.total_reviews || listingData?.business?.total_reviews || 0,
@@ -392,6 +393,14 @@ export default function ListingDetailPage() {
                       )}
                       {ownerInfo.type === 'business' && (
                         <Badge className="bg-blue-600">Business</Badge>
+                      )}
+                      {ownerInfo.type === 'business' && (
+                        <Link 
+                          href={`/store/${createBusinessSlug(listing?.business?.name || '')}`}
+                          className="text-sm text-coral-600 hover:underline"
+                        >
+                          Visit Store
+                        </Link>
                       )}
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">

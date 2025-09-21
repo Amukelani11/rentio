@@ -580,8 +580,8 @@ export default function BusinessProfilePage() {
                 <Label>Logo</Label>
                 <UploadButton.Area clickableId="upload-logo">
                   <div className="mt-2 flex items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer">
-                    {business?.logo_url ? (
-                      <img src={business.logo_url} alt="Business logo" className="w-full h-full object-cover rounded-lg" />
+                    {business?.logo ? (
+                      <img src={business.logo} alt="Business logo" className="w-full h-full object-cover rounded-lg" />
                     ) : (
                       <div className="text-center">
                         <Upload className="mx-auto h-8 w-8 text-gray-400" />
@@ -595,8 +595,8 @@ export default function BusinessProfilePage() {
                   <UploadButton
                     type="logo"
                     inputId="upload-logo"
-                    onUploaded={(url) => handleInputChange('logo_url' as any, url)}
-                    existingUrl={business?.logo_url}
+                    onUploaded={(url) => handleInputChange('logo' as any, url)}
+                    existingUrl={business?.logo}
                     maxSizeBytes={2 * 1024 * 1024}
                   />
                 )}

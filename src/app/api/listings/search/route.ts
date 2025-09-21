@@ -22,8 +22,13 @@ export async function GET(request: NextRequest) {
     const routeClient = createRouteHandlerClient({ cookies })
     const db = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : routeClient
 
-    // Base query: public ACTIVE listings
-    let q = db.from('listings').select('*', { count: 'exact' }).eq('status', 'ACTIVE')
+    // Base query: public ACTIVE listings with business info
+    let q = db.from('listings').select(`
+      *,
+      categories(id, name, icon),
+      user:users(id, name, avatar),
+      business:businesses(id, name, logo, is_verified)
+    `, { count: 'exact' }).eq('status', 'ACTIVE')
 
     if (query) {
       const term = `%${query}%`
@@ -65,18 +70,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 })
     }
 
-    // Enrich with categories
-    const categoryIds = [...new Set((items || []).map((i: any) => i.category_id).filter(Boolean))]
-    let categories: any[] = []
-    if (categoryIds.length > 0) {
-      const { data: cats } = await routeClient.from('categories').select('id, name, icon').in('id', categoryIds)
-      categories = cats || []
-    }
-    const categoryMap = new Map(categories.map(c => [c.id, c]))
-
     const normalized = (items || []).map((listing: any) => ({
       ...listing,
-      categories: categoryMap.get(listing.category_id) || null,
+      categories: listing.categories || null,
+      user: listing.user || null,
+      business: listing.business || null,
+      ownerName: listing.business?.name || listing.user?.name || 'Owner',
+      ownerAvatar: listing.business?.logo || listing.user?.avatar,
+      ownerType: listing.business_id ? 'business' : 'individual',
+      isVerified: listing.business?.is_verified || false,
       images: listing.images || [],
       depositValue: listing.deposit_value ? parseFloat(listing.deposit_value) : (listing.depositValue || 0),
       priceDaily: parseFloat(listing.price_daily) || 0,

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { createBusinessSlug } from '@/lib/utils/slugify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -335,6 +336,7 @@ export default function BrowsePage() {
                         <span className="line-clamp-1">{listing.location}</span>
                       </div>
 
+
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <div className="text-2xl font-bold text-coral-600">
@@ -375,6 +377,16 @@ export default function BrowsePage() {
                           <Badge variant="outline" className="text-xs">
                             {(listing as any).categories?.name || 'Uncategorized'}
                           </Badge>
+                          {(listing as any).business_id && (
+                            <Link 
+                              href={`/store/${createBusinessSlug((listing as any).business?.name || '')}`}
+                              className="text-xs"
+                            >
+                              <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100">
+                                🏪 Store
+                              </Badge>
+                            </Link>
+                          )}
                         </div>
                         
                         <div className="flex items-center space-x-2">
