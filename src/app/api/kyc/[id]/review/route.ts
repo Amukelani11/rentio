@@ -33,8 +33,16 @@ export async function PUT(
       return NextResponse.json({ error: 'Rejection reason required' }, { status: 400 })
     }
 
+    // For admin reviewers use service-role client to bypass RLS so they can see any verification
+    const { createClient } = await import('@supabase/supabase-js')
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const db = (user.isAdmin && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
+      ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+      : supabase
+
     // Get the verification to ensure it exists and is pending
-    const { data: verification, error: fetchError } = await supabase
+    const { data: verification, error: fetchError } = await db
       .from('kyc_verifications')
       .select('*')
       .eq('id', id)
@@ -82,7 +90,7 @@ export async function PUT(
       updateData.rejection_reason = rejectionReason
     }
 
-    const { data: updatedVerification, error: updateError } = await supabase
+    const { data: updatedVerification, error: updateError } = await db
       .from('kyc_verifications')
       .update(updateData)
       .eq('id', id)
@@ -102,7 +110,7 @@ export async function PUT(
         reason: action !== 'approve' ? rejectionReason : undefined,
       })
       // Need user's email; fetch quickly
-      const { data: u } = await supabase.from('users').select('email').eq('id', updatedVerification.user_id).single()
+      const { data: u } = await db.from('users').select('email').eq('id', updatedVerification.user_id).single()
       if (u?.email) {
         await sendEmail({ to: u.email, subject: `KYC ${action === 'approve' ? 'Approved' : action === 'reject' ? 'Rejected' : 'Update'}`, html })
       }

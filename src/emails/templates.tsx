@@ -4,6 +4,8 @@ const brandColor = '#ff5a5f'
 const textColor = '#0f172a'
 const subText = '#475569'
 
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://rentio.co.za'
+
 function baseLayout(title: string, body: string) {
   return `<!doctype html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="ie=edge"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${title}</title></head><body style="margin:0;background:#f8fafc;color:${textColor};font-family:Inter,-apple-system,Segoe UI,Helvetica,Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f8fafc;padding:24px 0"><tbody><tr><td><table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(15,23,42,0.06)"><tbody><tr><td style="padding:20px;background:linear-gradient(90deg, rgba(255,90,95,0.08), rgba(255,90,95,0))"><img src="https://rentio-public.s3.amazonaws.com/rentiologo.png" alt="Rentio" height="24" style="display:block"/></td></tr><tr><td style="padding:24px">${body}</td></tr><tr><td style="padding:20px;background:#f1f5f9;color:#475569;font-size:12px"><div>You're receiving this email because you have a Rentio account.</div><div style="margin-top:6px">© ${new Date().getFullYear()} Rentio. All rights reserved.</div></td></tr></tbody></table></td></tr></tbody></table></body></html>`
 }
@@ -22,7 +24,7 @@ export function kycStatusEmail(opts: { name: string; status: 'VERIFIED' | 'REJEC
 
 export function listingReviewEmail(opts: { ownerName: string; listingTitle: string; status: 'SUBMITTED' | 'APPROVED' | 'REJECTED'; note?: string }) {
   const title = opts.status === 'APPROVED' ? 'Listing Approved' : opts.status === 'REJECTED' ? 'Listing Rejected' : 'Listing Submitted for Review'
-  const body = `<h1 style="margin:0 0 8px;font-size:22px">${title}</h1><p style="margin:0 0 16px;color:#334155">Hi ${opts.ownerName},</p><p style="margin:0 0 8px;color:#334155">Listing: <strong>${opts.listingTitle}</strong></p>${opts.note ? `<p style="margin:0 0 12px;color:${subText}">Note: ${opts.note}</p>` : ''}<a href="https://rentio.app/dashboard/listings" style="display:inline-block;margin-top:12px;background:${brandColor};color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none">Manage listings</a>`
+  const body = `<h1 style="margin:0 0 8px;font-size:22px">${title}</h1><p style="margin:0 0 16px;color:#334155">Hi ${opts.ownerName},</p><p style="margin:0 0 8px;color:#334155">Listing: <strong>${opts.listingTitle}</strong></p>${opts.note ? `<p style="margin:0 0 12px;color:${subText}">Note: ${opts.note}</p>` : ''}<a href="${SITE_URL}/dashboard/listings" style="display:inline-block;margin-top:12px;background:${brandColor};color:#fff;padding:10px 16px;border-radius:10px;text-decoration:none">Manage listings</a>`
   return baseLayout(title, body)
 }
 
