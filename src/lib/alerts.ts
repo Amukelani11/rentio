@@ -219,7 +219,7 @@ export class StockAlertService {
         break
     }
 
-    message += `\n\nThis is an automated alert from your Rentio business dashboard.\n\nTo manage your alerts, visit your dashboard.`
+    message += `\n\nThis is an automated notification from your business dashboard.\n\nTo manage your alerts, visit your dashboard.`
     message += `\n\nTo stop receiving these notifications, you can disable this alert in your dashboard settings.`
 
     return message

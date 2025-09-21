@@ -70,6 +70,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch listings' }, { status: 500 })
     }
 
+    // Debug: Log the raw items to see what business data is being fetched
+    console.log('Raw search results:', items?.[0])
+
     const normalized = (items || []).map((listing: any) => ({
       ...listing,
       categories: listing.categories || null,

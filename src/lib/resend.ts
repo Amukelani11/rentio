@@ -29,7 +29,7 @@ export async function sendEmail(options: SendEmailOptions) {
       return { skipped: true }
     }
 
-    const from = options.from || 'Rentio <no-reply@rentio.co.za>'
+    const from = options.from || 'notifications@rentio.co.za'
     console.log('[email] Sending email:', { from, to: options.to, subject: options.subject })
 
     const res = await client.emails.send({
