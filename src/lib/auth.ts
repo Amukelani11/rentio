@@ -88,18 +88,20 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
       }
     }
 
-    // Get user roles from auth metadata; if empty, fall back to DB user_roles (RLS allows own read)
+    // Always get user roles from database to ensure fresh data
     let rolesList: Role[] = []
-    const metaRoles = session.user.user_metadata?.roles
-    rolesList = Array.isArray(metaRoles) ? metaRoles : []
-    if (rolesList.length === 0) {
-      try {
-        const { data: rows } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', (user as any).id)
-        rolesList = (rows || []).map((r: any) => r.role)
-      } catch {}
+    try {
+      const { data: rows } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', (user as any).id)
+      rolesList = (rows || []).map((r: any) => r.role)
+      console.log('Auth: Fetched roles from DB for user', (user as any).email, ':', rolesList)
+    } catch (e) {
+      // Fall back to auth metadata if DB fetch fails
+      const metaRoles = session.user.user_metadata?.roles
+      rolesList = Array.isArray(metaRoles) ? metaRoles : []
+      console.log('Auth: Fell back to metadata roles for user', (user as any).email, ':', rolesList)
     }
 
     // Get profile data including is_admin using regular client (not admin)
@@ -113,13 +115,27 @@ export async function getAuthUser(providedClient?: ReturnType<typeof createServe
       // Silent fail for profile fetch
     }
 
+    // Always fetch fresh KYC status from database
+    let kycStatus = null
+    try {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('kyc_status')
+        .eq('id', (user as any).id)
+        .single()
+      kycStatus = (userData as any)?.kyc_status
+    } catch (e) {
+      // Fall back to session data if fetch fails
+      kycStatus = (user as any).kyc_status
+    }
+
     return {
       id: (user as any).id,
       email: (user as any).email,
       name: (user as any).name,
       avatar: (user as any).avatar,
       roles: rolesList,
-      kycStatus: (user as any).kyc_status,
+      kycStatus: kycStatus,
       isAdmin: isAdmin,
     }
   } catch (error) {
