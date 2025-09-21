@@ -1,6 +1,6 @@
 'use client'
 
-import { Phone, Mail, MapPin, Clock, MessageSquare, Users, Building2, Star, CheckCircle, Send } from 'lucide-react'
+import { Mail, MessageSquare, Users, Building2, Send, Clock, Globe, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -32,13 +32,6 @@ export default function ContactPage() {
 
   const contactInfo = [
     {
-      icon: Phone,
-      title: "Phone Support",
-      value: "+27 10 123 4567",
-      description: "Monday - Friday, 9 AM - 6 PM",
-      hours: "Mon-Fri: 9AM-6PM"
-    },
-    {
       icon: Mail,
       title: "Email Support",
       value: "support@rentio.co.za",
@@ -46,42 +39,49 @@ export default function ContactPage() {
       hours: "24/7 Support"
     },
     {
-      icon: MapPin,
-      title: "Head Office",
-      value: "Johannesburg, South Africa",
-      description: "By appointment only",
-      hours: "Mon-Fri: 9AM-5PM"
+      icon: MessageSquare,
+      title: "Live Chat",
+      value: "In-App Chat",
+      description: "Chat with our support team",
+      hours: "Available 24/7"
+    },
+    {
+      icon: Globe,
+      title: "Help Center",
+      value: "Online Resources",
+      description: "Self-service support articles",
+      hours: "Always Available"
     }
   ]
 
   const faqs = [
     {
       question: "How quickly do you respond to support requests?",
-      answer: "We typically respond to all inquiries within 24 hours. For urgent issues, please call our support line during business hours."
+      answer: "We typically respond to all inquiries within 24 hours. Most responses are sent within 4-6 hours during business days."
     },
     {
       question: "What should I do if I have a problem with a rental?",
-      answer: "If you're experiencing issues with a rental, please contact our support team immediately. We have dedicated dispute resolution specialists who can help mediate any issues."
+      answer: "If you're experiencing issues with a rental, please contact our support team through the contact form or in-app messaging. We have dedicated dispute resolution specialists who can help mediate any issues."
     },
     {
       question: "How do I report suspicious activity?",
-      answer: "You can report suspicious activity through your dashboard or by contacting our support team. All reports are investigated promptly and confidentially."
+      answer: "You can report suspicious activity through your dashboard, in-app reporting tools, or by contacting our support team. All reports are investigated promptly and confidentially."
     },
     {
       question: "Do you offer phone support?",
-      answer: "Yes, we offer phone support during business hours (Monday-Friday, 9 AM - 6 PM). For after-hours support, please email us or use our online contact form."
+      answer: "Currently, we provide support through email and in-app messaging to ensure we can track all communications and provide thorough assistance. This allows us to resolve issues more efficiently."
     }
   ]
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+      <div className="bg-gradient-to-r from-coral-600 to-coral-700 text-white">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-4xl mx-auto text-center">
             <MessageSquare className="h-16 w-16 mx-auto mb-4" />
             <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
-            <p className="text-xl text-blue-100">
+            <p className="text-xl text-coral-100">
               We're here to help! Get in touch with our friendly support team for any questions or concerns.
             </p>
           </div>
@@ -96,11 +96,11 @@ export default function ContactPage() {
             {contactInfo.map((info, index) => (
               <Card key={index} className="text-center">
                 <CardContent className="p-6">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <info.icon className="h-8 w-8 text-blue-600" />
+                  <div className="w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <info.icon className="h-8 w-8 text-coral-600" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{info.title}</h3>
-                  <p className="text-blue-600 font-medium mb-1">{info.value}</p>
+                  <p className="text-coral-600 font-medium mb-1">{info.value}</p>
                   <p className="text-gray-600 text-sm mb-2">{info.description}</p>
                   <Badge variant="outline" className="text-xs">
                     <Clock className="h-3 w-3 mr-1" />
@@ -182,43 +182,14 @@ export default function ContactPage() {
             </Card>
           </div>
 
-          {/* Emergency Contact */}
+          {/* Support Categories */}
           <div>
-            <h2 className="text-3xl font-bold mb-6">Need Urgent Help?</h2>
+            <h2 className="text-3xl font-bold mb-6">How We Can Help</h2>
             <div className="space-y-6">
-              <Card className="border-red-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-red-600">
-                    <Star className="h-5 w-5 mr-2" />
-                    Emergency Support
-                  </CardTitle>
-                  <CardDescription>
-                    For urgent issues requiring immediate attention
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center">
-                      <Phone className="h-5 w-5 text-red-600 mr-3" />
-                      <div>
-                        <p className="font-medium">Emergency Hotline</p>
-                        <p className="text-red-600 font-semibold">+27 10 123 4567</p>
-                        <p className="text-sm text-gray-600">Available 24/7 for safety issues</p>
-                      </div>
-                    </div>
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <p className="text-sm text-red-800">
-                        <strong>Emergency cases include:</strong> Safety threats, harassment, fraudulent activity, or immediate security concerns.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <Users className="h-5 w-5 mr-2 text-blue-600" />
+                    <Users className="h-5 w-5 mr-2 text-coral-600" />
                     Support Categories
                   </CardTitle>
                 </CardHeader>
@@ -263,6 +234,30 @@ export default function ContactPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              <Card className="border-coral-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-coral-600">
+                    <Shield className="h-5 w-5 mr-2" />
+                    Safety & Security
+                  </CardTitle>
+                  <CardDescription>
+                    Report urgent safety or security concerns
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="bg-coral-50 border border-coral-200 rounded-lg p-3">
+                      <p className="text-sm text-coral-800">
+                        <strong>For urgent safety issues:</strong> Please use the in-app reporting feature or mark your message as urgent when contacting support.
+                      </p>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Our team prioritizes safety-related reports and responds to urgent matters within 2-4 hours.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
@@ -289,120 +284,69 @@ export default function ContactPage() {
           <h2 className="text-3xl font-bold mb-8 text-center">Our Response Times</h2>
           <Card>
             <CardContent className="p-8">
-              <div className="grid md:grid-cols-4 gap-6 text-center">
+              <div className="grid md:grid-cols-3 gap-6 text-center">
                 <div>
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Shield className="h-8 w-8 text-red-600" />
                   </div>
-                  <h3 className="font-semibold mb-2">Emergency</h3>
-                  <p className="text-green-600 font-bold">Immediate</p>
-                  <p className="text-sm text-gray-600">24/7 hotline</p>
+                  <h3 className="font-semibold mb-2">Safety Issues</h3>
+                  <p className="text-red-600 font-bold">2-4 hours</p>
+                  <p className="text-sm text-gray-600">Priority response</p>
+                </div>
+                <div>
+                  <div className="w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock className="h-8 w-8 text-coral-600" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Urgent</h3>
+                  <p className="text-coral-600 font-bold">4-8 hours</p>
+                  <p className="text-sm text-gray-600">Same business day</p>
                 </div>
                 <div>
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Clock className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="font-semibold mb-2">Urgent</h3>
-                  <p className="text-blue-600 font-bold">2-4 hours</p>
-                  <p className="text-sm text-gray-600">Business hours</p>
-                </div>
-                <div>
-                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageSquare className="h-8 w-8 text-yellow-600" />
+                    <MessageSquare className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="font-semibold mb-2">Standard</h3>
-                  <p className="text-yellow-600 font-bold">24 hours</p>
+                  <p className="text-blue-600 font-bold">24 hours</p>
                   <p className="text-sm text-gray-600">All inquiries</p>
-                </div>
-                <div>
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Building2 className="h-8 w-8 text-purple-600" />
-                  </div>
-                  <h3 className="font-semibold mb-2">Business</h3>
-                  <p className="text-purple-600 font-bold">4-8 hours</p>
-                  <p className="text-sm text-gray-600">Priority support</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Office Locations */}
+        {/* Online Resources */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">Visit Our Offices</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MapPin className="h-6 w-6 mr-2 text-coral-600" />
-                  Johannesburg Office
-                </CardTitle>
-                <CardDescription>Headquarters & Main Support Center</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-semibold">Address</h4>
-                    <p className="text-gray-600">
-                      123 Rivonia Road<br />
-                      Sandton, Johannesburg<br />
-                      2196, South Africa
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Hours</h4>
-                    <p className="text-gray-600">
-                      Monday - Friday: 9:00 AM - 6:00 PM<br />
-                      Saturday: 9:00 AM - 1:00 PM<br />
-                      Sunday: Closed
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Services</h4>
-                    <p className="text-gray-600">
-                      In-person support, business meetings, training sessions, account setup assistance
-                    </p>
-                  </div>
+          <h2 className="text-3xl font-bold mb-8 text-center">Self-Service Resources</h2>
+          <Card>
+            <CardContent className="p-8">
+              <div className="grid md:grid-cols-3 gap-8 text-center">
+                <div>
+                  <div className="text-4xl mb-4">📚</div>
+                  <h3 className="font-semibold mb-2">Help Center</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Browse our comprehensive knowledge base with tutorials and guides.
+                  </p>
+                  <Button variant="outline" size="sm">Visit Help Center</Button>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MapPin className="h-6 w-6 mr-2 text-blue-600" />
-                  Cape Town Office
-                </CardTitle>
-                <CardDescription>Regional Support Center</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-semibold">Address</h4>
-                    <p className="text-gray-600">
-                      45 Long Street<br />
-                      Cape Town City Centre<br />
-                      8001, South Africa
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Hours</h4>
-                    <p className="text-gray-600">
-                      Monday - Friday: 9:00 AM - 5:00 PM<br />
-                      Saturday: 10:00 AM - 2:00 PM<br />
-                      Sunday: Closed
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Services</h4>
-                    <p className="text-gray-600">
-                      Regional support, partner meetings, community events, local business outreach
-                    </p>
-                  </div>
+                <div>
+                  <div className="text-4xl mb-4">🎬</div>
+                  <h3 className="font-semibold mb-2">Video Tutorials</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Watch step-by-step video guides for using all Rentio features.
+                  </p>
+                  <Button variant="outline" size="sm">Watch Tutorials</Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div>
+                  <div className="text-4xl mb-4">📱</div>
+                  <h3 className="font-semibold mb-2">In-App Support</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    Get instant help through our built-in chat and support tools.
+                  </p>
+                  <Button variant="outline" size="sm">Open App</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Community */}
@@ -441,15 +385,15 @@ export default function ContactPage() {
         </div>
 
         {/* CTA */}
-        <div className="text-center py-12 bg-gradient-to-r from-blue-50 to-coral-50 rounded-lg">
+        <div className="text-center py-12 bg-gradient-to-r from-coral-50 to-blue-50 rounded-lg">
           <h2 className="text-3xl font-bold mb-4">Still Have Questions?</h2>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
             Our friendly support team is ready to help you with any questions or concerns you might have.
-            Don't hesitate to reach out!
+            Don't hesitate to reach out through our contact form or in-app messaging.
           </p>
           <div className="flex justify-center gap-4">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-              Contact Support
+            <Button size="lg" className="bg-coral-600 hover:bg-coral-700">
+              Send Message
             </Button>
             <Button size="lg" variant="outline">
               Browse Help Center
