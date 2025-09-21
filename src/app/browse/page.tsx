@@ -299,7 +299,7 @@ export default function BrowsePage() {
                   <Card key={listing.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
                     <div className="relative">
                       {getCover(listing) ? (
-                        <img src={getCover(listing)!} alt={listing.title} className="h-48 w-full object-cover" />
+                        <img src={getCover(listing)!} alt={listing.title} className="h-48 w-full object-contain bg-gray-50" />
                       ) : (
                         <div className="h-48 bg-gray-200 flex items-center justify-center">
                           <ImageIcon className="h-16 w-16 text-gray-400" />

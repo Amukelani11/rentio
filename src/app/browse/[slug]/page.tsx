@@ -273,7 +273,7 @@ export default function ListingDetailPage() {
                       alt={listing?.title || 'Listing image'}
                       fill
                       sizes="(max-width: 1024px) 100vw, 66vw"
-                      className="object-cover"
+                      className="object-contain bg-gray-50"
                       unoptimized
                       priority
                     />
@@ -332,7 +332,7 @@ export default function ListingDetailPage() {
                         className={`relative h-16 w-24 flex-shrink-0 rounded overflow-hidden border ${i === currentImage ? 'ring-2 ring-coral-600' : 'border-gray-200'}`}
                         aria-label={`Go to image ${i+1}`}
                       >
-                        <Image src={src} alt={`Thumbnail ${i+1}`} fill className="object-cover" sizes="96px" unoptimized />
+                        <Image src={src} alt={`Thumbnail ${i+1}`} fill className="object-contain bg-gray-50" sizes="96px" unoptimized />
                       </button>
                     ))}
                   </div>
