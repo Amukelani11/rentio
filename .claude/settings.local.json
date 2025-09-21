@@ -4,7 +4,8 @@
       "Bash(npx create-next-app:*)",
       "Bash(mkdir:*)",
       "Bash(find:*)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
