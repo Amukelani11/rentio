@@ -76,9 +76,13 @@ export default function AdminKYCPage() {
 
   const fetchData = async () => {
     try {
+      const qs = new URLSearchParams({
+        status: statusFilter !== 'ALL' ? statusFilter : '',
+        type: typeFilter !== 'ALL' ? typeFilter : '',
+      }).toString()
       const [userResponse, verificationsResponse] = await Promise.all([
         fetch('/api/auth/user'),
-        fetch(`/api/kyc?status=${statusFilter !== 'ALL' ? statusFilter : ''}&type=${typeFilter !== 'ALL' ? typeFilter : ''}`),
+        fetch(`/api/admin/kyc?${qs}`),
       ]);
 
       if (userResponse.ok) {
@@ -89,9 +93,12 @@ export default function AdminKYCPage() {
       if (verificationsResponse.ok) {
         const verificationsData = await verificationsResponse.json();
         setVerifications(verificationsData.data.items);
+      } else {
+        setVerifications([])
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setVerifications([])
     } finally {
       setLoading(false);
     }
