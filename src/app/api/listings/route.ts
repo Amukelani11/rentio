@@ -105,6 +105,8 @@ export async function GET(request: NextRequest) {
         bookingsCount: listing.bookings_count || 0,
         priceDaily: parseFloat(listing.price_daily) || 0,
         priceWeekly: listing.price_weekly ? parseFloat(listing.price_weekly) : null,
+        supportsMonthly: listing.supports_monthly || false,
+        minMonths: listing.min_months || null,
       }
     })
 
@@ -189,11 +191,18 @@ export async function POST(request: NextRequest) {
       specifications,
       tags,
       cancellationPolicy,
+      supportsMonthly,
+      minMonths,
     } = body
 
     // Validate required fields
     if (!title || !description || !categoryId || !priceDaily || !depositType || !depositValue || !location) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Validate monthly rental fields
+    if (supportsMonthly && (!minMonths || minMonths < 1)) {
+      return NextResponse.json({ error: 'Minimum months must be at least 1 when monthly rentals are enabled' }, { status: 400 })
     }
 
     // Generate slug
@@ -249,6 +258,8 @@ export async function POST(request: NextRequest) {
       tags: tags || [],
       images: body.images || [],
       cancellation_policy: cancellationPolicy || 'MODERATE',
+      supports_monthly: supportsMonthly || false,
+      min_months: supportsMonthly && minMonths ? parseInt(minMonths) : null,
       status: statusToSave,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

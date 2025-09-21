@@ -39,6 +39,8 @@ interface CreateListingForm {
   latitude?: number;
   longitude?: number;
   pickupAddress?: string;
+  supportsMonthly: boolean;
+  minMonths?: number;
   deliveryOptions: {
     pickupAvailable: boolean;
     deliveryAvailable: boolean;
@@ -84,6 +86,7 @@ export default function CreateListingPage() {
     requiresKyc: false,
     location: '',
     pickupAddress: '',
+    supportsMonthly: false,
     deliveryOptions: {
       pickupAvailable: true,
       deliveryAvailable: false,
@@ -322,6 +325,8 @@ export default function CreateListingPage() {
           categoryId: resolvedCategoryId,
           images: imageUrls,
           status: action === 'publish' ? 'ACTIVE' : 'DRAFT',
+          supportsMonthly: formData.supportsMonthly,
+          minMonths: formData.supportsMonthly ? formData.minMonths : null,
         }),
       });
 
@@ -624,6 +629,37 @@ export default function CreateListingPage() {
                         onChange={(e) => handleInputChange('weekendMultiplier', parseFloat(e.target.value) || 1)}
                       />
                     </div>
+                  </div>
+
+                  {/* Monthly Rentals Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <Label>Monthly Rentals</Label>
+                        <p className="text-sm text-gray-600">Allow customers to rent this item for long-term monthly periods</p>
+                      </div>
+                      <Switch
+                        checked={formData.supportsMonthly}
+                        onCheckedChange={(checked) => handleInputChange('supportsMonthly', checked)}
+                      />
+                    </div>
+
+                    {formData.supportsMonthly && (
+                      <div className="max-w-xs">
+                        <Label htmlFor="minMonths">Minimum Months</Label>
+                        <Input
+                          id="minMonths"
+                          type="number"
+                          min="1"
+                          placeholder="1"
+                          value={formData.minMonths || ''}
+                          onChange={(e) => handleInputChange('minMonths', parseInt(e.target.value) || 1)}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Minimum number of months for monthly rentals
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Minimum/Maximum Days moved to Availability step */}
