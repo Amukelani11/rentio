@@ -133,26 +133,174 @@ export default function AdminListingsPage() {
                       {detailsLoading ? (
                         <div className="p-6 text-center">Loading...</div>
                       ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-6">
+                          {/* Images */}
+                          {selectedListing.images && selectedListing.images.length > 0 && (
+                            <div>
+                              <h3 className="font-semibold mb-2">Images</h3>
+                              <div className="grid grid-cols-2 gap-2">
+                                {selectedListing.images.slice(0, 4).map((image: string, index: number) => (
+                                  <img
+                                    key={index}
+                                    src={image}
+                                    alt={`Listing image ${index + 1}`}
+                                    className="w-full h-24 object-cover rounded-lg border"
+                                  />
+                                ))}
+                              </div>
+                              {selectedListing.images.length > 4 && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  +{selectedListing.images.length - 4} more images
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Owner Information */}
                           <div>
-                            <h3 className="font-semibold">Title</h3>
-                            <div className="text-sm">{selectedListing.title}</div>
+                            <h3 className="font-semibold mb-2">Posted by</h3>
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              {selectedListing.owner_user ? (
+                                <div>
+                                  <div className="font-medium">{selectedListing.owner_user.name}</div>
+                                  <div className="text-sm text-gray-600">{selectedListing.owner_user.email}</div>
+                                  <Badge variant="outline" className="mt-1">Individual Lister</Badge>
+                                </div>
+                              ) : selectedListing.owner_business ? (
+                                <div>
+                                  <div className="font-medium">{selectedListing.owner_business.name}</div>
+                                  <div className="text-sm text-gray-600">{selectedListing.owner_business.contact_email}</div>
+                                  <div className="text-sm text-gray-500">{selectedListing.owner_business.contact_name}</div>
+                                  <Badge variant="outline" className="mt-1">Business Lister</Badge>
+                                </div>
+                              ) : (
+                                <div className="text-sm text-gray-500">Owner information not available</div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold">Location</h3>
-                            <div className="text-sm">{selectedListing.location}</div>
+
+                          {/* Basic Info */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h3 className="font-semibold">Title</h3>
+                              <div className="text-sm">{selectedListing.title}</div>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">Category</h3>
+                              <div className="text-sm">{selectedListing.category?.name || 'N/A'}</div>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">Status</h3>
+                              <Badge variant={selectedListing.status === 'ACTIVE' ? 'default' : selectedListing.status === 'PENDING' ? 'secondary' : 'destructive'}>
+                                {selectedListing.status}
+                              </Badge>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">Location</h3>
+                              <div className="text-sm">{selectedListing.location}</div>
+                            </div>
                           </div>
+
+                          {/* Pricing */}
                           <div>
-                            <h3 className="font-semibold">Posted by</h3>
-                            <div className="text-sm">{selectedListing.user?.email || selectedListing.user_id}</div>
+                            <h3 className="font-semibold mb-2">Pricing</h3>
+                            <div className="bg-blue-50 p-3 rounded-lg space-y-2">
+                              <div className="flex justify-between">
+                                <span>Daily Rate:</span>
+                                <span className="font-medium">R{parseFloat(selectedListing.price_daily || 0).toLocaleString()}</span>
+                              </div>
+                              {selectedListing.price_weekly && (
+                                <div className="flex justify-between">
+                                  <span>Weekly Rate:</span>
+                                  <span className="font-medium">R{parseFloat(selectedListing.price_weekly).toLocaleString()}</span>
+                                </div>
+                              )}
+                              {selectedListing.supports_monthly && (
+                                <div className="flex justify-between">
+                                  <span>Monthly Rentals:</span>
+                                  <span className="font-medium">
+                                    Supported {selectedListing.min_months && `(Min: ${selectedListing.min_months} months)`}
+                                  </span>
+                                </div>
+                              )}
+                              {selectedListing.weekend_multiplier > 1 && (
+                                <div className="flex justify-between">
+                                  <span>Weekend Multiplier:</span>
+                                  <span className="font-medium">{selectedListing.weekend_multiplier}x</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
+
+                          {/* Deposit */}
                           <div>
-                            <h3 className="font-semibold">Price</h3>
-                            <div className="text-sm">{selectedListing.price_daily ? `R${selectedListing.price_daily}/day` : 'N/A'}</div>
+                            <h3 className="font-semibold mb-2">Security Deposit</h3>
+                            <div className="bg-yellow-50 p-3 rounded-lg">
+                              <div className="flex justify-between">
+                                <span>Type:</span>
+                                <span className="font-medium">{selectedListing.deposit_type}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Amount:</span>
+                                <span className="font-medium">
+                                  {selectedListing.deposit_type === 'PERCENTAGE' 
+                                    ? `${selectedListing.deposit_value}%` 
+                                    : `R${parseFloat(selectedListing.deposit_value || 0).toLocaleString()}`
+                                  }
+                                </span>
+                              </div>
+                            </div>
                           </div>
+
+                          {/* Rental Terms */}
                           <div>
-                            <h3 className="font-semibold">Description</h3>
-                            <div className="text-sm whitespace-pre-wrap">{selectedListing.description}</div>
+                            <h3 className="font-semibold mb-2">Rental Terms</h3>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-600">Minimum Days:</span>
+                                <div className="font-medium">{selectedListing.min_days || 1}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Maximum Days:</span>
+                                <div className="font-medium">{selectedListing.max_days || 'No limit'}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Instant Book:</span>
+                                <div className="font-medium">{selectedListing.instant_book ? 'Yes' : 'No'}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">KYC Required:</span>
+                                <div className="font-medium">{selectedListing.requires_kyc ? 'Yes' : 'No'}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <div>
+                            <h3 className="font-semibold mb-2">Description</h3>
+                            <div className="text-sm whitespace-pre-wrap bg-gray-50 p-3 rounded-lg max-h-32 overflow-y-auto">
+                              {selectedListing.description}
+                            </div>
+                          </div>
+
+                          {/* Tags */}
+                          {selectedListing.tags && selectedListing.tags.length > 0 && (
+                            <div>
+                              <h3 className="font-semibold mb-2">Tags</h3>
+                              <div className="flex flex-wrap gap-1">
+                                {selectedListing.tags.map((tag: string, index: number) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Timestamps */}
+                          <div className="text-xs text-gray-500 pt-2 border-t">
+                            <div>Created: {new Date(selectedListing.created_at).toLocaleString()}</div>
+                            <div>Updated: {new Date(selectedListing.updated_at).toLocaleString()}</div>
                           </div>
                         </div>
                       )}

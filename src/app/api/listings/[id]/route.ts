@@ -28,7 +28,12 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     const id = params.id
     const { data: listing, error } = await admin
       .from('listings')
-      .select('*')
+      .select(`
+        *,
+        category:categories(id, name, icon),
+        owner_user:users!user_id(id, email, name, avatar),
+        owner_business:businesses!business_id(id, name, contact_email, contact_name)
+      `)
       .eq('id', id)
       .single()
 
