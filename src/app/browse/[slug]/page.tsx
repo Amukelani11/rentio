@@ -357,6 +357,14 @@ export default function ListingDetailPage() {
                   <Calendar className="h-5 w-5 mr-1" />
                   <span>{listing?.bookingsCount || 0} bookings</span>
                 </div>
+                {listing?.instant_book && (
+                  <div className="flex items-center">
+                    <Badge className="bg-green-600 text-white">
+                      <Clock className="h-4 w-4 mr-1" />
+                      Instant Book
+                    </Badge>
+                  </div>
+                )}
               </div>
             </div>
 

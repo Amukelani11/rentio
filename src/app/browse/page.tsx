@@ -311,6 +311,12 @@ export default function BrowsePage() {
                           Featured
                         </Badge>
                       )}
+                      {listing.instantBook && (
+                        <Badge className="absolute top-2 left-2 bg-green-600 text-white flex items-center" style={{ marginTop: listing.featured ? '2.5rem' : '0' }}>
+                          <Clock className="h-3 w-3 mr-1" />
+                          Instant Book
+                        </Badge>
+                      )}
                       {listing.verified && (
                         <Badge className="absolute top-2 right-2 bg-green-600/30 border border-green-600 text-green-800">
                           Verified
@@ -359,7 +365,8 @@ export default function BrowsePage() {
                             Deposit: {formatPrice(typeof listing.depositValue === 'number' ? listing.depositValue : ((listing as any).deposit_value ? parseFloat((listing as any).deposit_value) : 0))}
                           </div>
                           {listing.instantBook && (
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge className="text-xs bg-green-600 text-white">
+                              <Clock className="h-3 w-3 mr-1" />
                               Instant Book
                             </Badge>
                           )}

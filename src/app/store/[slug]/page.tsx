@@ -286,6 +286,12 @@ export default function BusinessStorePage() {
                               Featured
                             </Badge>
                           )}
+                          {listing.instant_book && (
+                            <Badge className="absolute top-2 left-2 bg-green-600 text-white flex items-center" style={{ marginTop: listing.featured ? '2.5rem' : '0' }}>
+                              <Clock className="h-3 w-3 mr-1" />
+                              Instant Book
+                            </Badge>
+                          )}
                           
                           <button
                             onClick={() => handleFavoriteToggle(listing.id)}
@@ -324,7 +330,8 @@ export default function BusinessStorePage() {
                             
                             <div className="text-right">
                               {listing.instant_book && (
-                                <Badge variant="secondary" className="text-xs mb-1">
+                                <Badge className="text-xs mb-1 bg-green-600 text-white">
+                                  <Clock className="h-3 w-3 mr-1" />
                                   Instant Book
                                 </Badge>
                               )}
