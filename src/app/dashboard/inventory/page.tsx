@@ -31,11 +31,13 @@ interface InventoryItem {
   available_quantity: number;
   price_daily: number;
   price_weekly: number;
-  status: 'AVAILABLE' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'MAINTENANCE';
+  status: 'AVAILABLE' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'MAINTENANCE' | 'PENDING' | 'DRAFT';
+  listing_status?: 'ACTIVE' | 'PENDING' | 'DRAFT';
   total_revenue: number;
   total_bookings: number;
   last_booked: string | null;
   image_url?: string;
+  has_inventory: boolean;
 }
 
 export default function InventoryPage() {
@@ -64,11 +66,56 @@ export default function InventoryPage() {
 
   const fetchInventory = async () => {
     try {
-      const response = await fetch('/api/business/inventory');
-      if (response.ok) {
-        const data = await response.json();
-        setInventory(data.inventory || []);
-      }
+      // Fetch inventory items (listings with inventory)
+      const inventoryResponse = await fetch('/api/business/inventory');
+      const inventoryData = inventoryResponse.ok ? await inventoryResponse.json() : { inventory: [] };
+      console.log('Inventory data:', inventoryData);
+
+      // Fetch all business listings (including those without inventory)
+      const listingsResponse = await fetch('/api/listings');
+      const listingsData = listingsResponse.ok ? await listingsResponse.json() : { data: { items: [] } };
+      console.log('Listings response status:', listingsResponse.status);
+      console.log('Listings data:', listingsData);
+
+      // Combine and format data
+      const inventoryItems = inventoryData.inventory || [];
+      const allListings = listingsData.data?.items || [];
+
+      // Create a Set of inventory listing IDs
+      const inventoryListingIds = new Set(inventoryItems.map((item: any) => item.id));
+
+      // Add listings that don't have inventory items yet
+      const listingsWithoutInventory = allListings
+        .filter((listing: any) => !inventoryListingIds.has(listing.id))
+        .map((listing: any) => ({
+          id: listing.id,
+          name: listing.title,
+          sku: `LIST-${listing.id.slice(0, 8).toUpperCase()}`,
+          category: listing.categories?.name || 'Uncategorized',
+          quantity: 1,
+          available_quantity: 1,
+          price_daily: parseFloat(listing.price_daily),
+          price_weekly: listing.price_weekly ? parseFloat(listing.price_weekly) : null,
+          status: listing.status === 'PENDING' ? 'PENDING' : listing.status === 'DRAFT' ? 'DRAFT' : 'AVAILABLE',
+          listing_status: listing.status,
+          total_revenue: 0,
+          total_bookings: 0,
+          last_booked: null,
+          image_url: listing.images?.[0] || listing.image_url,
+          has_inventory: false
+        }));
+
+      // Update inventory items with additional fields
+      const updatedInventoryItems = inventoryItems.map((item: any) => ({
+        ...item,
+        has_inventory: true,
+        listing_status: 'ACTIVE' // Assuming inventory items are active listings
+      }));
+
+      // Combine both arrays
+      const combinedInventory = [...updatedInventoryItems, ...listingsWithoutInventory];
+      console.log('Combined inventory:', combinedInventory);
+      setInventory(combinedInventory);
     } catch (error) {
       console.error('Error fetching inventory:', error);
     } finally {
@@ -96,6 +143,10 @@ export default function InventoryPage() {
         return <Badge className="bg-red-100 text-red-800">Out of Stock</Badge>;
       case 'MAINTENANCE':
         return <Badge className="bg-blue-100 text-blue-800">Maintenance</Badge>;
+      case 'PENDING':
+        return <Badge className="bg-orange-100 text-orange-800">Pending</Badge>;
+      case 'DRAFT':
+        return <Badge className="bg-gray-100 text-gray-800">Draft</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -105,6 +156,8 @@ export default function InventoryPage() {
   const totalValue = inventory.reduce((sum, item) => sum + (item.price_daily * item.quantity), 0);
   const availableItems = inventory.filter(item => item.status === 'AVAILABLE').length;
   const lowStockItems = inventory.filter(item => item.status === 'LOW_STOCK').length;
+  const pendingItems = inventory.filter(item => item.status === 'PENDING').length;
+  const draftItems = inventory.filter(item => item.status === 'DRAFT').length;
 
   if (loading) {
     return (
@@ -135,7 +188,7 @@ export default function InventoryPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
-            <p className="text-gray-600 mt-1">Track and manage your rental inventory</p>
+            <p className="text-gray-600 mt-1">Track and manage all your rental listings and inventory</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => window.location.href = '/dashboard/listings/new'}>
@@ -146,7 +199,7 @@ export default function InventoryPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -179,6 +232,30 @@ export default function InventoryPage() {
                   <p className="text-2xl font-bold text-yellow-600">{lowStockItems}</p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-yellow-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Pending</p>
+                  <p className="text-2xl font-bold text-orange-600">{pendingItems}</p>
+                </div>
+                <Package className="h-8 w-8 text-orange-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Draft</p>
+                  <p className="text-2xl font-bold text-gray-600">{draftItems}</p>
+                </div>
+                <Package className="h-8 w-8 text-gray-600" />
               </div>
             </CardContent>
           </Card>
@@ -228,6 +305,8 @@ export default function InventoryPage() {
                   <option value="LOW_STOCK">Low Stock</option>
                   <option value="OUT_OF_STOCK">Out of Stock</option>
                   <option value="MAINTENANCE">Maintenance</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="DRAFT">Draft</option>
                 </select>
                 <Button variant="outline" onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); }}>
                   Clear
@@ -240,9 +319,9 @@ export default function InventoryPage() {
         {/* Inventory Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Inventory Items</CardTitle>
+            <CardTitle>All Listings & Inventory</CardTitle>
             <CardDescription>
-              {filteredInventory.length} items found
+              {filteredInventory.length} items found (including pending and draft listings)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -286,10 +365,18 @@ export default function InventoryPage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="text-sm">
-                          <p className={item.available_quantity === 0 ? 'text-red-600' : item.available_quantity <= 2 ? 'text-yellow-600' : 'text-green-600'}>
-                            {item.available_quantity} available
-                          </p>
-                          <p className="text-gray-500">of {item.quantity} total</p>
+                          {item.has_inventory ? (
+                            <>
+                              <p className={item.available_quantity === 0 ? 'text-red-600' : item.available_quantity <= 2 ? 'text-yellow-600' : 'text-green-600'}>
+                                {item.available_quantity} available
+                              </p>
+                              <p className="text-gray-500">of {item.quantity} total</p>
+                            </>
+                          ) : (
+                            <p className="text-gray-500">
+                              {item.status === 'PENDING' ? 'Setup Required' : 'Draft'}
+                            </p>
+                          )}
                         </div>
                       </td>
                       <td className="py-3 px-4">

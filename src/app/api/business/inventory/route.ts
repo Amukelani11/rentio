@@ -49,9 +49,8 @@ export async function GET(request: NextRequest) {
           reorder_point,
           last_restocked_at
         ),
-        booking_stats:bookings(
-          count,
-          sum(total_amount)
+        bookings(
+          total_amount
         )
       `)
       .eq('business_id', business.id)
@@ -66,8 +65,9 @@ export async function GET(request: NextRequest) {
     // Format inventory data
     const inventory = listings.map(listing => {
       const inventoryItem = listing.inventory && listing.inventory[0]
-      const totalRevenue = listing.booking_stats?.sum || 0
-      const totalBookings = listing.booking_stats?.count || 0
+      const bookings = listing.bookings || []
+      const totalRevenue = bookings.reduce((sum: number, booking: any) => sum + (parseFloat(booking.total_amount) || 0), 0)
+      const totalBookings = bookings.length
 
       // Determine status based on inventory
       let status = 'AVAILABLE'
