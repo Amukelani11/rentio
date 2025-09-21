@@ -1,4 +1,4 @@
-import { Coins, Percent, CreditCard, Users, Building2, TrendingUp, Calculator, Info } from 'lucide-react'
+import { Coins, Percent, CreditCard, Users, Building2, TrendingUp, Calculator, Info, CheckCircle, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'

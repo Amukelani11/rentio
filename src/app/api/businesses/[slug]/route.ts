@@ -55,7 +55,7 @@ export async function GET(
 
     // Calculate rating stats
     const totalReviews = reviews?.length || 0
-    const averageRating = totalReviews > 0 
+    const averageRating = totalReviews > 0 && reviews
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews 
       : 0
 

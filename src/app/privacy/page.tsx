@@ -1,4 +1,4 @@
-import { Shield, Lock, Eye, Database, Share2, Trash2, Settings, Globe, Mail, Phone, MapPin } from 'lucide-react'
+import { Shield, Lock, Eye, Database, Share2, Trash2, Settings, Globe, Mail, Phone, MapPin, User, CreditCard, Camera, MessageSquare, Edit, Pause, Download, X, Brain, Users, FileText } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 

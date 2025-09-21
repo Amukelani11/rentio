@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     const { data: ratingData } = await avgQuery
 
     const totalReviews = ratingData?.length || 0
-    const averageRating = totalReviews > 0 
+    const averageRating = totalReviews > 0 && ratingData
       ? ratingData.reduce((sum, r) => sum + r.rating, 0) / totalReviews 
       : 0
 
