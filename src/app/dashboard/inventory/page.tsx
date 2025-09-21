@@ -264,7 +264,7 @@ export default function InventoryPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Value</p>
+                  <p className="text-sm text-gray-600">Daily Value</p>
                   <p className="text-2xl font-bold">R {totalValue.toLocaleString()}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-600" />
