@@ -87,6 +87,16 @@ const verificationTypes = [
   },
 ];
 
+// Determine which verification types are available based on user roles
+const getAvailableVerificationTypesForUser = (u: any | null) => {
+  const roles: string[] = Array.isArray(u?.roles) ? u!.roles : []
+  if (roles.includes('BUSINESS_LISTER')) {
+    return verificationTypes.filter(t => t.id === 'BUSINESS')
+  }
+  // Non-business users: identity/address only
+  return verificationTypes.filter(t => t.id !== 'BUSINESS')
+}
+
 export default function KYCPage() {
   const [user, setUser] = useState<any>(null);
   const [verifications, setVerifications] = useState<KYCVerification[]>([]);
@@ -380,7 +390,14 @@ export default function KYCPage() {
             <p className="text-gray-600">Complete your verification to build trust and unlock more features</p>
           </div>
           <Button 
-            onClick={() => setShowUploadForm(true)}
+            onClick={() => {
+              const available = getAvailableVerificationTypesForUser(user)
+              // Auto-select the single available option for business listers
+              if (available.length === 1) {
+                setSelectedType(available[0].id)
+              }
+              setShowUploadForm(true)
+            }}
             disabled={showUploadForm}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -411,7 +428,7 @@ export default function KYCPage() {
                       <SelectValue placeholder="Select verification type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {verificationTypes.map((type) => (
+                      {getAvailableVerificationTypesForUser(user).map((type) => (
                         <SelectItem key={type.id} value={type.id}>
                           <div className="flex items-center space-x-2">
                             <type.icon className="h-4 w-4" />

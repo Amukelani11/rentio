@@ -20,12 +20,17 @@ export type SendEmailOptions = {
 
 export async function sendEmail(options: SendEmailOptions) {
   try {
+    console.log('[email] Starting sendEmail function')
+    console.log('[email] RESEND_API_KEY:', RESEND_API_KEY ? 'Present' : 'Missing')
+    console.log('[email] Client initialized:', client ? 'Yes' : 'No')
+
     if (!client) {
       console.warn('[email] RESEND_API_KEY missing; skipping send to', options.to)
       return { skipped: true }
     }
 
-    const from = options.from || 'Rentio <no-reply@rentio.app>'
+    const from = options.from || 'Rentio <no-reply@rentio.co.za>'
+    console.log('[email] Sending email:', { from, to: options.to, subject: options.subject })
 
     const res = await client.emails.send({
       from,
@@ -35,9 +40,11 @@ export async function sendEmail(options: SendEmailOptions) {
       cc: options.cc,
       bcc: options.bcc,
     })
+
+    console.log('[email] Email sent successfully:', res)
     return res
   } catch (e) {
-    console.error('[email] send error', e)
+    console.error('[email] send error:', e)
     return { error: true }
   }
 }

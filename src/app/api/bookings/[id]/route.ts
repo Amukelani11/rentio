@@ -243,6 +243,35 @@ export async function PUT(
             data: { bookingId, listingId: booking.listing?.id },
             channels: ['EMAIL', 'PUSH'],
           })
+
+        // Send rating request email to renter
+        try {
+          const renterEmail = booking.renter?.email
+          const ownerName = booking.listing?.user?.name || booking.listing?.business?.name || 'the owner'
+          
+          if (renterEmail) {
+            await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/emails/send`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: renterEmail,
+                subject: 'How was your rental experience? ⭐',
+                template: 'ratingRequest',
+                data: {
+                  renterName: booking.renter?.name || 'there',
+                  listingTitle: booking.listing?.title || 'your rental',
+                  ownerName,
+                  bookingId,
+                  listingSlug: booking.listing?.slug || booking.listing?.id,
+                },
+              }),
+            })
+          }
+        } catch (emailError) {
+          console.error('Failed to send rating request email:', emailError)
+          // Don't fail the booking completion if email fails
+        }
+
         return NextResponse.json({ success: true, data: completedBooking, message: 'Rental completed successfully' })
       }
       case 'extend': {

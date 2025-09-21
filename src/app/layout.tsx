@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '../styles/globals.css'
 import SiteHeader from '@/components/layout/SiteHeader'
+import RatingModalWrapper from '@/components/RatingModalWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}> 
         <SiteHeader />
         {children}
+        <RatingModalWrapper />
       </body>
     </html>
   )

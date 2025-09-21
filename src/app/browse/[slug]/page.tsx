@@ -158,20 +158,18 @@ export default function ListingDetailPage() {
   const ownerInfo = useMemo(() => {
   const listingData = listing as any;
   console.log('Owner info data:', {
-    ownerName: listingData?.ownerName,
-    ownerAvatar: listingData?.ownerAvatar,
-    ownerType: listingData?.ownerType,
-    isVerified: listingData?.isVerified
+    user: listingData?.user,
+    business: listingData?.business
   });
   
   return {
-    name: listingData?.ownerName || 'Owner',
-    avatar: listingData?.ownerAvatar,
-    type: listingData?.ownerType || 'individual',
-    rating: 0, // Default rating since we don't have this data yet
-    totalReviews: 0, // Default reviews since we don't have this data yet
-    verified: Boolean(listingData?.isVerified),
-    memberSince: listingData?.createdAt || listingData?.created_at || new Date().toISOString(),
+    name: listingData?.user?.name || listingData?.business?.name || 'Owner',
+    avatar: listingData?.user?.avatar || listingData?.business?.logo_url,
+    type: listingData?.business ? 'business' : 'individual',
+    averageRating: listingData?.user?.average_rating || listingData?.business?.average_rating || 0,
+    totalReviews: listingData?.user?.total_reviews || listingData?.business?.total_reviews || 0,
+    verified: Boolean(listingData?.user?.kyc_status === 'VERIFIED' || listingData?.business?.is_verified),
+    memberSince: listingData?.user?.created_at || listingData?.business?.created_at || new Date().toISOString(),
     responseRate: 100,
     responseTime: 'within an hour',
   };
@@ -346,7 +344,9 @@ export default function ListingDetailPage() {
               <div className="flex items-center space-x-4 text-gray-600 mb-4">
                 <div className="flex items-center">
                   <Star className="h-5 w-5 text-yellow-500 mr-1" />
-                  <span>4.8 (23 reviews)</span>
+                  <span>
+                    {listing?.averageRating ? `${listing.averageRating.toFixed(1)} (${listing.totalReviews || 0} review${listing.totalReviews !== 1 ? 's' : ''})` : 'No reviews yet'}
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-5 w-5 mr-1" />
@@ -384,8 +384,8 @@ export default function ListingDetailPage() {
                     <div className="flex items-center space-x-4 mb-2">
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                        <span className="font-medium">{ownerInfo.rating}</span>
-                        <span className="text-gray-600 ml-1">({ownerInfo.totalReviews} reviews)</span>
+                        <span className="font-medium">{ownerInfo.averageRating ? ownerInfo.averageRating.toFixed(1) : 'New'}</span>
+                        <span className="text-gray-600 ml-1">({ownerInfo.totalReviews || 0} review{ownerInfo.totalReviews !== 1 ? 's' : ''})</span>
                       </div>
                       {ownerInfo.verified && (
                         <Badge className="bg-green-600">Verified</Badge>

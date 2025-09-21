@@ -104,6 +104,7 @@ export async function PUT(
 
     // Email the user about KYC decision (best-effort)
     try {
+      console.log('[kyc-review] Starting email send process')
       const html = kycStatusEmail({
         name: verification?.user?.name || 'there',
         status: newStatus as any,
@@ -111,11 +112,16 @@ export async function PUT(
       })
       // Need user's email; fetch quickly
       const { data: u } = await db.from('users').select('email').eq('id', updatedVerification.user_id).single()
+      console.log('[kyc-review] User email found:', u?.email)
       if (u?.email) {
-        await sendEmail({ to: u.email, subject: `KYC ${action === 'approve' ? 'Approved' : action === 'reject' ? 'Rejected' : 'Update'}`, html })
+        console.log('[kyc-review] About to send email to:', u.email)
+        const result = await sendEmail({ to: u.email, subject: `KYC ${action === 'approve' ? 'Approved' : action === 'reject' ? 'Rejected' : 'Update'}`, html })
+        console.log('[kyc-review] Email send result:', result)
+      } else {
+        console.log('[kyc-review] No user email found, skipping email send')
       }
     } catch (e) {
-      console.debug('[email] kyc notification skipped', e)
+      console.error('[email] kyc notification error:', e)
     }
 
     // Update the user's KYC status based on the action

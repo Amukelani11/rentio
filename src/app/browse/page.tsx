@@ -322,7 +322,7 @@ export default function BrowsePage() {
                 <Link href={`/browse/${listing.slug}`} className="font-semibold text-lg line-clamp-1 hover:underline">{listing.title}</Link>
                         <div className="flex items-center text-sm text-gray-600">
                           <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                          <span>4.8</span>
+                          <span>{listing.averageRating ? listing.averageRating.toFixed(1) : 'New'}</span>
                         </div>
                       </div>
                       

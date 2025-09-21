@@ -355,9 +355,9 @@ export default function CreateListingPage() {
       }
 
       if (action === 'publish') {
-        router.push('/dashboard/listings');
+        router.push('/dashboard/inventory');
       } else {
-        router.push('/dashboard/listings/draft');
+        router.push('/dashboard/inventory');
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
@@ -839,19 +839,7 @@ export default function CreateListingPage() {
                       <RecurrenceEditor value={recurrenceRule} onChange={(r) => setRecurrenceRule(r)} />
                     </div>
                     
-                    <div className="mt-6">
-                      <Label htmlFor="pickupAddress">Pickup Address</Label>
-                      <Input
-                        id="pickupAddress"
-                        placeholder="Enter pickup address (e.g., 123 Main St, Cape Town)"
-                        value={formData.pickupAddress || ''}
-                        onChange={(e) => handleInputChange('pickupAddress', e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        This address will be shown to renters for pickup location
-                      </p>
                     </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

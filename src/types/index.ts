@@ -14,6 +14,8 @@ export interface User {
   phoneVerified: boolean;
   isBlocked: boolean;
   blockedReason?: string;
+  totalReviews?: number;
+  averageRating?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,6 +71,8 @@ export interface Business {
   status: BusinessStatus;
   isVerified: boolean;
   businessHours?: BusinessHours;
+  totalReviews?: number;
+  averageRating?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -134,6 +138,8 @@ export interface Listing {
   verified: boolean;
   views: number;
   bookingsCount: number;
+  totalReviews: number;
+  averageRating?: number;
   createdAt: Date;
   updatedAt: Date;
 }

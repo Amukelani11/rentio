@@ -83,23 +83,36 @@ export async function GET(request: NextRequest) {
       = {}
 
     if (userIds.length > 0) {
-      // Listings total
+      // Listings total - use raw SQL for aggregation
       const { data: listingCounts } = await db
         .from('listings')
-        .select('user_id, count:id')
+        .select('user_id')
         .in('user_id', userIds)
-        .group('user_id')
 
       // Listings active
       const { data: activeListingCounts } = await db
         .from('listings')
-        .select('user_id, count:id')
+        .select('user_id')
         .eq('status', 'ACTIVE')
         .in('user_id', userIds)
-        .group('user_id')
 
-      const listingTotalMap = new Map((listingCounts || []).map((r: any) => [r.user_id, Number(r.count) || 0]))
-      const listingActiveMap = new Map((activeListingCounts || []).map((r: any) => [r.user_id, Number(r.count) || 0]))
+      // Count listings per user manually
+      const listingTotalMap = new Map()
+      const listingActiveMap = new Map()
+
+      if (listingCounts) {
+        for (const listing of listingCounts) {
+          const count = listingTotalMap.get(listing.user_id) || 0
+          listingTotalMap.set(listing.user_id, count + 1)
+        }
+      }
+
+      if (activeListingCounts) {
+        for (const listing of activeListingCounts) {
+          const count = listingActiveMap.get(listing.user_id) || 0
+          listingActiveMap.set(listing.user_id, count + 1)
+        }
+      }
 
       // Initialize stats
       for (const id of userIds) {

@@ -65,6 +65,13 @@ export function supportTicketEmail(opts: { name: string; ticketId: string; statu
   return baseLayout(`Support ticket ${opts.status}`, body)
 }
 
+export function ratingRequestEmail(opts: { renterName: string; listingTitle: string; ownerName: string; bookingId: string; listingSlug: string }) {
+  const title = 'How was your rental experience? ⭐'
+  
+  const body = `<h1 style="margin:0 0 8px;font-size:22px">${title}</h1><p style="margin:0 0 16px;color:#334155">Hi ${opts.renterName},</p><p style="margin:0 0 16px;color:#334155">Thanks for completing your rental of "<strong>${opts.listingTitle}</strong>" with ${opts.ownerName}. We'd love to hear about your experience!</p><div style="background:#f8fafc;border-radius:12px;padding:16px;margin:16px 0;text-align:center"><div style="color:#334155;margin-bottom:12px">Your feedback helps other renters make informed decisions and helps owners improve their service.</div><a href="${SITE_URL}/reviews/new?booking=${opts.bookingId}" style="display:inline-block;background:${brandColor};color:#fff;padding:14px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:16px">⭐ Rate Your Experience</a></div><p style="margin:16px 0 0;color:#334155">The review will only take a minute and helps keep our community trustworthy and reliable.</p><p style="margin:24px 0 0;color:${subText};font-size:13px">Questions? Reply to this email or visit our <a href="${SITE_URL}/support" style="color:${brandColor};text-decoration:none">Help Center</a>.</p>`
+  return baseLayout(title, body)
+}
+
 export function stockAlertEmail(opts: {
   recipientName: string
   businessName: string
