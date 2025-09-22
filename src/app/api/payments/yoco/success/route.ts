@@ -162,49 +162,69 @@ export async function GET(request: NextRequest) {
           }
 
           // Send notification to owner/lister
-          const ownerId = fullBooking.listing?.user_id || fullBooking.listing?.business_id
-          console.log('📧 [SUCCESS] Owner ID found:', ownerId)
+          const userId = fullBooking.listing?.user_id
+          const businessId = fullBooking.listing?.business_id
           console.log('📧 [SUCCESS] Listing data:', {
-            user_id: fullBooking.listing?.user_id,
-            business_id: fullBooking.listing?.business_id
+            user_id: userId,
+            business_id: businessId
           })
           
-          if (ownerId) {
-            console.log('📧 [SUCCESS] Fetching owner details for ID:', ownerId)
-            const { data: owner, error: ownerError } = await supabase
+          let owner = null
+          let ownerError = null
+
+          if (userId) {
+            // Individual lister - fetch from users table
+            console.log('📧 [SUCCESS] Fetching individual owner details for user ID:', userId)
+            const { data: userOwner, error: userError } = await supabase
               .from('users')
               .select('email, name')
-              .eq('id', ownerId)
+              .eq('id', userId)
               .single()
+            
+            owner = userOwner
+            ownerError = userError
+            console.log('📧 [SUCCESS] Individual owner fetch result:', { owner, ownerError })
+          } else if (businessId) {
+            // Business lister - fetch from businesses table
+            console.log('📧 [SUCCESS] Fetching business owner details for business ID:', businessId)
+            const { data: businessOwner, error: businessError } = await supabase
+              .from('businesses')
+              .select('owner_email, name')
+              .eq('id', businessId)
+              .single()
+            
+            // Map business fields to match expected structure
+            owner = businessOwner ? {
+              email: businessOwner.owner_email,
+              name: businessOwner.name
+            } : null
+            ownerError = businessError
+            console.log('📧 [SUCCESS] Business owner fetch result:', { owner, ownerError })
+          }
 
-            console.log('📧 [SUCCESS] Owner fetch result:', { owner, ownerError })
-
-            if (owner?.email) {
-              const renterPhone = fullBooking.contact_phone || 'Not provided'
-              
-              console.log('📧 [SUCCESS] Sending owner notification to:', owner.email)
-              await sendEmail({
-                to: owner.email,
-                subject: `New Booking ${requiresConfirmation ? 'Request' : 'Confirmed'} - ${listingTitle}`,
-                html: newBookingNotificationEmail({
-                  ownerName: owner.name || 'there',
-                  renterName,
-                  renterEmail: renterEmail,
-                  renterPhone,
-                  listingTitle,
-                  startDate: new Date(fullBooking.start_date).toLocaleDateString('en-ZA'),
-                  endDate: new Date(fullBooking.end_date).toLocaleDateString('en-ZA'),
-                  total: amountStr,
-                  bookingNumber: fullBooking.booking_number,
-                  requiresConfirmation
-                })
+          if (owner?.email) {
+            const renterPhone = fullBooking.contact_phone || 'Not provided'
+            
+            console.log('📧 [SUCCESS] Sending owner notification to:', owner.email)
+            await sendEmail({
+              to: owner.email,
+              subject: `New Booking ${requiresConfirmation ? 'Request' : 'Confirmed'} - ${listingTitle}`,
+              html: newBookingNotificationEmail({
+                ownerName: owner.name || 'there',
+                renterName,
+                renterEmail: renterEmail,
+                renterPhone,
+                listingTitle,
+                startDate: new Date(fullBooking.start_date).toLocaleDateString('en-ZA'),
+                endDate: new Date(fullBooking.end_date).toLocaleDateString('en-ZA'),
+                total: amountStr,
+                bookingNumber: fullBooking.booking_number,
+                requiresConfirmation
               })
-              console.log('✅ [SUCCESS] Owner notification sent')
-            } else {
-              console.log('❌ [SUCCESS] No owner email found or owner fetch failed')
-            }
+            })
+            console.log('✅ [SUCCESS] Owner notification sent')
           } else {
-            console.log('❌ [SUCCESS] No owner ID found in listing')
+            console.log('❌ [SUCCESS] No owner email found or owner fetch failed:', ownerError)
           }
         }
       }
