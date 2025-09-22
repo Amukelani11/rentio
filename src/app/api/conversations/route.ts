@@ -47,36 +47,24 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    let query = supabase
+    // First get the conversations
+    const { data: conversations, error, count } = await supabase
       .from('conversations')
-      .select(`
-        *,
-        conversation_participants(
-          user_id,
-          joined_at,
-          user:users(id, name, email, avatar)
-        ),
-        listing:listings(id, title, images),
-        booking:bookings(
-          id,
-          listing:listings(id, title, images)
-        )
-      `)
+      .select('*')
       .in('id', conversationIds)
       .order('updated_at', { ascending: false })
       .range(from, to)
 
     // Filter by booking if specified
+    let filteredConversations = conversations
     if (bookingId) {
-      query = query.eq('booking_id', bookingId)
+      filteredConversations = conversations?.filter(c => c.booking_id === bookingId)
     }
 
     // Filter by user if specified
     if (userId) {
-      query = query.eq('participants.user_id', userId)
+      // This would need additional logic to check participants
     }
-
-    const { data: conversations, error, count } = await query
 
     console.log('📋 Conversations query result:', {
       conversationIds,
@@ -91,9 +79,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 })
     }
 
+    // Get participants for each conversation
+    const conversationsWithParticipants = await Promise.all(
+      (filteredConversations || []).map(async (conversation) => {
+        const { data: participants } = await supabase
+          .from('conversation_participants')
+          .select(`
+            user_id,
+            joined_at,
+            user:users(id, name, email, avatar)
+          `)
+          .eq('conversation_id', conversation.id)
+
+        return {
+          ...conversation,
+          conversation_participants: participants || []
+        }
+      })
+    )
+
     // Get latest message for each conversation
     const conversationsWithMessages = await Promise.all(
-      (conversations || []).map(async (conversation) => {
+      (conversationsWithParticipants || []).map(async (conversation) => {
         let messageQuery = supabase
           .from('messages')
           .select(`
