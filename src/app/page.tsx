@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 // use public/ string paths instead of static imports to avoid module resolution issues in Netlify
 import {
@@ -21,7 +22,18 @@ import {
 } from 'lucide-react'
 
 export default function HomePage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [scrolled, setScrolled] = useState(false)
+
+  // Handle booking confirmation redirect
+  useEffect(() => {
+    const bookingId = searchParams.get('bookingId')
+    if (bookingId) {
+      router.replace(`/booking-confirmation?bookingId=${bookingId}`)
+    }
+  }, [searchParams, router])
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80)
     window.addEventListener('scroll', onScroll, { passive: true })
