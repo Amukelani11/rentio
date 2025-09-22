@@ -44,11 +44,21 @@ interface Message {
 
 interface Conversation {
   id: string;
+  booking_id?: string;
+  listing_id?: string;
   bookingId?: string;
   listingId?: string;
   lastMessage?: string;
   lastMessageAt?: string;
-  participants: Array<{
+  conversation_participants?: Array<{
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      avatar?: string;
+    };
+  }>;
+  participants?: Array<{
     user: {
       id: string;
       name: string;
@@ -109,7 +119,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     fetchData();
-  }, [conversationId]);
+  }, [conversationId, bookingId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -118,7 +128,7 @@ export default function MessagesPage() {
   const fetchData = async () => {
     try {
       console.log('📱 Messages page: Fetching data...')
-      
+
       const [userResponse, conversationsResponse] = await Promise.all([
         fetch('/api/auth/user'),
         fetch('/api/conversations'),
@@ -136,17 +146,34 @@ export default function MessagesPage() {
           total: conversationsData.data?.items?.length || 0,
           conversations: conversationsData.data?.items?.map((c: any) => ({
             id: c.id,
-            bookingId: c.booking_id,
-            listingId: c.listing_id,
+            bookingId: c.booking_id || c.bookingId,
+            listingId: c.listing_id || c.listingId,
             title: c.title,
             hasBooking: !!c.booking,
             hasListing: !!c.listing
           }))
         })
         setConversations(conversationsData.data.items);
-        
+
+        // Handle booking parameter - create conversation if needed
+        if (bookingId && user) {
+          console.log('🎯 Messages page: Booking parameter detected:', bookingId)
+
+          // Check if conversation already exists for this booking
+          const existingConversation = conversationsData.data.items.find((c: Conversation) =>
+            c.bookingId === bookingId || c.booking_id === bookingId
+          );
+
+          if (existingConversation) {
+            console.log('✅ Messages page: Found existing conversation for booking:', existingConversation.id)
+            selectConversation(existingConversation);
+          } else {
+            console.log('🔄 Messages page: No conversation found for booking, creating one...')
+            await createConversationFromBooking(bookingId);
+          }
+        }
         // Auto-select conversation if ID provided
-        if (conversationId) {
+        else if (conversationId) {
           const conversation = conversationsData.data.items.find((c: Conversation) => c.id === conversationId);
           console.log('🎯 Messages page: Auto-selecting conversation:', { conversationId, found: !!conversation })
           if (conversation) {
@@ -156,9 +183,10 @@ export default function MessagesPage() {
           }
         } else if (compose && composeTo) {
           // Try to find a conversation with target participant
-          const conversation = conversationsData.data.items.find((c: Conversation) =>
-            c.participants?.some?.(p => String(p.user.id) === String(composeTo))
-          );
+          const conversation = conversationsData.data.items.find((c: Conversation) => {
+            const participants = c.conversation_participants || c.participants || [];
+            return participants.some?.(p => String(p.user.id) === String(composeTo));
+          });
           console.log('💬 Messages page: Compose mode - finding conversation:', { composeTo, found: !!conversation })
           if (conversation) {
             selectConversation(conversation);
@@ -179,10 +207,40 @@ export default function MessagesPage() {
     }
   };
 
+  const createConversationFromBooking = async (bookingId: string) => {
+    try {
+      console.log('🔄 Creating conversation from booking:', bookingId);
+
+      const response = await fetch(`/api/bookings/${bookingId}/conversation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Conversation created successfully:', data);
+
+        // Add the new conversation to the list
+        const newConversation = data.data.conversation;
+        setConversations(prev => [newConversation, ...prev]);
+
+        // Select the new conversation
+        selectConversation(newConversation);
+      } else {
+        const errorData = await response.json().catch(() => null);
+        console.error('❌ Failed to create conversation:', errorData);
+      }
+    } catch (error) {
+      console.error('💥 Error creating conversation from booking:', error);
+    }
+  };
+
   const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
     await fetchMessages(conversation.id);
-    
+
     // Update URL
     const url = new URL(window.location.href);
     url.searchParams.set('id', conversation.id);
@@ -273,7 +331,8 @@ export default function MessagesPage() {
   };
 
   const getOtherParticipant = (conversation: Conversation) => {
-    return conversation.participants.find(p => p.user.id !== user?.id)?.user;
+    const participants = conversation.conversation_participants || conversation.participants || [];
+    return participants.find(p => p.user.id !== user?.id)?.user;
   };
 
   const isMessageRead = (message: Message) => {

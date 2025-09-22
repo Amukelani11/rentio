@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       .from('conversations')
       .select(`
         *,
-        participants:conversation_participants(
+        conversation_participants(
           user_id,
           joined_at,
           user:users(id, name, email, avatar)
@@ -79,9 +79,11 @@ export async function GET(request: NextRequest) {
     const { data: conversations, error, count } = await query
 
     console.log('📋 Conversations query result:', {
+      conversationIds,
       conversations: conversations?.length || 0,
       error,
-      count
+      count,
+      conversationsData: conversations
     })
 
     if (error) {
