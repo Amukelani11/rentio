@@ -163,16 +163,26 @@ export async function GET(request: NextRequest) {
 
           // Send notification to owner/lister
           const ownerId = fullBooking.listing?.user_id || fullBooking.listing?.business_id
+          console.log('📧 [SUCCESS] Owner ID found:', ownerId)
+          console.log('📧 [SUCCESS] Listing data:', {
+            user_id: fullBooking.listing?.user_id,
+            business_id: fullBooking.listing?.business_id
+          })
+          
           if (ownerId) {
-            const { data: owner } = await supabase
+            console.log('📧 [SUCCESS] Fetching owner details for ID:', ownerId)
+            const { data: owner, error: ownerError } = await supabase
               .from('users')
               .select('email, name')
               .eq('id', ownerId)
               .single()
 
+            console.log('📧 [SUCCESS] Owner fetch result:', { owner, ownerError })
+
             if (owner?.email) {
               const renterPhone = fullBooking.contact_phone || 'Not provided'
               
+              console.log('📧 [SUCCESS] Sending owner notification to:', owner.email)
               await sendEmail({
                 to: owner.email,
                 subject: `New Booking ${requiresConfirmation ? 'Request' : 'Confirmed'} - ${listingTitle}`,
@@ -190,7 +200,11 @@ export async function GET(request: NextRequest) {
                 })
               })
               console.log('✅ [SUCCESS] Owner notification sent')
+            } else {
+              console.log('❌ [SUCCESS] No owner email found or owner fetch failed')
             }
+          } else {
+            console.log('❌ [SUCCESS] No owner ID found in listing')
           }
         }
       }
