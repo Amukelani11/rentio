@@ -155,7 +155,12 @@ export async function GET(request: NextRequest) {
                 listingTitle,
                 startDate: new Date(fullBooking.start_date).toLocaleDateString('en-ZA'),
                 endDate: new Date(fullBooking.end_date).toLocaleDateString('en-ZA'),
-                total: amountStr
+                total: amountStr,
+                pickupLocation: fullBooking.listing?.pickup_location || fullBooking.listing?.location,
+                pickupInstructions: fullBooking.listing?.pickup_instructions,
+                ownerName: fullBooking.listing?.user?.name || fullBooking.listing?.business?.name,
+                ownerEmail: fullBooking.listing?.user?.email || fullBooking.listing?.business?.owner_email,
+                bookingId: fullBooking.id
               })
             })
             console.log('✅ [SUCCESS] Booking confirmation sent')

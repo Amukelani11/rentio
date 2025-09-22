@@ -266,7 +266,12 @@ export async function POST(request: NextRequest) {
                   listingTitle,
                   startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
                   endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
-                  total: amountStr
+                  total: amountStr,
+                  pickupLocation: paymentObj.booking?.listing?.pickup_location || paymentObj.booking?.listing?.location,
+                  pickupInstructions: paymentObj.booking?.listing?.pickup_instructions,
+                  ownerName: paymentObj.booking?.listing?.user?.name || paymentObj.booking?.listing?.business?.name,
+                  ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.owner_email,
+                  bookingId: paymentObj.booking_id
                 })
               })
               console.log('✅ Booking confirmation email sent successfully')
@@ -430,7 +435,12 @@ export async function POST(request: NextRequest) {
                 listingTitle,
                 startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
                 endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
-                total: amountStr
+                total: amountStr,
+                pickupLocation: paymentObj.booking?.listing?.pickup_location || paymentObj.booking?.listing?.location,
+                pickupInstructions: paymentObj.booking?.listing?.pickup_instructions,
+                ownerName: paymentObj.booking?.listing?.user?.name || paymentObj.booking?.listing?.business?.name,
+                ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.owner_email,
+                bookingId: paymentObj.booking_id
               })
             })
             console.log('✅ [INSTANT] Booking confirmation sent successfully')
