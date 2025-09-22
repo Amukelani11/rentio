@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { getAuthUser } from '@/lib/auth'
+import { sendEmail } from '@/lib/resend'
+import { paymentReceiptEmail, bookingStatusEmail, bookingConfirmationEmail, newBookingNotificationEmail } from '@/emails/templates'
 
 // This endpoint handles the redirect URL from Yoco after a successful payment.
 // It attempts to confirm the payment server-side using the authenticated session
@@ -94,6 +96,107 @@ export async function GET(request: NextRequest) {
         .from('bookings')
         .update({ status: 'CONFIRMED', payment_status: 'COMPLETED', confirmed_at: new Date().toISOString() })
         .eq('id', payment.booking_id)
+    }
+
+    // Send confirmation emails since webhook might not be triggered
+    try {
+      // Get full booking details with listing and renter info
+      const { data: fullBooking, error: bookingError } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          listing:listings(*),
+          renter:users!renter_id(*)
+        `)
+        .eq('id', payment.booking_id)
+        .single()
+
+      if (fullBooking && !bookingError) {
+        const renterEmail = fullBooking.renter?.email
+        const renterName = fullBooking.renter?.name || 'there'
+        const listingTitle = fullBooking.listing?.title || 'Unknown Item'
+        const amountStr = `R ${(payment.amount || fullBooking.total_amount || 0).toFixed?.(2) || String(payment.amount)}`
+
+        console.log('📧 [SUCCESS] Sending confirmation emails to:', renterEmail)
+
+        if (renterEmail) {
+          // Send payment receipt
+          await sendEmail({
+            to: renterEmail,
+            subject: 'Payment Received',
+            html: paymentReceiptEmail({
+              name: renterName,
+              amount: amountStr,
+              bookingNumber: fullBooking.booking_number,
+              provider: 'YOCO'
+            })
+          })
+          console.log('✅ [SUCCESS] Payment receipt sent')
+
+          // Send booking confirmation based on type
+          if (requiresConfirmation) {
+            await sendEmail({
+              to: renterEmail,
+              subject: 'Booking Awaiting Confirmation',
+              html: bookingStatusEmail({
+                name: renterName,
+                listingTitle: listingTitle,
+                status: 'PENDING',
+                note: 'Your payment has been received. The listing owner will review your booking request shortly.'
+              })
+            })
+            console.log('✅ [SUCCESS] Booking pending email sent')
+          } else {
+            await sendEmail({
+              to: renterEmail,
+              subject: 'Booking Confirmed!',
+              html: bookingConfirmationEmail({
+                renterName,
+                listingTitle,
+                startDate: new Date(fullBooking.start_date).toLocaleDateString('en-ZA'),
+                endDate: new Date(fullBooking.end_date).toLocaleDateString('en-ZA'),
+                total: amountStr
+              })
+            })
+            console.log('✅ [SUCCESS] Booking confirmation sent')
+          }
+
+          // Send notification to owner/lister
+          const ownerId = fullBooking.listing?.user_id || fullBooking.listing?.business_id
+          if (ownerId) {
+            const { data: owner } = await supabase
+              .from('users')
+              .select('email, name')
+              .eq('id', ownerId)
+              .single()
+
+            if (owner?.email) {
+              const renterPhone = fullBooking.contact_phone || 'Not provided'
+              
+              await sendEmail({
+                to: owner.email,
+                subject: `New Booking ${requiresConfirmation ? 'Request' : 'Confirmed'} - ${listingTitle}`,
+                html: newBookingNotificationEmail({
+                  ownerName: owner.name || 'there',
+                  renterName,
+                  renterEmail: renterEmail,
+                  renterPhone,
+                  listingTitle,
+                  startDate: new Date(fullBooking.start_date).toLocaleDateString('en-ZA'),
+                  endDate: new Date(fullBooking.end_date).toLocaleDateString('en-ZA'),
+                  total: amountStr,
+                  bookingNumber: fullBooking.booking_number,
+                  requiresConfirmation
+                })
+              })
+              console.log('✅ [SUCCESS] Owner notification sent')
+            }
+          }
+        }
+      }
+    } catch (emailError) {
+      console.error('❌ [SUCCESS] Error sending emails:', emailError)
+      // Don't fail the redirect if emails fail
     }
 
     // Redirect to the booking confirmation page (now should show confirmed)

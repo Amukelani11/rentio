@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DayPicker } from 'react-day-picker'
 import { format } from 'date-fns'
-import { Calendar as CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import 'react-day-picker/dist/style.css'
@@ -42,10 +42,34 @@ interface DateRangePickerProps {
 export default function DateRangePicker({ value, onChange, listingId }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [loadingAvailability, setLoadingAvailability] = useState(false)
+  const [bookedDates, setBookedDates] = useState<{ start: Date; end: Date }[]>([])
 
   // Get today's date for min date selection
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+
+  // Fetch availability data when listingId changes or calendar opens
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!listingId || !isOpen) return
+
+      setLoadingAvailability(true)
+      try {
+        const response = await fetch(`/api/listings/${listingId}/availability`)
+        if (response.ok) {
+          const data = await response.json()
+          setBookedDates(data.bookedDates || [])
+        }
+      } catch (error) {
+        console.error('Error fetching availability:', error)
+      } finally {
+        setLoadingAvailability(false)
+      }
+    }
+
+    fetchAvailability()
+  }, [listingId, isOpen])
 
   // Handle date selection
   const handleSelect = (range: { from?: Date; to?: Date } | undefined) => {
@@ -82,9 +106,22 @@ export default function DateRangePicker({ value, onChange, listingId }: DateRang
 
   const selected = value.start ? { from: value.start, to: value.end } : undefined
 
+  // Check if a date is within any booked range
+  const isDateBooked = (date: Date) => {
+    return bookedDates.some(bookedRange => {
+      const start = new Date(bookedRange.start)
+      const end = new Date(bookedRange.end)
+      return date >= start && date <= end
+    })
+  }
+
   const disabledDays = [
     { before: today },
-    // Add more disabled days based on listing availability if needed
+    // Disable dates that are already booked
+    ...(bookedDates.map(range => ({
+      from: new Date(range.start),
+      to: new Date(range.end)
+    })) || [])
   ]
 
   const displayText = value.start && value.end
@@ -102,6 +139,7 @@ export default function DateRangePicker({ value, onChange, listingId }: DateRang
         <span className="truncate">
           {displayText}
         </span>
+        {loadingAvailability && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
       </Button>
 
       {isOpen && (
@@ -116,7 +154,8 @@ export default function DateRangePicker({ value, onChange, listingId }: DateRang
               disabled={disabledDays}
               modifiers={{
                 today: today,
-                disabled: (date) => date < today
+                disabled: (date) => date < today || isDateBooked(date),
+                booked: (date) => isDateBooked(date)
               }}
               modifiersStyles={{
                 today: {
@@ -156,6 +195,12 @@ export default function DateRangePicker({ value, onChange, listingId }: DateRang
                 outside: {
                   backgroundColor: '#f9fafb',
                   color: '#9ca3af'
+                },
+                booked: {
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  textDecoration: 'line-through',
+                  cursor: 'not-allowed'
                 }
               }}
               className="rdp"

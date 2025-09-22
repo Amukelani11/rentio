@@ -276,6 +276,15 @@ export default function HomePage() {
               </ul>
             </div>
             <div>
+              <h4 className="font-semibold">Legal</h4>
+              <ul className="mt-3 space-y-2 text-gray-400">
+                <li><Link href="/rental-policy" className="hover:text-white">Rental Policy</Link></li>
+                <li><Link href="/renter-guarantee" className="hover:text-white">Renter Guarantee</Link></li>
+                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
+              </ul>
+            </div>
+            <div>
               <h4 className="font-semibold">Company</h4>
               <ul className="mt-3 space-y-2 text-gray-400">
                 <li><Link href="/about" className="hover:text-white">About us</Link></li>
