@@ -110,7 +110,8 @@ export async function POST(request: NextRequest) {
         *,
         booking:bookings(
           *,
-          listing:listings(*)
+          listing:listings(*),
+          renter:users!renter_id(*)
         )
       `)
       .eq('checkout_id', yocoCheckoutId)
@@ -128,7 +129,8 @@ export async function POST(request: NextRequest) {
           *,
           booking:bookings(
             *,
-            listing:listings(*)
+            listing:listings(*),
+            renter:users!renter_id(*)
           )
         `)
         .eq('provider_id', yocoCheckoutId)
@@ -221,47 +223,61 @@ export async function POST(request: NextRequest) {
           const renterEmail = paymentObj.booking?.renter?.email || null
           const renterName = paymentObj.booking?.renter?.name || 'there'
           const amountStr = `R ${(paymentObj.amount || paymentObj.booking?.total_amount || 0).toFixed?.(2) || String(paymentObj.amount)}`
+
+          console.log('📧 Attempting to send renter emails to:', renterEmail, 'name:', renterName)
+
           if (renterEmail) {
             // Send payment receipt
-            await sendEmail({ 
-              to: renterEmail, 
-              subject: 'Payment Received', 
-              html: paymentReceiptEmail({ 
-                name: renterName, 
-                amount: amountStr, 
-                bookingNumber: paymentObj.booking?.booking_number, 
-                provider: 'YOCO' 
-              }) 
+            console.log('📧 Sending payment receipt to:', renterEmail)
+            await sendEmail({
+              to: renterEmail,
+              subject: 'Payment Received',
+              html: paymentReceiptEmail({
+                name: renterName,
+                amount: amountStr,
+                bookingNumber: paymentObj.booking?.booking_number,
+                provider: 'YOCO'
+              })
             })
-            
+            console.log('✅ Payment receipt sent successfully')
+
             // Send booking confirmation with proper status
             if (requiresConfirmation) {
-              await sendEmail({ 
-                to: renterEmail, 
-                subject: 'Booking Awaiting Confirmation', 
-                html: bookingStatusEmail({ 
-                  name: renterName, 
-                  listingTitle: listingTitle, 
+              console.log('📧 Sending booking pending email to:', renterEmail)
+              await sendEmail({
+                to: renterEmail,
+                subject: 'Booking Awaiting Confirmation',
+                html: bookingStatusEmail({
+                  name: renterName,
+                  listingTitle: listingTitle,
                   status: 'PENDING',
-                  note: 'Your payment has been received. The listing owner will review your booking request shortly.' 
-                }) 
+                  note: 'Your payment has been received. The listing owner will review your booking request shortly.'
+                })
               })
+              console.log('✅ Booking pending email sent successfully')
             } else {
               // Send proper booking confirmation for instant bookings
-              await sendEmail({ 
-                to: renterEmail, 
-                subject: 'Booking Confirmed!', 
-                html: bookingConfirmationEmail({ 
-                  renterName, 
-                  listingTitle, 
+              console.log('📧 Sending booking confirmation email to:', renterEmail)
+              await sendEmail({
+                to: renterEmail,
+                subject: 'Booking Confirmed!',
+                html: bookingConfirmationEmail({
+                  renterName,
+                  listingTitle,
                   startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
                   endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
-                  total: amountStr 
-                }) 
+                  total: amountStr
+                })
               })
+              console.log('✅ Booking confirmation email sent successfully')
             }
+          } else {
+            console.log('❌ No renter email found, skipping emails')
           }
-        } catch (e) { console.debug('[email] webhook renter emails skipped', e) }
+        } catch (e) {
+          console.error('❌ Error sending renter emails:', e)
+          console.debug('[email] webhook renter emails skipped', e)
+        }
 
         // Email business/lister about new booking
         try {
@@ -386,66 +402,86 @@ export async function POST(request: NextRequest) {
           const renterEmail = paymentObj.booking?.renter?.email || null
           const renterName = paymentObj.booking?.renter?.name || 'there'
           const amountStr = `R ${(paymentObj.amount || paymentObj.booking?.total_amount || 0).toFixed?.(2) || String(paymentObj.amount)}`
-          
+
+          console.log('📧 [INSTANT] Attempting to send instant booking emails to:', renterEmail)
+
           if (renterEmail) {
             // Send payment receipt
-            await sendEmail({ 
-              to: renterEmail, 
-              subject: 'Payment Received', 
-              html: paymentReceiptEmail({ 
-                name: renterName, 
-                amount: amountStr, 
-                bookingNumber: paymentObj.booking?.booking_number, 
-                provider: 'YOCO' 
-              }) 
+            console.log('📧 [INSTANT] Sending payment receipt to:', renterEmail)
+            await sendEmail({
+              to: renterEmail,
+              subject: 'Payment Received',
+              html: paymentReceiptEmail({
+                name: renterName,
+                amount: amountStr,
+                bookingNumber: paymentObj.booking?.booking_number,
+                provider: 'YOCO'
+              })
             })
-            
+            console.log('✅ [INSTANT] Payment receipt sent successfully')
+
             // Send booking confirmation for instant booking
-            await sendEmail({ 
-              to: renterEmail, 
-              subject: 'Booking Confirmed!', 
-              html: bookingConfirmationEmail({ 
-                renterName, 
-                listingTitle, 
+            console.log('📧 [INSTANT] Sending booking confirmation to:', renterEmail)
+            await sendEmail({
+              to: renterEmail,
+              subject: 'Booking Confirmed!',
+              html: bookingConfirmationEmail({
+                renterName,
+                listingTitle,
                 startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
                 endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
-                total: amountStr 
-              }) 
+                total: amountStr
+              })
             })
+            console.log('✅ [INSTANT] Booking confirmation sent successfully')
+          } else {
+            console.log('❌ [INSTANT] No renter email found, skipping emails')
           }
 
           // Email business/lister about new instant booking
           if (ownerId) {
+            console.log('📧 [INSTANT] Getting owner info for ID:', ownerId)
             // Get owner email and name
             const { data: owner } = await supabase
               .from('users')
               .select('email, name')
               .eq('id', ownerId)
               .single()
-              
+
+            console.log('📧 [INSTANT] Owner found:', owner?.email)
+
             if (owner?.email) {
               const renterEmail_safe = paymentObj.booking?.renter?.email || 'Not provided'
               const renterPhone = paymentObj.booking?.contact_phone || 'Not provided'
-              
-              await sendEmail({ 
-                to: owner.email, 
-                subject: `New Booking Confirmed - ${listingTitle}`, 
-                html: newBookingNotificationEmail({ 
+
+              console.log('📧 [INSTANT] Sending owner notification to:', owner.email)
+              await sendEmail({
+                to: owner.email,
+                subject: `New Booking Confirmed - ${listingTitle}`,
+                html: newBookingNotificationEmail({
                   ownerName: owner.name || 'there',
                   renterName,
                   renterEmail: renterEmail_safe,
                   renterPhone,
-                  listingTitle, 
+                  listingTitle,
                   startDate: new Date(paymentObj.booking?.start_date).toLocaleDateString('en-ZA'),
                   endDate: new Date(paymentObj.booking?.end_date).toLocaleDateString('en-ZA'),
                   total: amountStr,
                   bookingNumber: paymentObj.booking?.booking_number,
                   requiresConfirmation: false
-                }) 
+                })
               })
+              console.log('✅ [INSTANT] Owner notification sent successfully')
+            } else {
+              console.log('❌ [INSTANT] No owner email found')
             }
+          } else {
+            console.log('❌ [INSTANT] No owner ID found')
           }
-        } catch (e) { console.debug('[email] instant booking emails skipped', e) }
+        } catch (e) {
+          console.error('❌ [INSTANT] Error sending instant booking emails:', e)
+          console.debug('[email] instant booking emails skipped', e)
+        }
       }
     } else {
       // Payment failed - update booking status
