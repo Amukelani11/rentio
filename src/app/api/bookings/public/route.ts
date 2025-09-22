@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     const { data: booking, error: bookingError } = await supabaseAdmin
       .from('bookings')
-      .select(`*, listing:listings(*), renter:profiles!bookings_renter_id_fkey(*)`)
+      .select(`*, listing:listings(*), renter:users!renter_id(*)`)
       .eq('id', targetBookingId)
       .single()
 
