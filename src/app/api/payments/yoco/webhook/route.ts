@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
                   deliveryAddress: paymentObj.booking?.delivery_address,
                   isDelivery: paymentObj.booking?.listing?.delivery_available || false,
                   ownerName: paymentObj.booking?.listing?.user?.name || paymentObj.booking?.listing?.business?.name,
-                  ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.owner_email,
+                  ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.email,
                   bookingId: paymentObj.booking_id
                 })
               })
@@ -445,7 +445,7 @@ export async function POST(request: NextRequest) {
                 deliveryAddress: paymentObj.booking?.delivery_address,
                 isDelivery: paymentObj.booking?.listing?.delivery_available || false,
                 ownerName: paymentObj.booking?.listing?.user?.name || paymentObj.booking?.listing?.business?.name,
-                ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.owner_email,
+                ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.email,
                 bookingId: paymentObj.booking_id
               })
             })

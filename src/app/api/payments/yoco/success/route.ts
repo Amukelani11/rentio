@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
                 deliveryAddress: fullBooking.delivery_address,
                 isDelivery: fullBooking.listing?.delivery_available || false,
                 ownerName: fullBooking.listing?.user?.name || fullBooking.listing?.business?.name,
-                ownerEmail: fullBooking.listing?.user?.email || fullBooking.listing?.business?.owner_email,
+                ownerEmail: fullBooking.listing?.user?.email || fullBooking.listing?.business?.email,
                 bookingId: fullBooking.id
               })
             })
@@ -197,13 +197,13 @@ export async function GET(request: NextRequest) {
             console.log('📧 [SUCCESS] Fetching business owner details for business ID:', businessId)
             const { data: businessOwner, error: businessError } = await supabase
               .from('businesses')
-              .select('owner_email, name')
+              .select('email, name')
               .eq('id', businessId)
               .single()
             
             // Map business fields to match expected structure
             owner = businessOwner ? {
-              email: businessOwner.owner_email,
+              email: businessOwner.email,
               name: businessOwner.name
             } : null
             ownerError = businessError
