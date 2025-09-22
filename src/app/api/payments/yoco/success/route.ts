@@ -158,6 +158,9 @@ export async function GET(request: NextRequest) {
                 total: amountStr,
                 pickupLocation: fullBooking.listing?.pickup_location || fullBooking.listing?.location,
                 pickupInstructions: fullBooking.listing?.pickup_instructions,
+                deliveryInstructions: fullBooking.listing?.delivery_instructions,
+                deliveryAddress: fullBooking.delivery_address,
+                isDelivery: fullBooking.listing?.delivery_available || false,
                 ownerName: fullBooking.listing?.user?.name || fullBooking.listing?.business?.name,
                 ownerEmail: fullBooking.listing?.user?.email || fullBooking.listing?.business?.owner_email,
                 bookingId: fullBooking.id

@@ -269,6 +269,9 @@ export async function POST(request: NextRequest) {
                   total: amountStr,
                   pickupLocation: paymentObj.booking?.listing?.pickup_location || paymentObj.booking?.listing?.location,
                   pickupInstructions: paymentObj.booking?.listing?.pickup_instructions,
+                  deliveryInstructions: paymentObj.booking?.listing?.delivery_instructions,
+                  deliveryAddress: paymentObj.booking?.delivery_address,
+                  isDelivery: paymentObj.booking?.listing?.delivery_available || false,
                   ownerName: paymentObj.booking?.listing?.user?.name || paymentObj.booking?.listing?.business?.name,
                   ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.owner_email,
                   bookingId: paymentObj.booking_id
@@ -438,6 +441,9 @@ export async function POST(request: NextRequest) {
                 total: amountStr,
                 pickupLocation: paymentObj.booking?.listing?.pickup_location || paymentObj.booking?.listing?.location,
                 pickupInstructions: paymentObj.booking?.listing?.pickup_instructions,
+                deliveryInstructions: paymentObj.booking?.listing?.delivery_instructions,
+                deliveryAddress: paymentObj.booking?.delivery_address,
+                isDelivery: paymentObj.booking?.listing?.delivery_available || false,
                 ownerName: paymentObj.booking?.listing?.user?.name || paymentObj.booking?.listing?.business?.name,
                 ownerEmail: paymentObj.booking?.listing?.user?.email || paymentObj.booking?.listing?.business?.owner_email,
                 bookingId: paymentObj.booking_id
