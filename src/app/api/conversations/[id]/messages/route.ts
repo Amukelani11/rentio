@@ -15,13 +15,9 @@ export async function GET(
     }
 
     const conversationId = params.id
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    console.log('📨 [MESSAGES] Fetching messages for conversation:', conversationId)
 
-    // Check if user is participant in the conversation
+    // Check if user is a participant in this conversation
     const { data: participant } = await supabase
       .from('conversation_participants')
       .select('user_id')
@@ -30,74 +26,36 @@ export async function GET(
       .single()
 
     if (!participant) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      return NextResponse.json({ error: 'Unauthorized to view this conversation' }, { status: 403 })
     }
-
-    // Get the conversation details
-    const { data: conversation } = await supabase
-      .from('conversations')
-      .select('booking_id, listing_id')
-      .eq('id', conversationId)
-      .single()
-
-    if (!conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
-    }
-
-    // Mark messages as read
-    let readQuery = supabase
-      .from('messages')
-      .update({ is_read: true, read_at: new Date().toISOString() })
-      .eq('to_user_id', user.id)
-      .eq('is_read', false)
-
-    if (conversation.booking_id) {
-      readQuery = readQuery.eq('booking_id', conversation.booking_id)
-    } else {
-      readQuery = readQuery.eq('conversation_id', conversationId)
-    }
-
-    await readQuery
 
     // Get messages for this conversation
-    let messagesQuery = supabase
+    const { data: messages, error } = await supabase
       .from('messages')
       .select(`
         *,
         sender:users!from_user_id(id, name, avatar)
       `)
-      .order('created_at', { ascending: false })
-      .range(from, to)
-
-    if (conversation.booking_id) {
-      messagesQuery = messagesQuery.eq('booking_id', conversation.booking_id)
-    } else {
-      messagesQuery = messagesQuery.eq('conversation_id', conversationId)
-    }
-
-    const { data: messages, error, count } = await messagesQuery
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true })
 
     if (error) {
-      console.error('Get messages error:', error)
+      console.error('❌ [MESSAGES] Error fetching messages:', error)
       return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 })
     }
+
+    console.log('📨 [MESSAGES] Found messages:', messages?.length || 0)
 
     return NextResponse.json({
       success: true,
       data: {
-        items: (messages || []).reverse(), // Reverse to show oldest first
-        total: count || 0,
-        page,
-        pageSize: limit,
-        totalPages: Math.ceil((count || 0) / limit),
-      },
+        items: messages || [],
+        total: messages?.length || 0
+      }
     })
   } catch (error) {
-    console.error('Get messages error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('💥 [MESSAGES] Get messages error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -114,13 +72,15 @@ export async function POST(
 
     const conversationId = params.id
     const body = await request.json()
-    const { content, type = 'TEXT', mediaUrl } = body
+    const { content, message_type = 'TEXT' } = body
 
-    if (!content && !mediaUrl) {
-      return NextResponse.json({ error: 'Message content or media required' }, { status: 400 })
+    if (!content?.trim()) {
+      return NextResponse.json({ error: 'Message content is required' }, { status: 400 })
     }
 
-    // Check if user is participant in the conversation
+    console.log('📤 [MESSAGES] Sending message to conversation:', conversationId)
+
+    // Check if user is a participant in this conversation
     const { data: participant } = await supabase
       .from('conversation_participants')
       .select('user_id')
@@ -129,108 +89,45 @@ export async function POST(
       .single()
 
     if (!participant) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      return NextResponse.json({ error: 'Unauthorized to send messages to this conversation' }, { status: 403 })
     }
 
-    // Get conversation details
+    // Get conversation details to find booking_id
     const { data: conversation } = await supabase
       .from('conversations')
-      .select('booking_id, listing_id')
+      .select('booking_id')
       .eq('id', conversationId)
       .single()
 
-    if (!conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
-    }
-
-    // Get other participants
-    const { data: participants } = await supabase
-      .from('conversation_participants')
-      .select('user_id')
-      .eq('conversation_id', conversationId)
-      .neq('user_id', user.id)
-
-    const otherParticipants = participants || []
-    const toUserId = otherParticipants[0]?.user_id
-
     // Create message
-    const messageData: any = {
-      conversation_id: conversationId,
-      from_user_id: user.id,
-      to_user_id: toUserId,
-      content: content || 'Media message',
-      type,
-      attachments: mediaUrl ? [{ url: mediaUrl, type: 'image' }] : null,
-      is_read: false,
-    }
-
-    // Add booking_id if it exists, otherwise use listing-based topic
-    if (conversation.booking_id) {
-      messageData.booking_id = conversation.booking_id
-      messageData.topic = `booking_${conversation.booking_id}`
-    } else {
-      messageData.topic = `listing_${conversation.listing_id}`
-    }
-
-    messageData.extension = 'chat'
-
-    const { data: message, error: messageError } = await supabase
+    const { data: message, error } = await supabase
       .from('messages')
-      .insert(messageData)
+      .insert({
+        conversation_id: conversationId,
+        booking_id: conversation?.booking_id,
+        from_user_id: user.id,
+        content: content.trim(),
+        message_type
+      })
       .select(`
         *,
         sender:users!from_user_id(id, name, avatar)
       `)
       .single()
 
-    if (messageError) {
-      console.error('Send message error:', messageError)
+    if (error) {
+      console.error('❌ [MESSAGES] Error creating message:', error)
       return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
     }
 
-    // Update conversation last message
-    await supabase
-      .from('conversations')
-      .update({
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', conversationId)
-
-    // Create notifications for other participants
-    for (const participant of otherParticipants) {
-      const notificationData: any = {
-        user_id: participant.user_id,
-        type: 'MESSAGE_RECEIVED',
-        title: 'New Message',
-        message: `You have a new message from ${user.name}`,
-        data: {
-          conversationId,
-          messageId: message.id,
-        },
-        channels: ['PUSH'],
-      }
-
-      // Add booking or listing reference
-      if (conversation.booking_id) {
-        notificationData.data.bookingId = conversation.booking_id
-      } else {
-        notificationData.data.listingId = conversation.listing_id
-      }
-
-      await supabase
-        .from('notifications')
-        .insert(notificationData)
-    }
+    console.log('✅ [MESSAGES] Message sent successfully:', message.id)
 
     return NextResponse.json({
       success: true,
-      data: message,
+      data: { message }
     })
   } catch (error) {
-    console.error('Send message error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('💥 [MESSAGES] Send message error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

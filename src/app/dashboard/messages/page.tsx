@@ -1,570 +1,406 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useRealtimeMessages } from '@/hooks/useRealtimeMessages';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Send, 
-  Paperclip, 
-  Smile, 
-  MoreVertical, 
-  ArrowLeft,
-  Phone,
-  Video,
-  Info,
-  Clock,
-  Check,
-  CheckCheck
-} from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Send, MessageSquare, User, Clock, CheckCircle } from 'lucide-react'
+
+interface User {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+}
 
 interface Message {
-  id: string;
-  content: string;
-  type: 'TEXT' | 'IMAGE' | 'FILE';
-  mediaUrl?: string;
-  createdAt: string;
+  id: string
+  content: string
+  created_at: string
+  from_user_id: string
   sender: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  readReceipts: Array<{
-    userId: string;
-    read: boolean;
-    readAt?: string;
-  }>;
+    id: string
+    name: string
+    avatar?: string
+  }
 }
 
 interface Conversation {
-  id: string;
-  booking_id?: string;
-  listing_id?: string;
-  bookingId?: string;
-  listingId?: string;
-  lastMessage?: string;
-  lastMessageAt?: string;
+  id: string
+  title: string
+  booking_id?: string
+  listing_id?: string
   conversation_participants?: Array<{
+    user_id: string
     user: {
-      id: string;
-      name: string;
-      email: string;
-      avatar?: string;
-    };
-  }>;
-  participants?: Array<{
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      avatar?: string;
-    };
-  }>;
-  booking?: {
-    id: string;
-    listing: {
-      id: string;
-      title: string;
-      images: string[];
-    };
-  };
-  listing?: {
-    id: string;
-    title: string;
-    images: string[];
-  };
+      id: string
+      name: string
+      email: string
+      avatar?: string
+    }
+  }>
+  lastMessage?: string
+  lastMessageAt?: string
 }
 
 export default function MessagesPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const conversationId = searchParams.get('id') || searchParams.get('conversation');
-  const bookingId = searchParams.get('booking');
-  const compose = searchParams.get('compose');
-  const composeTo = searchParams.get('to');
-  const composeText = searchParams.get('text') || '';
-  
-  const [user, setUser] = useState<any>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams()
+  const conversationId = searchParams.get('id')
+  const bookingId = searchParams.get('booking')
+  const compose = searchParams.get('compose')
+  const composeTo = searchParams.get('to')
 
-  // Real-time messaging hook
-  const { 
-    messages: realtimeMessages, 
-    sendMessage: sendRealtimeMessage, 
-    markAsRead 
-  } = useRealtimeMessages({
-    bookingId: selectedConversation?.bookingId || '',
-    userId: user?.id || '',
-    onNewMessage: (message) => {
-      console.log('New real-time message received:', message);
-      // Auto-scroll to bottom when new message arrives
-      setTimeout(() => scrollToBottom(), 100);
-    },
-    onMessageRead: (messageId) => {
-      console.log('Message read:', messageId);
-    }
-  });
+  const [user, setUser] = useState<User | null>(null)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [sending, setSending] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   useEffect(() => {
-    fetchData();
-  }, [conversationId, bookingId]);
+    scrollToBottom()
+  }, [messages])
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    fetchData()
+  }, [conversationId, bookingId])
 
   const fetchData = async () => {
     try {
-      console.log('📱 Messages page: Fetching data...')
-
+      console.log('📱 [MESSAGES] Fetching data...')
+      
       const [userResponse, conversationsResponse] = await Promise.all([
         fetch('/api/auth/user'),
-        fetch('/api/conversations'),
-      ]);
+        fetch('/api/conversations')
+      ])
 
       if (userResponse.ok) {
-        const userData = await userResponse.json();
-        console.log('👤 Messages page: User data loaded:', userData.user?.id)
-        setUser(userData.user);
+        const userData = await userResponse.json()
+        setUser(userData.user)
       }
 
       if (conversationsResponse.ok) {
-        const conversationsData = await conversationsResponse.json();
-        console.log('📋 Messages page: Conversations loaded:', {
+        const conversationsData = await conversationsResponse.json()
+        console.log('📋 [MESSAGES] Conversations loaded:', {
           total: conversationsData.data?.items?.length || 0,
-          conversations: conversationsData.data?.items?.map((c: any) => ({
-            id: c.id,
-            bookingId: c.booking_id || c.bookingId,
-            listingId: c.listing_id || c.listingId,
-            title: c.title,
-            hasBooking: !!c.booking,
-            hasListing: !!c.listing
-          }))
+          conversations: conversationsData.data?.items
         })
-        setConversations(conversationsData.data.items);
+        setConversations(conversationsData.data.items || [])
 
         // Handle booking parameter - create conversation if needed
         if (bookingId && user) {
-          console.log('🎯 Messages page: Booking parameter detected:', bookingId)
+          console.log('🎯 [MESSAGES] Booking parameter detected:', bookingId)
 
           // Check if conversation already exists for this booking
-          const existingConversation = conversationsData.data.items.find((c: Conversation) =>
-            c.bookingId === bookingId || c.booking_id === bookingId
-          );
+          const existingConversation = conversationsData.data?.items?.find((c: Conversation) =>
+            c.booking_id === bookingId
+          )
 
           if (existingConversation) {
-            console.log('✅ Messages page: Found existing conversation for booking:', existingConversation.id)
-            selectConversation(existingConversation);
+            console.log('✅ [MESSAGES] Found existing conversation for booking:', existingConversation.id)
+            selectConversation(existingConversation)
           } else {
-            console.log('🔄 Messages page: No conversation found for booking, creating one...')
-            await createConversationFromBooking(bookingId);
+            console.log('🔄 [MESSAGES] No conversation found for booking, creating one...')
+            await createConversationFromBooking(bookingId)
           }
         }
         // Auto-select conversation if ID provided
         else if (conversationId) {
-          const conversation = conversationsData.data.items.find((c: Conversation) => c.id === conversationId);
-          console.log('🎯 Messages page: Auto-selecting conversation:', { conversationId, found: !!conversation })
+          const conversation = conversationsData.data?.items?.find((c: Conversation) => c.id === conversationId)
+          console.log('🎯 [MESSAGES] Auto-selecting conversation:', { conversationId, found: !!conversation })
           if (conversation) {
-            selectConversation(conversation);
-          } else {
-            console.error('❌ Messages page: Conversation not found:', conversationId)
-          }
-        } else if (compose && composeTo) {
-          // Try to find a conversation with target participant
-          const conversation = conversationsData.data.items.find((c: Conversation) => {
-            const participants = c.conversation_participants || c.participants || [];
-            return participants.some?.(p => String(p.user.id) === String(composeTo));
-          });
-          console.log('💬 Messages page: Compose mode - finding conversation:', { composeTo, found: !!conversation })
-          if (conversation) {
-            selectConversation(conversation);
-            setNewMessage(composeText);
+            selectConversation(conversation)
           }
         }
-      } else {
-        const errorData = await conversationsResponse.json().catch(() => null)
-        console.error('❌ Messages page: Failed to load conversations:', {
-          status: conversationsResponse.status,
-          errorData
-        })
+        // Handle compose mode
+        else if (compose && composeTo) {
+          // Try to find a conversation with target participant
+          const conversation = conversationsData.data?.items?.find((c: Conversation) => {
+            const participants = c.conversation_participants || []
+            return participants.some(p => String(p.user_id) === String(composeTo))
+          })
+          console.log('💬 [MESSAGES] Compose mode - finding conversation:', { composeTo, found: !!conversation })
+          if (conversation) {
+            selectConversation(conversation)
+          }
+        }
       }
     } catch (error) {
-      console.error('💥 Messages page: Error fetching data:', error);
+      console.error('💥 [MESSAGES] Error fetching data:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const createConversationFromBooking = async (bookingId: string) => {
     try {
-      console.log('🔄 Creating conversation from booking:', bookingId);
+      console.log('🔄 [MESSAGES] Creating conversation from booking:', bookingId)
 
       const response = await fetch(`/api/bookings/${bookingId}/conversation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-      });
+      })
 
       if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Conversation created successfully:', data);
+        const data = await response.json()
+        console.log('✅ [MESSAGES] Conversation created successfully:', data)
 
-        // Add the new conversation to the list
-        const newConversation = data.data.conversation;
-        setConversations(prev => [newConversation, ...prev]);
-
-        // Select the new conversation
-        selectConversation(newConversation);
+        // Refresh conversations
+        await fetchData()
       } else {
-        const errorData = await response.json().catch(() => null);
-        console.error('❌ Failed to create conversation:', errorData);
+        const errorData = await response.json().catch(() => null)
+        console.error('❌ [MESSAGES] Failed to create conversation:', errorData)
       }
     } catch (error) {
-      console.error('💥 Error creating conversation from booking:', error);
+      console.error('💥 [MESSAGES] Error creating conversation from booking:', error)
     }
-  };
+  }
 
   const selectConversation = async (conversation: Conversation) => {
-    setSelectedConversation(conversation);
-    await fetchMessages(conversation.id);
+    console.log('🎯 [MESSAGES] Selecting conversation:', conversation.id)
+    setSelectedConversation(conversation)
+    await fetchMessages(conversation.id)
 
     // Update URL
-    const url = new URL(window.location.href);
-    url.searchParams.set('id', conversation.id);
-    window.history.pushState({}, '', url.toString());
-  };
+    const url = new URL(window.location.href)
+    url.searchParams.set('id', conversation.id)
+    url.searchParams.delete('booking')
+    url.searchParams.delete('compose')
+    url.searchParams.delete('to')
+    window.history.replaceState({}, '', url.toString())
+  }
 
   const fetchMessages = async (conversationId: string) => {
     try {
-      const response = await fetch(`/api/conversations/${conversationId}/messages`);
-      if (response.ok) {
-        const messagesData = await response.json();
-        setMessages(messagesData.data.items);
-      }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedConversation || !newMessage.trim() || sending) return;
-
-    setSending(true);
-    const messageContent = newMessage.trim();
-    setNewMessage(''); // Clear input immediately for better UX
-
-    try {
-      // Use real-time messaging
-      const result = await sendRealtimeMessage(messageContent, 'TEXT');
+      console.log('📨 [MESSAGES] Fetching messages for conversation:', conversationId)
       
-      if (result) {
-        // Update conversation last message
-        setConversations(prev => prev.map(conv => 
-          conv.id === selectedConversation.id 
-            ? { ...conv, lastMessage: messageContent, lastMessageAt: new Date().toISOString() }
-            : conv
-        ));
-      } else {
-        // Fallback to regular API if real-time fails
-        const response = await fetch(`/api/conversations/${selectedConversation.id}/messages`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            content: messageContent,
-            type: 'TEXT',
-          }),
-        });
-
-        if (response.ok) {
-          const messageData = await response.json();
-          setMessages(prev => [...prev, messageData.data]);
-          
-          // Update conversation last message
-          setConversations(prev => prev.map(conv => 
-            conv.id === selectedConversation.id 
-              ? { ...conv, lastMessage: messageContent, lastMessageAt: new Date().toISOString() }
-              : conv
-          ));
-        } else {
-          console.error('Failed to send message');
-          setNewMessage(messageContent); // Restore message if failed
-        }
+      const response = await fetch(`/api/conversations/${conversationId}/messages`)
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data.data?.items || [])
+        console.log('📨 [MESSAGES] Messages loaded:', data.data?.items?.length || 0)
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      setNewMessage(messageContent); // Restore message if failed
+      console.error('💥 [MESSAGES] Error fetching messages:', error)
+    }
+  }
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || sending) return
+
+    setSending(true)
+    try {
+      console.log('📤 [MESSAGES] Sending message:', newMessage)
+
+      const response = await fetch(`/api/conversations/${selectedConversation.id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: newMessage,
+          message_type: 'TEXT'
+        }),
+      })
+
+      if (response.ok) {
+        setNewMessage('')
+        await fetchMessages(selectedConversation.id)
+        console.log('✅ [MESSAGES] Message sent successfully')
+      } else {
+        console.error('❌ [MESSAGES] Failed to send message')
+      }
+    } catch (error) {
+      console.error('💥 [MESSAGES] Error sending message:', error)
     } finally {
-      setSending(false);
+      setSending(false)
     }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
-    } else {
-      return date.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' });
-    }
-  };
+  }
 
   const getOtherParticipant = (conversation: Conversation) => {
-    const participants = conversation.conversation_participants || conversation.participants || [];
-    return participants.find(p => p.user.id !== user?.id)?.user;
-  };
+    const participants = conversation.conversation_participants || []
+    return participants.find(p => p.user_id !== user?.id)?.user
+  }
 
-  const isMessageRead = (message: Message) => {
-    if (message.sender?.id === user?.id) {
-      return message.readReceipts.some(r => r.userId !== user?.id && r.read);
-    }
-    return false;
-  };
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-ZA', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
 
   if (loading) {
     return (
-      <DashboardLayout user={user} showHeader={false}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral-600"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading conversations...</p>
         </div>
-      </DashboardLayout>
-    );
+      </div>
+    )
   }
 
   return (
-    <DashboardLayout user={user} showHeader={false}>
-      <div className="h-[calc(100vh-8rem)] flex space-x-6">
-        {/* Conversations Sidebar */}
-        <div className="w-80 flex flex-col border-r">
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-semibold">Messages</h2>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto">
-            {conversations.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Send className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">No conversations yet</h3>
-                <p className="text-sm mb-4">Start a conversation by booking an item or having someone book your listing.</p>
-                <div className="space-y-2">
-                  <Link href="/browse">
-                    <Button variant="outline" size="sm" className="w-full">
-                      Browse Items
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard/listings">
-                    <Button variant="outline" size="sm" className="w-full">
-                      Manage Listings
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              conversations.map((conversation) => {
-                const otherUser = getOtherParticipant(conversation);
-                return (
-                  <div
-                    key={conversation.id}
-                    className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                      selectedConversation?.id === conversation.id ? 'bg-coral-50' : ''
-                    }`}
-                    onClick={() => selectConversation(conversation)}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
-                          {otherUser?.name?.charAt(0) || 'U'}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-sm truncate">
-                            {otherUser?.name || 'Unknown User'}
-                          </h3>
-                          {conversation.lastMessageAt && (
-                            <span className="text-xs text-gray-500">
-                              {formatTime(conversation.lastMessageAt)}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-600 mb-1">
-                          {conversation.booking?.listing?.title || conversation.listing?.title || 'No listing'}
+    <div className="flex h-[calc(100vh-4rem)]">
+      {/* Conversations Sidebar */}
+      <div className="w-1/3 border-r bg-gray-50">
+        <div className="p-4 border-b">
+          <h1 className="text-xl font-semibold">Messages</h1>
+        </div>
+        
+        <div className="overflow-y-auto">
+          {conversations.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <p>No conversations yet</p>
+            </div>
+          ) : (
+            conversations.map((conversation) => {
+              const otherParticipant = getOtherParticipant(conversation)
+              return (
+                <div
+                  key={conversation.id}
+                  onClick={() => selectConversation(conversation)}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-100 ${
+                    selectedConversation?.id === conversation.id ? 'bg-coral-50 border-coral-200' : ''
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={otherParticipant?.avatar} />
+                      <AvatarFallback>
+                        {otherParticipant?.name?.charAt(0) || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {otherParticipant?.name || 'Unknown User'}
                         </p>
-                        {conversation.lastMessage && (
-                          <p className="text-sm text-gray-500 truncate">
-                            {conversation.lastMessage}
+                        {conversation.lastMessageAt && (
+                          <p className="text-xs text-gray-500">
+                            {formatTime(conversation.lastMessageAt)}
                           </p>
                         )}
                       </div>
+                      <p className="text-sm text-gray-500 truncate">
+                        {conversation.lastMessage || 'No messages yet'}
+                      </p>
+                      {conversation.booking_id && (
+                        <Badge variant="secondary" className="text-xs mt-1">
+                          Booking Chat
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {selectedConversation ? (
-            <>
-              {/* Chat Header */}
-              <div className="p-4 border-b flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Link href="/dashboard/messages">
-                    <Button variant="outline" size="sm" className="md:hidden">
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">
-                      {getOtherParticipant(selectedConversation)?.name?.charAt(0) || 'U'}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">
-                      {getOtherParticipant(selectedConversation)?.name || 'Unknown User'}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {selectedConversation.booking?.listing?.title || selectedConversation.listing?.title || 'No listing'}
-                    </p>
-                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Video className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Info className="h-4 w-4" />
-                  </Button>
+              )
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {selectedConversation ? (
+          <>
+            {/* Chat Header */}
+            <div className="p-4 border-b bg-white">
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={getOtherParticipant(selectedConversation)?.avatar} />
+                  <AvatarFallback>
+                    {getOtherParticipant(selectedConversation)?.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="font-semibold">
+                    {getOtherParticipant(selectedConversation)?.name || 'Unknown User'}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {selectedConversation.booking_id ? 'Booking conversation' : 'Direct message'}
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {(realtimeMessages.length > 0 ? realtimeMessages : messages).map((message: any) => {
-                  const isOwn = message.sender?.id === user?.id;
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {messages.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p>No messages yet. Start the conversation!</p>
+                </div>
+              ) : (
+                messages.map((message) => {
+                  const isOwn = message.from_user_id === user?.id
                   return (
                     <div
                       key={message.id}
                       className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className={`max-w-xs lg:max-w-md ${isOwn ? 'order-2' : 'order-1'}`}>
-                        <div
-                          className={`rounded-lg px-4 py-2 ${
-                            isOwn
-                              ? 'bg-coral-600 text-white'
-                              : 'bg-gray-100 text-gray-900'
-                          }`}
-                        >
-                          <p className="text-sm">{message.content}</p>
-                        </div>
-                        <div className={`flex items-center space-x-1 mt-1 ${
-                          isOwn ? 'justify-end' : 'justify-start'
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          isOwn
+                            ? 'bg-coral-600 text-white'
+                            : 'bg-gray-200 text-gray-900'
+                        }`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                        <p className={`text-xs mt-1 ${
+                          isOwn ? 'text-coral-100' : 'text-gray-500'
                         }`}>
-                          <span className="text-xs text-gray-500">
-                              {formatTime(message.createdAt)}
-                          </span>
-                          {isOwn && (
-                            <span className="text-xs text-gray-500">
-                              {isMessageRead(message) ? (
-                                <CheckCheck className="h-3 w-3" />
-                              ) : (
-                                <Check className="h-3 w-3" />
-                              )}
-                            </span>
-                          )}
-                        </div>
+                          {formatTime(message.created_at)}
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
+                  )
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
-              {/* Message Input */}
-              <div className="p-4 border-t">
-                <form onSubmit={sendMessage} className="flex items-center space-x-2">
-                  <Button type="button" variant="outline" size="sm">
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <div className="flex-1">
-                    <Textarea
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type a message..."
-                      className="resize-none"
-                      rows={1}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          sendMessage(e);
-                        }
-                      }}
-                    />
-                  </div>
-                  <Button type="button" variant="outline" size="sm">
-                    <Smile className="h-4 w-4" />
-                  </Button>
-                  <Button type="submit" size="sm" disabled={!newMessage.trim() || sending}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Send className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Select a conversation</h3>
-                <p className="text-gray-600 mb-4">Choose a conversation from the list to start messaging</p>
-                {conversations.length === 0 && (
-                  <div className="space-y-2">
-                    <Link href="/browse">
-                      <Button variant="outline" size="sm">
-                        Browse Items
-                      </Button>
-                    </Link>
-                    <Link href="/dashboard/listings">
-                      <Button variant="outline" size="sm" className="ml-2">
-                        Manage Listings
-                      </Button>
-                    </Link>
-                  </div>
-                )}
+            {/* Message Input */}
+            <div className="p-4 border-t bg-white">
+              <div className="flex space-x-2">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  disabled={sending}
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim() || sending}
+                  className="bg-coral-600 hover:bg-coral-700"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium mb-2">No conversation selected</h3>
+              <p>Choose a conversation from the sidebar to start messaging</p>
+            </div>
+          </div>
+        )}
       </div>
-    </DashboardLayout>
-  );
+    </div>
+  )
 }

@@ -19,22 +19,24 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    // Get conversations where user is a participant (either through bookings or direct conversations)
-    // First get conversation IDs where user is a participant
-    const { data: userParticipantConversations } = await supabase
+    console.log('🔍 [CONVERSATIONS] Starting conversation lookup for user:', user.id)
+
+    // Get conversation IDs where user is a participant
+    const { data: userParticipantConversations, error: participantError } = await supabase
       .from('conversation_participants')
       .select('conversation_id')
       .eq('user_id', user.id)
 
-    const conversationIds = userParticipantConversations?.map(p => p.conversation_id) || []
+    if (participantError) {
+      console.error('❌ [CONVERSATIONS] Error fetching participant conversations:', participantError)
+      return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 })
+    }
 
-    console.log('🔍 User conversations lookup:', {
-      userId: user.id,
-      conversationIds,
-      total: conversationIds.length
-    })
+    const conversationIds = userParticipantConversations?.map(p => p.conversation_id) || []
+    console.log('🔍 [CONVERSATIONS] Found conversation IDs:', conversationIds)
 
     if (conversationIds.length === 0) {
+      console.log('📭 [CONVERSATIONS] No conversations found for user')
       return NextResponse.json({
         success: true,
         data: {
@@ -47,36 +49,26 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // First get the conversations
-    const { data: conversations, error, count } = await supabase
+    // Get conversations
+    const { data: conversations, error: conversationsError } = await supabase
       .from('conversations')
       .select('*')
       .in('id', conversationIds)
       .order('updated_at', { ascending: false })
       .range(from, to)
 
+    if (conversationsError) {
+      console.error('❌ [CONVERSATIONS] Error fetching conversations:', conversationsError)
+      return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 })
+    }
+
+    console.log('📋 [CONVERSATIONS] Found conversations:', conversations?.length || 0)
+
     // Filter by booking if specified
     let filteredConversations = conversations
     if (bookingId) {
       filteredConversations = conversations?.filter(c => c.booking_id === bookingId)
-    }
-
-    // Filter by user if specified
-    if (userId) {
-      // This would need additional logic to check participants
-    }
-
-    console.log('📋 Conversations query result:', {
-      conversationIds,
-      conversations: conversations?.length || 0,
-      error,
-      count,
-      conversationsData: conversations
-    })
-
-    if (error) {
-      console.error('❌ Get conversations error:', error)
-      return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 })
+      console.log('🎯 [CONVERSATIONS] Filtered by booking:', bookingId, 'found:', filteredConversations?.length || 0)
     }
 
     // Get participants for each conversation
@@ -121,23 +113,27 @@ export async function GET(request: NextRequest) {
 
         return {
           ...conversation,
+          lastMessage: latestMessage?.content || null,
+          lastMessageAt: latestMessage?.created_at || null,
           messages: latestMessage ? [latestMessage] : []
         }
       })
     )
 
+    console.log('✅ [CONVERSATIONS] Returning conversations:', conversationsWithMessages.length)
+
     return NextResponse.json({
       success: true,
       data: {
         items: conversationsWithMessages,
-        total: count || 0,
+        total: conversationsWithMessages.length,
         page,
         pageSize: limit,
-        totalPages: Math.ceil((count || 0) / limit),
+        totalPages: Math.ceil(conversationsWithMessages.length / limit),
       },
     })
   } catch (error) {
-    console.error('Get conversations error:', error)
+    console.error('💥 [CONVERSATIONS] Get conversations error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -182,7 +178,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized to create conversation for this booking' }, { status: 403 })
     }
 
-    // Check if conversation already exists for this booking
+    // Check if conversation already exists
     const { data: existingConversation } = await supabase
       .from('conversations')
       .select('id')
@@ -190,7 +186,10 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingConversation) {
-      return NextResponse.json({ error: 'Conversation already exists for this booking' }, { status: 400 })
+      return NextResponse.json({ 
+        success: true, 
+        data: { conversation: existingConversation } 
+      })
     }
 
     // Create conversation
@@ -198,72 +197,48 @@ export async function POST(request: NextRequest) {
       .from('conversations')
       .insert({
         booking_id: bookingId,
-        title: `Chat about ${booking.listing.title}`,
+        listing_id: booking.listing.id,
+        title: `Chat about ${booking.listing.title}`
       })
-      .select()
+      .select('id')
       .single()
 
-    if (conversationError) {
-      console.error('Create conversation error:', conversationError)
+    if (conversationError || !conversation) {
+      console.error('❌ Create conversation error:', conversationError)
       return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 })
     }
 
     // Add participants
-    const participantInserts = participantIds.map((userId: string) => ({
+    const participants = participantIds.map((participantId: string) => ({
       conversation_id: conversation.id,
-      user_id: userId,
+      user_id: participantId
     }))
 
     const { error: participantsError } = await supabase
       .from('conversation_participants')
-      .insert(participantInserts)
+      .insert(participants)
 
     if (participantsError) {
-      console.error('Add participants error:', participantsError)
+      console.error('❌ Add participants error:', participantsError)
       return NextResponse.json({ error: 'Failed to add participants' }, { status: 500 })
     }
 
     // Send initial message if provided
     if (initialMessage) {
-      const { error: messageError } = await supabase
+      await supabase
         .from('messages')
         .insert({
+          conversation_id: conversation.id,
           booking_id: bookingId,
           from_user_id: user.id,
-          to_user_id: participantIds.find((id: string) => id !== user.id),
           content: initialMessage,
-          type: 'TEXT',
-          topic: `booking_${bookingId}`,
-          extension: 'chat',
-        })
-
-      if (messageError) {
-        console.error('Send initial message error:', messageError)
-        // Don't fail the entire operation
-      }
-    }
-
-    // Create notifications for other participants
-    const otherParticipants = participantIds.filter((id: string) => id !== user.id)
-    for (const participantId of otherParticipants) {
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: participantId,
-          type: 'MESSAGE_RECEIVED',
-          title: 'New Conversation Started',
-          message: `You have a new conversation about "${booking.listing.title}"`,
-          data: {
-            conversationId: conversation.id,
-            bookingId,
-          },
-          channels: ['EMAIL', 'PUSH'],
+          message_type: 'TEXT'
         })
     }
 
     return NextResponse.json({
       success: true,
-      data: conversation,
+      data: { conversation }
     })
   } catch (error) {
     console.error('Create conversation error:', error)

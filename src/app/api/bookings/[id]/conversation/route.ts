@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { getAuthUser } from '@/lib/auth'
 
 export async function POST(
   request: NextRequest,
@@ -8,14 +9,13 @@ export async function POST(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const user = await getAuthUser(supabase)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const bookingId = params.id
+    console.log('🔄 [BOOKING-CONVERSATION] Creating conversation for booking:', bookingId)
 
     // Get booking details with listing and owner info
     const { data: booking, error: bookingError } = await supabase
@@ -23,66 +23,51 @@ export async function POST(
       .select(`
         *,
         listing:listings(
-          *,
-          user:user_id(*),
-          business:business_id(*)
-        )
+          id, 
+          title, 
+          user_id, 
+          business_id,
+          user:users(id, name, email),
+          business:businesses(id, name, email)
+        ),
+        renter:users!renter_id(id, name, email)
       `)
       .eq('id', bookingId)
       .single()
 
     if (bookingError || !booking) {
+      console.error('❌ [BOOKING-CONVERSATION] Booking not found:', bookingError)
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    // Check if user is involved in this booking
+    console.log('📋 [BOOKING-CONVERSATION] Booking found:', {
+      id: booking.id,
+      renter_id: booking.renter_id,
+      listing_user_id: booking.listing?.user_id,
+      listing_business_id: booking.listing?.business_id
+    })
+
+    // Check if user is authorized (renter or owner)
     const isRenter = booking.renter_id === user.id
-    const isOwner = booking.listing?.user?.id === user.id || booking.listing?.business?.id === user.id
+    const isOwner = booking.listing?.user_id === user.id || booking.listing?.business_id === user.id
 
     if (!isRenter && !isOwner) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+      console.error('❌ [BOOKING-CONVERSATION] User not authorized:', user.id)
+      return NextResponse.json({ error: 'Unauthorized to create conversation for this booking' }, { status: 403 })
     }
 
-    // Check if conversation already exists for this booking
-    const { data: existingConversations, error: existingError } = await supabase
+    // Check if conversation already exists
+    const { data: existingConversation } = await supabase
       .from('conversations')
-      .select('id, booking_id')
+      .select('id, title')
       .eq('booking_id', bookingId)
+      .single()
 
-    if (existingError) {
-      console.error('Error checking existing conversation:', existingError)
-    }
-
-    if (existingConversations && existingConversations.length > 0) {
-      // Return existing conversation
-      const existingConversation = existingConversations[0]
-
-      // Get full conversation data with participants
-      const { data: fullConversation, error: fullConvError } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          booking:bookings(
-            *,
-            listing:listings(*)
-          ),
-          conversation_participants(
-            user:user_id(id, name, email, avatar)
-          )
-        `)
-        .eq('id', existingConversation.id)
-        .single()
-
-      if (fullConvError || !fullConversation) {
-        return NextResponse.json({ error: 'Failed to load conversation' }, { status: 500 })
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          conversation: fullConversation,
-          message: 'Conversation already exists'
-        }
+    if (existingConversation) {
+      console.log('✅ [BOOKING-CONVERSATION] Conversation already exists:', existingConversation.id)
+      return NextResponse.json({ 
+        success: true, 
+        data: { conversation: existingConversation } 
       })
     }
 
@@ -91,22 +76,23 @@ export async function POST(
 
     if (isRenter) {
       // For renter, find the business owner or user
-      if (booking.listing?.user?.id) {
+      if (booking.listing?.user_id) {
         // Individual listing
-        otherUserId = booking.listing.user.id
-      } else if (booking.listing?.business?.id) {
+        otherUserId = booking.listing.user_id
+        console.log('👤 [BOOKING-CONVERSATION] Individual listing owner:', otherUserId)
+      } else if (booking.listing?.business_id) {
         // Business listing - find a business representative
         const { data: teamMembers } = await supabase
           .from('team_members')
           .select('user_id')
-          .eq('business_id', booking.listing.business.id)
+          .eq('business_id', booking.listing.business_id)
           .limit(1)
 
         if (teamMembers && teamMembers.length > 0) {
           otherUserId = teamMembers[0].user_id
+          console.log('🏢 [BOOKING-CONVERSATION] Business team member:', otherUserId)
         } else {
           // Fallback: use any admin user or the system user
-          // For now, use a default admin user (you should customize this)
           const { data: adminUser } = await supabase
             .from('users')
             .select('id')
@@ -114,112 +100,84 @@ export async function POST(
             .single()
 
           otherUserId = adminUser?.id
+          console.log('👑 [BOOKING-CONVERSATION] Fallback admin user:', otherUserId)
         }
       }
     } else {
       // For owner/business user, the other participant is the renter
       otherUserId = booking.renter_id
+      console.log('👤 [BOOKING-CONVERSATION] Renter:', otherUserId)
     }
 
     if (!otherUserId) {
+      console.error('❌ [BOOKING-CONVERSATION] Other participant not found')
       return NextResponse.json({ error: 'Other participant not found' }, { status: 404 })
     }
 
-    // Create new conversation
-    const { data: newConversation, error: conversationError } = await supabase
+    // Create conversation
+    const { data: conversation, error: conversationError } = await supabase
       .from('conversations')
       .insert({
         booking_id: bookingId,
-        listing_id: booking.listing_id,
-        title: `Chat about ${booking.listing.title}`,
+        listing_id: booking.listing.id,
+        title: `Chat about ${booking.listing.title}`
       })
-      .select(`
-        *,
-        booking:bookings(
-          *,
-          listing:listings(*)
-        )
-      `)
+      .select('id, title')
       .single()
 
-    if (conversationError || !newConversation) {
-      console.error('Error creating conversation:', conversationError)
+    if (conversationError || !conversation) {
+      console.error('❌ [BOOKING-CONVERSATION] Create conversation error:', conversationError)
       return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 })
     }
 
+    console.log('✅ [BOOKING-CONVERSATION] Conversation created:', conversation.id)
+
     // Add participants
+    const participants = [
+      { conversation_id: conversation.id, user_id: user.id },
+      { conversation_id: conversation.id, user_id: otherUserId }
+    ]
+
     const { error: participantsError } = await supabase
       .from('conversation_participants')
-      .insert([
-        { conversation_id: newConversation.id, user_id: user.id },
-        { conversation_id: newConversation.id, user_id: otherUserId }
-      ])
+      .insert(participants)
 
     if (participantsError) {
-      console.error('Error adding participants:', participantsError)
+      console.error('❌ [BOOKING-CONVERSATION] Add participants error:', participantsError)
       return NextResponse.json({ error: 'Failed to add participants' }, { status: 500 })
     }
 
-    // Get conversation with participants
-    const { data: conversationWithParticipants, error: participantsFetchError } = await supabase
-      .from('conversations')
-      .select(`
-        *,
-        booking:bookings(
-          *,
-          listing:listings(*)
-        ),
-        conversation_participants(
-          user:user_id(id, name, email, avatar)
-        )
-      `)
-      .eq('id', newConversation.id)
-      .single()
-
-    if (participantsFetchError || !conversationWithParticipants) {
-      return NextResponse.json({ error: 'Failed to load conversation with participants' }, { status: 500 })
-    }
+    console.log('✅ [BOOKING-CONVERSATION] Participants added:', participants.length)
 
     // Send initial message
-    const initialMessage = isRenter
-      ? `Hi! I have a question about my booking for "${booking.listing.title}"`
-      : `Hi! I have a question about your booking for "${booking.listing.title}"`
+    const initialMessage = isRenter 
+      ? "Hi! I have a question about my booking. Can you help me?"
+      : "Hi! I received your booking request. How can I help you?"
 
-    const { data: newMessage, error: messageError } = await supabase
+    const { error: messageError } = await supabase
       .from('messages')
       .insert({
+        conversation_id: conversation.id,
         booking_id: bookingId,
         from_user_id: user.id,
-        to_user_id: otherUserId,
         content: initialMessage,
-        type: 'TEXT'
+        message_type: 'TEXT'
       })
-      .select(`
-        id,
-        content,
-        type,
-        created_at,
-        from_user_id,
-        to_user_id,
-        sender:from_user_id(id, name, email)
-      `)
-      .single()
 
     if (messageError) {
-      console.error('Error sending initial message:', messageError)
+      console.error('❌ [BOOKING-CONVERSATION] Send initial message error:', messageError)
       // Don't fail the whole operation if message fails
+    } else {
+      console.log('✅ [BOOKING-CONVERSATION] Initial message sent')
     }
 
     return NextResponse.json({
       success: true,
-      data: {
-        conversation: conversationWithParticipants,
-        message: newMessage || null
-      }
+      data: { conversation }
     })
 
   } catch (error) {
-    console.error('Error creating conversation from booking:', error)
+    console.error('💥 [BOOKING-CONVERSATION] API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
