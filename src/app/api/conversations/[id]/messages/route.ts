@@ -123,9 +123,16 @@ export async function POST(
     const body = await request.json().catch(() => ({}))
     const content = typeof body.content === 'string' ? body.content.trim() : ''
     const messageType = normalizeMessageType(body.type)
+    const attachments = Array.isArray(body.attachments) ? body.attachments : []
 
-    if (!content) {
+    // For TEXT messages, content is required
+    if (messageType === 'TEXT' && !content) {
       return NextResponse.json({ error: 'Message content is required' }, { status: 400 })
+    }
+
+    // For IMAGE/FILE messages, at least one attachment is required
+    if ((messageType === 'IMAGE' || messageType === 'FILE') && attachments.length === 0) {
+      return NextResponse.json({ error: 'At least one attachment is required for file/image messages' }, { status: 400 })
     }
 
     const { data: conversation, error: conversationError } = await supabase
@@ -178,7 +185,8 @@ export async function POST(
       from_user_id: user.id,
       to_user_id: recipients[0].user_id,
       content,
-      type: messageType
+      type: messageType,
+      attachments: attachments.length > 0 ? attachments : null
     }
 
     if (conversationRecord.booking_id) {

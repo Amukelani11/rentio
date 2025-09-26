@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MessageSquare, Send, ArrowLeft, Menu } from 'lucide-react'
+import { MessageSquare, Send, ArrowLeft, Menu, Paperclip, X, Image as ImageIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import { useUserActivity } from '@/hooks/useUserActivity'
@@ -167,6 +167,8 @@ export default function MessagesPage() {
   const [participantActivity, setParticipantActivity] = useState<{[userId: string]: string}>({}) // userId -> last_seen_at
   const [showConversationList, setShowConversationList] = useState(true)
   const [messagesEndRef, setMessagesEndRef] = useState<HTMLDivElement | null>(null)
+  const [uploadingFiles, setUploadingFiles] = useState<File[]>([])
+  const [dragOver, setDragOver] = useState(false)
 
   const supabase = useMemo(() => createClient(), [])
 
@@ -453,19 +455,123 @@ export default function MessagesPage() {
     }
   }, [messages, messagesEndRef])
 
+  const handleFileSelect = useCallback((files: FileList | null) => {
+    if (!files) return
+
+    const fileArray = Array.from(files)
+    const validFiles = fileArray.filter(file => {
+      const isImage = file.type.startsWith('image/')
+      const isDocument = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain',
+        'text/csv'
+      ].includes(file.type)
+
+      return isImage || isDocument
+    })
+
+    setUploadingFiles(prev => [...prev, ...validFiles])
+  }, [])
+
+  const removeFile = useCallback((index: number) => {
+    setUploadingFiles(prev => prev.filter((_, i) => i !== index))
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    handleFileSelect(e.dataTransfer.files)
+  }, [handleFileSelect])
+
+  const uploadFile = useCallback(async (file: File): Promise<{ attachment: any; messageType: string } | null> => {
+    if (!selectedConversation) return null
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await fetch(`/api/conversations/${selectedConversation.id}/upload`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null)
+        throw new Error(errorPayload?.error ?? 'Failed to upload file')
+      }
+
+      const payload = await response.json()
+      return payload.data
+    } catch (error) {
+      console.error('[FILE_UPLOAD] Failed to upload file', error)
+      return null
+    }
+  }, [selectedConversation])
+
   const handleSendMessage = useCallback(async () => {
-    if (!selectedConversation || !newMessage.trim() || sending) return
+    if (!selectedConversation || (!newMessage.trim() && uploadingFiles.length === 0) || sending) return
 
     const content = newMessage.trim()
     setSending(true)
     setErrorMessage(null)
-    setNewMessage('')
 
     try {
+      let attachments: any[] = []
+
+      // Upload any files first
+      if (uploadingFiles.length > 0) {
+        const uploadPromises = uploadingFiles.map(uploadFile)
+        const uploadResults = await Promise.all(uploadPromises)
+
+        attachments = uploadResults.filter(result => result !== null) as any[]
+
+        if (attachments.length === 0 && !content) {
+          throw new Error('Failed to upload files')
+        }
+      }
+
+      // Determine message type
+      let messageType = 'TEXT'
+      if (attachments.length > 0) {
+        const hasImages = attachments.some(att => att.messageType === 'IMAGE')
+        const hasFiles = attachments.some(att => att.messageType === 'FILE')
+
+        if (hasImages && !hasFiles) {
+          messageType = 'IMAGE'
+        } else if (hasFiles && !hasImages) {
+          messageType = 'FILE'
+        } else if (hasImages && hasFiles) {
+          messageType = 'FILE' // Default to FILE if mixed
+        }
+      }
+
+      const messagePayload: any = {
+        content: content || (messageType === 'TEXT' ? '' : 'Attachment'),
+        type: messageType
+      }
+
+      if (attachments.length > 0) {
+        messagePayload.attachments = attachments
+      }
+
       const response = await fetch(`/api/conversations/${selectedConversation.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, type: 'TEXT' })
+        body: JSON.stringify(messagePayload)
       })
 
       if (!response.ok) {
@@ -473,28 +579,30 @@ export default function MessagesPage() {
         throw new Error(errorPayload?.error ?? 'Failed to send message')
       }
 
-        const payload: ApiResponse<{ message: Message }> = await response.json()
-        const createdMessage = payload.data?.message
+      const payload: ApiResponse<{ message: Message }> = await response.json()
+      const createdMessage = payload.data?.message
 
-        if (createdMessage) {
-          setMessages((previous) => [...previous, createdMessage])
-          // Auto-scroll to bottom after sending message
-          setTimeout(() => {
-            messagesEndRef?.scrollIntoView({ behavior: 'smooth' })
-          }, 100)
-        } else {
-          await loadMessages(selectedConversation.id)
-        }
+      if (createdMessage) {
+        setMessages((previous) => [...previous, createdMessage])
+        setNewMessage('')
+        setUploadingFiles([])
+        // Auto-scroll to bottom after sending message
+        setTimeout(() => {
+          messagesEndRef?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      } else {
+        await loadMessages(selectedConversation.id)
+      }
     } catch (error) {
       console.error('[MESSAGES] Failed to send message', error)
       const fallbackMessage =
         error instanceof Error ? error.message : 'Unable to send this message. Please try again.'
       setErrorMessage(fallbackMessage)
-      setNewMessage(content)
+      if (content) setNewMessage(content)
     } finally {
       setSending(false)
     }
-  }, [loadMessages, newMessage, selectedConversation, sending])
+  }, [loadMessages, newMessage, selectedConversation, sending, uploadingFiles, uploadFile, messagesEndRef])
 
   const renderConversationList = () => {
     if (loadingConversations && conversations.length === 0) {
@@ -627,7 +735,50 @@ export default function MessagesPage() {
                         : 'bg-white text-gray-900 rounded-bl-md border border-gray-200'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                    {message.content && <p className="whitespace-pre-wrap break-words mb-2">{message.content}</p>}
+
+                    {/* Display attachments */}
+                    {message.attachments && message.attachments.length > 0 && (
+                      <div className="space-y-2">
+                        {message.attachments.map((attachment: any, index: number) => (
+                          <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                            {attachment.type?.startsWith('image/') ? (
+                              <div className="relative">
+                                <img
+                                  src={attachment.url}
+                                  alt={attachment.name}
+                                  className="max-w-48 max-h-32 rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => window.open(attachment.url, '_blank')}
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black bg-opacity-50 rounded-lg">
+                                  <ImageIcon className="h-6 w-6 text-white" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <Paperclip className="h-4 w-4 text-gray-500" />
+                                <div>
+                                  <p className="text-xs font-medium text-gray-900">{attachment.name}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.open(attachment.url, '_blank')}
+                                  className="h-6 w-6 p-0 text-gray-400 hover:text-coral-500"
+                                >
+                                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l4-4m-4 4l-4-4m8 2h3m-3 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${isOwn ? 'justify-end' : 'justify-start'}`}>
                     <span>{formatTime(message.created_at)}</span>
@@ -710,7 +861,45 @@ export default function MessagesPage() {
 
             {/* Message Input */}
             <footer className="border-t bg-white p-4">
-              <div className="flex items-end gap-3">
+              {/* File Preview */}
+              {uploadingFiles.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {uploadingFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0">
+                        {file.type.startsWith('image/') ? (
+                          <ImageIcon className="h-5 w-5 text-coral-500" />
+                        ) : (
+                          <Paperclip className="h-5 w-5 text-gray-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div
+                className={`flex items-end gap-3 transition-colors ${
+                  dragOver ? 'bg-coral-50 border-2 border-dashed border-coral-300' : ''
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 <div className="flex-1 relative">
                   <Input
                     value={newMessage}
@@ -721,14 +910,37 @@ export default function MessagesPage() {
                         handleSendMessage()
                       }
                     }}
-                    placeholder="Type a message..."
+                    placeholder={uploadingFiles.length > 0 ? "Add a message..." : "Type a message..."}
                     disabled={sending}
-                    className="min-h-[44px] py-3 px-4 pr-12 rounded-full border-gray-300 focus:border-coral-500 focus:ring-coral-500 resize-none"
+                    className="min-h-[44px] py-3 px-4 pr-20 rounded-full border-gray-300 focus:border-coral-500 focus:ring-coral-500 resize-none"
                   />
+
+                  {/* File Upload Button */}
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <input
+                      type="file"
+                      id="file-upload-mobile"
+                      className="hidden"
+                      multiple
+                      accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv"
+                      onChange={(e) => handleFileSelect(e.target.files)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-coral-500"
+                      onClick={() => document.getElementById('file-upload-mobile')?.click()}
+                      disabled={sending}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
+
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || sending}
+                  disabled={(!newMessage.trim() && uploadingFiles.length === 0) || sending}
                   className="h-11 w-11 rounded-full bg-coral-600 hover:bg-coral-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                   size="sm"
                 >
@@ -739,6 +951,12 @@ export default function MessagesPage() {
                   )}
                 </Button>
               </div>
+
+              {dragOver && (
+                <div className="text-center mt-2 text-sm text-coral-600">
+                  Drop files here to attach them
+                </div>
+              )}
             </footer>
           </div>
         )}
@@ -805,28 +1023,102 @@ export default function MessagesPage() {
           {renderMessageList()}
 
           {selectedConversation && (
-            <footer className="border-t px-6 py-4">
-              <div className="flex items-center gap-3">
-                <Input
-                  value={newMessage}
-                  onChange={(event) => setNewMessage(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault()
-                      handleSendMessage()
-                    }
-                  }}
-                  placeholder="Type a message..."
-                  disabled={sending}
-                />
+            <footer className="border-t bg-white px-6 py-4">
+              {/* File Preview */}
+              {uploadingFiles.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {uploadingFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      <div className="flex-shrink-0">
+                        {file.type.startsWith('image/') ? (
+                          <ImageIcon className="h-5 w-5 text-coral-500" />
+                        ) : (
+                          <Paperclip className="h-5 w-5 text-gray-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div
+                className={`flex items-center gap-3 transition-colors ${
+                  dragOver ? 'bg-coral-50 border-2 border-dashed border-coral-300 rounded-md p-2' : ''
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <div className="flex-1 relative">
+                  <Input
+                    value={newMessage}
+                    onChange={(event) => setNewMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        handleSendMessage()
+                      }
+                    }}
+                    placeholder={uploadingFiles.length > 0 ? "Add a message..." : "Type a message..."}
+                    disabled={sending}
+                    className="pr-16"
+                  />
+
+                  {/* File Upload Button */}
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <input
+                      type="file"
+                      id="file-upload-desktop"
+                      className="hidden"
+                      multiple
+                      accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv"
+                      onChange={(e) => handleFileSelect(e.target.files)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-coral-500"
+                      onClick={() => document.getElementById('file-upload-desktop')?.click()}
+                      disabled={sending}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || sending}
+                  disabled={(!newMessage.trim() && uploadingFiles.length === 0) || sending}
                   className="bg-coral-600 hover:bg-coral-700"
                 >
-                  <Send className="h-4 w-4" />
+                  {sending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-coral-200"></div>
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
+
+              {dragOver && (
+                <div className="text-center mt-2 text-sm text-coral-600">
+                  Drop files here to attach them
+                </div>
+              )}
             </footer>
           )}
         </section>
