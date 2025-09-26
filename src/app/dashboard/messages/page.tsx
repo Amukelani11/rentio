@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MessageSquare, Send } from 'lucide-react'
+import { MessageSquare, Send, ArrowLeft, Menu } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { RealtimeChannel } from '@supabase/supabase-js'
 import { useUserActivity } from '@/hooks/useUserActivity'
@@ -165,6 +165,8 @@ export default function MessagesPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [rtChannel, setRtChannel] = useState<RealtimeChannel | null>(null)
   const [participantActivity, setParticipantActivity] = useState<{[userId: string]: string}>({}) // userId -> last_seen_at
+  const [showConversationList, setShowConversationList] = useState(false)
+  const [messagesEndRef, setMessagesEndRef] = useState<HTMLDivElement | null>(null)
 
   const supabase = useMemo(() => createClient(), [])
 
@@ -265,6 +267,8 @@ export default function MessagesPage() {
       updateUrl(conversationId)
       await loadMessages(conversationId)
       await fetchParticipantActivity(conversationId)
+      // On mobile, hide conversation list when selecting a conversation
+      setShowConversationList(false)
     },
     [loadMessages, updateUrl, fetchParticipantActivity]
   )
@@ -423,9 +427,16 @@ export default function MessagesPage() {
 
     // Refresh activity every 30 seconds
     const interval = setInterval(refreshActivity, 30000)
-    
+
     return () => clearInterval(interval)
   }, [selectedConversationId, fetchParticipantActivity])
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      messagesEndRef?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages, messagesEndRef])
 
   const handleSendMessage = useCallback(async () => {
     if (!selectedConversation || !newMessage.trim() || sending) return
@@ -447,14 +458,18 @@ export default function MessagesPage() {
         throw new Error(errorPayload?.error ?? 'Failed to send message')
       }
 
-      const payload: ApiResponse<{ message: Message }> = await response.json()
-      const createdMessage = payload.data?.message
+        const payload: ApiResponse<{ message: Message }> = await response.json()
+        const createdMessage = payload.data?.message
 
-      if (createdMessage) {
-        setMessages((previous) => [...previous, createdMessage])
-      } else {
-        await loadMessages(selectedConversation.id)
-      }
+        if (createdMessage) {
+          setMessages((previous) => [...previous, createdMessage])
+          // Auto-scroll to bottom after sending message
+          setTimeout(() => {
+            messagesEndRef?.scrollIntoView({ behavior: 'smooth' })
+          }, 100)
+        } else {
+          await loadMessages(selectedConversation.id)
+        }
     } catch (error) {
       console.error('[MESSAGES] Failed to send message', error)
       const fallbackMessage =
@@ -469,7 +484,7 @@ export default function MessagesPage() {
   const renderConversationList = () => {
     if (loadingConversations && conversations.length === 0) {
       return (
-        <div className="p-4 text-sm text-gray-500">
+        <div className="flex h-full items-center justify-center p-4 text-sm text-gray-500">
           Loading conversations...
         </div>
       )
@@ -477,9 +492,10 @@ export default function MessagesPage() {
 
     if (!loadingConversations && conversations.length === 0) {
       return (
-        <div className="p-8 text-center text-sm text-gray-500">
-          <MessageSquare className="mx-auto mb-3 h-8 w-8 text-gray-400" />
-          <p>No conversations yet.</p>
+        <div className="flex h-full flex-col items-center justify-center p-8 text-center text-sm text-gray-500">
+          <MessageSquare className="mx-auto mb-3 h-12 w-12 text-gray-400" />
+          <p className="mb-2 text-base font-medium">No conversations yet</p>
+          <p className="text-gray-400">Start a conversation to get started</p>
         </div>
       )
     }
@@ -492,14 +508,16 @@ export default function MessagesPage() {
         <button
           key={conversation.id}
           onClick={() => handleSelectConversation(conversation.id)}
-          className={`flex w-full items-center gap-3 border-b px-4 py-3 text-left transition ${
-            isSelected ? 'bg-coral-50' : 'hover:bg-gray-100'
+          className={`flex w-full items-center gap-3 border-b border-gray-100 px-4 py-4 text-left transition ${
+            isSelected ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50 active:bg-gray-100'
           }`}
         >
           <div className="relative">
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-12 w-12">
               <AvatarImage src={other?.avatar ?? undefined} alt={other?.name ?? 'User avatar'} />
-              <AvatarFallback>{(other?.name ?? 'U').charAt(0)}</AvatarFallback>
+              <AvatarFallback className="bg-gray-200 text-gray-600">
+                {(other?.name ?? 'U').charAt(0).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             {other?.id && (
               <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
@@ -508,7 +526,9 @@ export default function MessagesPage() {
 
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center justify-between">
-              <span className="truncate text-sm font-medium text-gray-900">
+              <span className={`truncate text-sm font-medium ${
+                isSelected ? 'text-green-700' : 'text-gray-900'
+              }`}>
                 {other?.name ?? conversation.title ?? 'Conversation'}
               </span>
               <span className="ml-2 shrink-0 text-xs text-gray-500">
@@ -534,142 +554,248 @@ export default function MessagesPage() {
   const renderMessageList = () => {
     if (!selectedConversation) {
       return (
-        <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
-          <MessageSquare className="mb-3 h-10 w-10 text-gray-400" />
-          <h3 className="text-base font-medium">No conversation selected</h3>
-          <p className="mt-1 text-sm text-gray-500">Choose a conversation to get started.</p>
+        <div className="flex h-full flex-col items-center justify-center text-gray-500 px-6">
+          <MessageSquare className="mb-4 h-16 w-16 text-gray-300" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Select a conversation</h3>
+          <p className="text-sm text-gray-500 text-center max-w-sm">
+            Choose a conversation from the list to start messaging
+          </p>
         </div>
       )
     }
 
     if (loadingMessages) {
       return (
-        <div className="flex flex-1 items-center justify-center text-sm text-gray-500">
-          Loading messages...
+        <div className="flex h-full items-center justify-center text-sm text-gray-500">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
+            <p>Loading messages...</p>
+          </div>
         </div>
       )
     }
 
     if (messages.length === 0) {
       return (
-        <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
-          <MessageSquare className="mb-3 h-10 w-10 text-gray-400" />
-          <p>No messages yet. Start the conversation!</p>
+        <div className="flex h-full flex-col items-center justify-center text-gray-500 px-6">
+          <MessageSquare className="mb-4 h-16 w-16 text-gray-300" />
+          <p className="text-center text-gray-400">No messages yet</p>
+          <p className="text-center text-sm text-gray-400 mt-1">Start the conversation!</p>
         </div>
       )
     }
 
     return (
-      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
-        {messages.map((message) => {
-          const isOwn = message.from_user_id === user?.id
-          return (
-            <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-[75%] rounded-lg px-4 py-3 text-sm ${
-                  isOwn ? 'bg-coral-600 text-white' : 'bg-gray-100 text-gray-900'
-                }`}
-              >
-                <p>{message.content}</p>
-                <span
-                  className={`mt-2 block text-xs ${
-                    isOwn ? 'text-coral-100' : 'text-gray-500'
-                  }`}
-                >
-                  {formatTime(message.created_at)}
-                </span>
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="space-y-1 p-4">
+          {messages.map((message, index) => {
+            const isOwn = message.from_user_id === user?.id
+            const showAvatar = !isOwn && (index === 0 || messages[index - 1].from_user_id !== message.from_user_id)
+
+            return (
+              <div key={message.id} className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                {!isOwn && showAvatar && (
+                  <Avatar className="h-8 w-8 mt-1">
+                    <AvatarImage src={message.sender?.avatar ?? undefined} />
+                    <AvatarFallback className="bg-gray-200 text-xs">
+                      {(message.sender?.name ?? 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                {!isOwn && !showAvatar && <div className="w-10" />}
+
+                <div className={`max-w-[85%] ${isOwn ? 'ml-auto' : ''}`}>
+                  <div
+                    className={`rounded-2xl px-4 py-2 text-sm shadow-sm ${
+                      isOwn
+                        ? 'bg-green-500 text-white rounded-br-md'
+                        : 'bg-white text-gray-900 rounded-bl-md border border-gray-200'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                  </div>
+                  <div className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                    <span>{formatTime(message.created_at)}</span>
+                    {isOwn && (
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-green-500 rounded-full opacity-60 ml-1"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+          <div ref={(el) => setMessagesEndRef(el)} />
+        </div>
       </div>
     )
   }
 
   return (
     <DashboardLayout user={user} showHeader={false}>
-      <div className={`flex ${PAGE_HEIGHT}`}>
-      <aside className="flex w-full max-w-sm flex-col border-r bg-gray-50">
-        <div className="border-b px-4 py-4">
-          <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
-        </div>
-        <div className="flex-1 overflow-y-auto">{renderConversationList()}</div>
-      </aside>
-
-      <section className="flex flex-1 flex-col bg-white">
-        {errorMessage && (
-          <div className="border-b bg-red-50 px-4 py-2 text-sm text-red-700">
-            {errorMessage}
+      <div className={`flex h-screen bg-gray-50`}>
+        {/* Mobile Conversation List Overlay */}
+        {showConversationList && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden">
+            <div className="absolute left-0 top-0 h-full w-80 bg-white shadow-2xl transform transition-transform">
+              <div className="flex items-center justify-between border-b p-4">
+                <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowConversationList(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {renderConversationList()}
+              </div>
+            </div>
+            <div className="flex-1" onClick={() => setShowConversationList(false)} />
           </div>
         )}
 
-        {selectedConversation && (
-          <header className="flex items-center gap-3 border-b px-6 py-4">
-            {(() => {
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex md:w-80 md:flex-col md:border-r md:bg-white">
+          <div className="border-b px-6 py-4">
+            <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {renderConversationList()}
+          </div>
+        </aside>
+
+        {/* Main Chat Area */}
+        <section className="flex flex-1 flex-col bg-white md:bg-gray-50">
+          {errorMessage && (
+            <div className="border-b bg-red-50 px-4 py-2 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Mobile Header */}
+          <div className="flex items-center gap-3 border-b bg-white p-4 md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowConversationList(true)}
+              className="h-8 w-8 p-0"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+
+            {selectedConversation && (() => {
               const other = getOtherParticipant(selectedConversation, user?.id)
               return (
-                <>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="relative">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={other?.avatar ?? undefined} />
-                      <AvatarFallback>{(other?.name ?? 'U').charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-gray-200">
+                        {(other?.name ?? 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     {other?.id && (
                       <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
                     )}
                   </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-sm font-semibold text-gray-900 truncate">
                       {other?.name ?? selectedConversation.title ?? 'Conversation'}
                     </h2>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-500">
-                        {selectedConversation.booking_id ? 'Booking conversation' : 'Direct message'}
+                    {other?.id && (
+                      <p className="text-xs text-gray-500 truncate">
+                        {formatLastSeen(participantActivity[other.id])}
                       </p>
-                      {other?.id && (
-                        <>
-                          <span className="text-xs text-gray-300">•</span>
-                          <span className="text-xs text-gray-500">
-                            {formatLastSeen(participantActivity[other.id])}
-                          </span>
-                        </>
-                      )}
-                    </div>
+                    )}
                   </div>
-                </>
+                </div>
               )
             })()}
-          </header>
-        )}
+          </div>
 
-        {renderMessageList()}
+          {/* Desktop Header */}
+          {selectedConversation && (
+            <header className="hidden md:flex items-center gap-3 border-b bg-white px-6 py-4">
+              {(() => {
+                const other = getOtherParticipant(selectedConversation, user?.id)
+                return (
+                  <>
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={other?.avatar ?? undefined} />
+                        <AvatarFallback className="bg-gray-200">
+                          {(other?.name ?? 'U').charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {other?.id && (
+                        <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-sm font-semibold text-gray-900 truncate">
+                        {other?.name ?? selectedConversation.title ?? 'Conversation'}
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-gray-500">
+                          {selectedConversation.booking_id ? 'Booking conversation' : 'Direct message'}
+                        </p>
+                        {other?.id && (
+                          <>
+                            <span className="text-xs text-gray-300">•</span>
+                            <span className="text-xs text-gray-500">
+                              {formatLastSeen(participantActivity[other.id])}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )
+              })()}
+            </header>
+          )}
 
-        {selectedConversation && (
-          <footer className="border-t px-6 py-4">
-            <div className="flex items-center gap-3">
-              <Input
-                value={newMessage}
-                onChange={(event) => setNewMessage(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault()
-                    handleSendMessage()
-                  }
-                }}
-                placeholder="Type a message..."
-                disabled={sending}
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim() || sending}
-                className="bg-coral-600 hover:bg-coral-700"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </footer>
-        )}
-      </section>
+          {renderMessageList()}
+
+          {/* Message Input */}
+          {selectedConversation && (
+            <footer className="border-t bg-white p-4">
+              <div className="flex items-end gap-3 max-w-4xl mx-auto">
+                <div className="flex-1 relative">
+                  <Input
+                    value={newMessage}
+                    onChange={(event) => setNewMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        handleSendMessage()
+                      }
+                    }}
+                    placeholder="Type a message..."
+                    disabled={sending}
+                    className="min-h-[44px] py-3 px-4 pr-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500 resize-none"
+                  />
+                </div>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || sending}
+                  className="h-11 w-11 rounded-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  size="sm"
+                >
+                  {sending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </footer>
+          )}
+        </section>
       </div>
     </DashboardLayout>
   )
