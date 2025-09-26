@@ -311,7 +311,7 @@ export default function Dashboard() {
               </h1>
               <p className="text-gray-600 dark:text-slate-200">Here’s your latest activity and insights.</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {(
                 user.roles.includes(Role.INDIVIDUAL_LISTER) || user.roles.includes(Role.BUSINESS_LISTER)
               ) ? (
@@ -366,7 +366,7 @@ export default function Dashboard() {
         {/* Upcoming Rental removed per request */}
 
         {/* Quick Actions — Customer only (no lister/admin actions on dashboard) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Card className="cursor-pointer hover:shadow-md transition-all rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm dark:border-charcoal-600 dark:bg-charcoal-600/60" onClick={() => router.push('/dashboard/bookings')}>
             <CardHeader>
               <CardTitle className="flex items-center">

@@ -211,12 +211,12 @@ export default function TeamPage() {
     <DashboardLayout user={user}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
             <p className="text-gray-600 mt-1">Manage your business team and permissions</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={() => setShowInviteForm(true)}>
               <UserPlus className="mr-2 h-4 w-4" />
               Invite Team Member
@@ -225,7 +225,7 @@ export default function TeamPage() {
         </div>
 
         {/* Team Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -291,7 +291,7 @@ export default function TeamPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <Label htmlFor="email">Email Address</Label>
                   <Input
@@ -308,7 +308,7 @@ export default function TeamPage() {
                     id="role"
                     value={inviteData.role}
                     onChange={(e) => setInviteData({ ...inviteData, role: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2"
                   >
                     <option value="MANAGER">Manager</option>
                     <option value="OPERATIONS">Operations</option>
@@ -320,16 +320,16 @@ export default function TeamPage() {
 
               <div>
                 <Label>Role Description</Label>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="mt-1 text-sm text-gray-600">
                   {getRoleDescription(inviteData.role)}
                 </p>
               </div>
 
               <div>
                 <Label>Permissions</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                <div className="grid grid-cols-1 gap-2 py-2 sm:grid-cols-2 md:grid-cols-3">
                   {availablePermissions.map((permission) => (
-                    <label key={permission} className="flex items-center space-x-2">
+                    <label key={permission} className="flex items-center gap-2 rounded-lg border border-gray-200 p-2 hover:bg-slate-50">
                       <input
                         type="checkbox"
                         checked={inviteData.permissions.includes(permission)}
@@ -347,11 +347,11 @@ export default function TeamPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button onClick={handleInvite} disabled={inviting || !inviteData.email}>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button className="flex-1" onClick={handleInvite} disabled={inviting || !inviteData.email}>
                   {inviting ? 'Sending Invite...' : 'Send Invitation'}
                 </Button>
-                <Button variant="outline" onClick={() => setShowInviteForm(false)}>
+                <Button className="flex-1" variant="outline" onClick={() => setShowInviteForm(false)}>
                   Cancel
                 </Button>
               </div>
@@ -370,16 +370,16 @@ export default function TeamPage() {
           <CardContent>
             <div className="space-y-4">
               {teamMembers.map((member) => (
-                <div key={member.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-coral-100 rounded-full flex items-center justify-center">
+                <div key={member.id} className="rounded-lg border p-4 hover:bg-gray-50">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
+                    <div className="flex gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-coral-100">
                         <span className="text-coral-600 font-semibold text-lg">
                           {member.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-semibold">{member.name}</h3>
                           {getRoleBadge(member.role)}
                           {getStatusBadge(member.status)}
@@ -403,7 +403,7 @@ export default function TeamPage() {
 
                         {member.permissions.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 mb-1">Permissions:</p>
+                            <p className="mb-1 text-xs text-gray-500">Permissions:</p>
                             <div className="flex flex-wrap gap-1">
                               {member.permissions.map((permission) => (
                                 <Badge key={permission} variant="outline" className="text-xs">
@@ -416,12 +416,12 @@ export default function TeamPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         <Edit className="h-4 w-4" />
                       </Button>
                       {member.role !== 'OWNER' && (
-                        <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                        <Button variant="outline" size="sm" className="w-full text-red-600 hover:text-red-700 sm:w-auto">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       )}

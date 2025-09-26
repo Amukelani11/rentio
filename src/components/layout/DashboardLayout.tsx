@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Home, Package, Calendar, MessageCircle, DollarSign, Settings, Shield, Users, Star, Building, Users as TeamIcon, PackagePlus, AlertTriangle, LogOut } from 'lucide-react'
+import { Home, Package, Calendar, MessageCircle, DollarSign, Settings, Shield, Users, Star, Building, Users as TeamIcon, PackagePlus, AlertTriangle, LogOut, Menu, X } from 'lucide-react'
 import { Role as UserRole } from '@/lib/types'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
@@ -20,6 +21,7 @@ export default function DashboardLayout({ children, user, showHeader = true }: P
   const router = useRouter()
   const [showBusinessPrompt, setShowBusinessPrompt] = useState(false)
   const [countdown, setCountdown] = useState(3)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   useEffect(() => {
     const checkBusinessProfile = async () => {
@@ -124,41 +126,123 @@ export default function DashboardLayout({ children, user, showHeader = true }: P
 
   const navItems = getNavItems()
 
+  useEffect(() => {
+    setMobileNavOpen(false)
+  }, [pathname])
+
+  const navContent = (
+    <nav className="flex h-full flex-col">
+      <div className="space-y-1 overflow-y-auto pb-6">
+        {navItems.map((item) => (
+          <NavItem
+            key={item.href}
+            href={item.href}
+            icon={item.icon}
+            active={pathname === item.href || pathname?.startsWith(item.href)}
+          >
+            {item.label}
+          </NavItem>
+        ))}
+      </div>
+      <div className="mt-auto border-t border-gray-200 pt-4 dark:border-gray-700">
+        <NavItem href="/dashboard/settings" icon={Settings} active={pathname?.startsWith('/dashboard/settings')}>
+          Settings
+        </NavItem>
+        <NavItem href="/dashboard/kyc" icon={Shield} active={pathname?.startsWith('/dashboard/kyc')}>
+          Verification
+        </NavItem>
+        <SignOutItem />
+      </div>
+    </nav>
+  )
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-charcoal-800">
       {showHeader && (
-        <header className="sticky top-0 z-40 border-b bg-white/80 backdrop-blur-md dark:bg-charcoal-700/60">
-          <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4">
-            <Link href="/dashboard" className="font-semibold">Rentio</Link>
+        <header className="sticky top-0 z-40 border-b bg-white/90 backdrop-blur-md dark:bg-charcoal-700/60">
+          <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4">
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="Toggle navigation"
+                className="inline-flex items-center justify-center rounded-lg border border-transparent p-2 text-charcoal-500 transition hover:bg-slate-100 hover:text-charcoal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-500 md:hidden"
+                onClick={() => setMobileNavOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <Link href="/dashboard" className="inline-flex items-center" aria-label="Rentio dashboard">
+                <Image src="/assets/rentiologo.png" alt="Rentio" width={96} height={28} priority className="h-7 w-auto" />
+              </Link>
             </div>
+            <div className="flex items-center gap-3" />
           </div>
         </header>
       )}
 
       <div className="flex w-full gap-0 px-0 md:px-4">
-        <aside className="hidden md:block md:sticky md:top-16 w-64 shrink-0 border-r bg-white/90 backdrop-blur-sm dark:bg-charcoal-700/60">
+        <aside className="hidden w-64 shrink-0 border-r bg-white/90 backdrop-blur-sm dark:bg-charcoal-700/60 md:sticky md:top-16 md:block">
           <div className="m-3 max-h-[calc(100vh-4rem)] overflow-y-auto rounded-2xl p-2">
-            <nav className="flex flex-col">
-              <div className="space-y-1">
-                {navItems.map((item) => (
-                  <NavItem key={item.href} href={item.href} icon={item.icon} active={pathname === item.href || pathname?.startsWith(item.href)}>
-                    {item.label}
-                  </NavItem>
-                ))}
-              </div>
-              <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-                <NavItem href="/dashboard/settings" icon={Settings} active={pathname?.startsWith('/dashboard/settings')}>Settings</NavItem>
-                <NavItem href="/dashboard/kyc" icon={Shield} active={pathname?.startsWith('/dashboard/kyc')}>Verification</NavItem>
-                <SignOutItem />
-              </div>
-            </nav>
+            {navContent}
           </div>
         </aside>
 
-        <main className="flex-1 p-4 md:p-6">
+        <main className="w-full flex-1 p-4 md:p-6">
+          <div className="mb-4 flex items-center justify-between md:hidden">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Open navigation"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/95 p-2 text-charcoal-500 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-500 dark:border-charcoal-600 dark:bg-charcoal-700/90 dark:text-slate-100"
+                  onClick={() => setMobileNavOpen(true)}
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <Link href="/dashboard" className="inline-flex items-center" aria-label="Rentio dashboard">
+                  <Image src="/assets/rentiologo.png" alt="Rentio" width={88} height={26} className="h-6 w-auto" />
+                </Link>
+              </div>
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium text-charcoal-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-500 dark:border-charcoal-600 dark:text-slate-100"
+              >
+                Back to top
+              </button>
+            </div>
           {children}
         </main>
+      </div>
+
+      <div
+        className={cn(
+          'fixed inset-0 z-50 bg-black/40 transition-opacity md:hidden',
+          mobileNavOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        )}
+        aria-hidden={!mobileNavOpen}
+        onClick={() => setMobileNavOpen(false)}
+      >
+        <div
+          className={cn(
+            'absolute left-0 top-0 h-full w-[85%] max-w-xs overflow-hidden border-r border-slate-200 bg-white/95 p-4 text-charcoal-700 shadow-xl transition-transform dark:border-charcoal-600 dark:bg-charcoal-700/95',
+            mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <Link href="/dashboard" className="text-lg font-semibold text-charcoal-900 dark:text-slate-50">Dashboard</Link>
+            <button
+              type="button"
+              aria-label="Close navigation"
+              className="rounded-lg p-2 text-charcoal-500 transition hover:bg-slate-100 hover:text-charcoal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral-500"
+              onClick={() => setMobileNavOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex h-[calc(100%-2.75rem)] flex-col overflow-y-auto">
+            {navContent}
+          </div>
+        </div>
       </div>
 
       {showBusinessPrompt && (

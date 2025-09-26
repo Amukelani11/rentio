@@ -350,7 +350,7 @@ export default function BookingsPage() {
     <DashboardLayout user={user} showHeader={false}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold">Bookings</h1>
             <p className="text-gray-600">Manage your rental bookings and reservations</p>
@@ -358,7 +358,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
@@ -415,8 +415,8 @@ export default function BookingsPage() {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   placeholder="Search bookings..."
@@ -425,9 +425,9 @@ export default function BookingsPage() {
                   className="pl-10"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full sm:w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -446,21 +446,21 @@ export default function BookingsPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All Bookings</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+          <TabsList className="flex flex-wrap gap-2">
+            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="all">All Bookings</TabsTrigger>
+            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="upcoming">Upcoming</TabsTrigger>
+            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="completed">Completed</TabsTrigger>
+            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="cancelled">Cancelled</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab}>
             {/* Bookings Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
               {filteredBookings.map((booking) => (
                 <Card key={booking.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
                           <Badge className={getStatusColor(booking.status)}>
                             {booking.status}
@@ -476,29 +476,31 @@ export default function BookingsPage() {
                           Booking #{booking.bookingNumber}
                         </p>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/messages/${booking.id}`)}>
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Message
-                          </DropdownMenuItem>
-                          {booking.status === 'COMPLETED' && !booking.reviews?.length && (
-                            <DropdownMenuItem onClick={() => router.push(`/dashboard/reviews/new/${booking.id}`)}>
-                              <Star className="h-4 w-4 mr-2" />
-                              Leave Review
+                      <div className="flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
                             </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuItem onClick={() => router.push(`/dashboard/messages/${booking.id}`)}>
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              Message
+                            </DropdownMenuItem>
+                            {booking.status === 'COMPLETED' && !booking.reviews?.length && (
+                              <DropdownMenuItem onClick={() => router.push(`/dashboard/reviews/new/${booking.id}`)}>
+                                <Star className="h-4 w-4 mr-2" />
+                                Leave Review
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
 
                     {/* Booking Details */}
@@ -552,7 +554,7 @@ export default function BookingsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       {/* Show confirm/reject buttons for pending bookings */}
                       {booking.status === 'PENDING' && booking.paymentStatus === 'COMPLETED' && (
                         <>
@@ -635,25 +637,27 @@ export default function BookingsPage() {
             <h3 className="text-lg font-semibold mb-4">Extension Request Review</h3>
 
             <div className="space-y-3 mb-6">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Renter:</span>
-                <span className="font-medium">{extensionBooking.renter.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Listing:</span>
-                <span className="font-medium">{extensionBooking.listing.title}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Current End:</span>
-                <span className="font-medium">{formatDate(extensionBooking.endDate)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Cost:</span>
-                <span className="font-medium text-coral-600">{formatPrice(extensionBooking.totalAmount)}</span>
+              <div className="flex flex-col gap-2 text-sm sm:text-base">
+                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-gray-600">Renter:</span>
+                  <span className="font-medium">{extensionBooking.renter.name}</span>
+                </div>
+                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-gray-600">Listing:</span>
+                  <span className="font-medium">{extensionBooking.listing.title}</span>
+                </div>
+                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-gray-600">Current End:</span>
+                  <span className="font-medium">{formatDate(extensionBooking.endDate)}</span>
+                </div>
+                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-gray-600">Total Cost:</span>
+                  <span className="font-medium text-coral-600">{formatPrice(extensionBooking.totalAmount)}</span>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button
                 variant="outline"
                 onClick={() => handleDeclineExtension(extensionBooking.id)}

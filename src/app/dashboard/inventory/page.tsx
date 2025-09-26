@@ -199,7 +199,7 @@ export default function InventoryPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -282,10 +282,10 @@ export default function InventoryPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
                   <Input
                     placeholder="Search items by name, SKU, or category..."
                     value={searchTerm}
@@ -294,11 +294,11 @@ export default function InventoryPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm sm:w-48"
                 >
                   <option value="ALL">All Status</option>
                   <option value="AVAILABLE">Available</option>

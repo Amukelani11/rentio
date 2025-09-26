@@ -1,0 +1,267 @@
+warning: in the working copy of 'src/app/dashboard/bookings/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/dashboard/business/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/dashboard/inventory/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/dashboard/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/dashboard/team/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/layout/DashboardLayout.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/app/dashboard/bookings/page.tsx b/src/app/dashboard/bookings/page.tsx[m
+[1mindex 7d34ddb..67d3af3 100644[m
+[1m--- a/src/app/dashboard/bookings/page.tsx[m
+[1m+++ b/src/app/dashboard/bookings/page.tsx[m
+[36m@@ -350,7 +350,7 @@[m [mexport default function BookingsPage() {[m
+     <DashboardLayout user={user} showHeader={false}>[m
+       <div className="space-y-6">[m
+         {/* Header */}[m
+[31m-        <div className="flex items-center justify-between">[m
+[32m+[m[32m        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">[m
+           <div>[m
+             <h1 className="text-3xl font-bold">Bookings</h1>[m
+             <p className="text-gray-600">Manage your rental bookings and reservations</p>[m
+[36m@@ -358,7 +358,7 @@[m [mexport default function BookingsPage() {[m
+         </div>[m
+ [m
+         {/* Stats Cards */}[m
+[31m-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">[m
+[32m+[m[32m        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">[m
+           <Card>[m
+             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">[m
+               <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>[m
+[36m@@ -415,8 +415,8 @@[m [mexport default function BookingsPage() {[m
+         {/* Filters */}[m
+         <Card>[m
+           <CardContent className="pt-6">[m
+[31m-            <div className="flex flex-col md:flex-row gap-4">[m
+[31m-              <div className="flex-1 relative">[m
+[32m+[m[32m            <div className="flex flex-col gap-4 md:flex-row md:items-center">[m
+[32m+[m[32m              <div className="relative flex-1">[m
+                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />[m
+                 <Input[m
+                   placeholder="Search bookings..."[m
+[36m@@ -425,9 +425,9 @@[m [mexport default function BookingsPage() {[m
+                   className="pl-10"[m
+                 />[m
+               </div>[m
+[31m-              <div className="flex gap-2">[m
+[32m+[m[32m              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">[m
+                 <Select value={statusFilter} onValueChange={setStatusFilter}>[m
+[31m-                  <SelectTrigger className="w-40">[m
+[32m+[m[32m                  <SelectTrigger className="w-full sm:w-40">[m
+                     <SelectValue />[m
+                   </SelectTrigger>[m
+                   <SelectContent>[m
+[36m@@ -446,21 +446,21 @@[m [mexport default function BookingsPage() {[m
+ [m
+         {/* Tabs */}[m
+         <Tabs value={activeTab} onValueChange={setActiveTab}>[m
+[31m-          <TabsList>[m
+[31m-            <TabsTrigger value="all">All Bookings</TabsTrigger>[m
+[31m-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>[m
+[31m-            <TabsTrigger value="completed">Completed</TabsTrigger>[m
+[31m-            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>[m
+[32m+[m[32m          <TabsList className="flex flex-wrap gap-2">[m
+[32m+[m[32m            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="all">All Bookings</TabsTrigger>[m
+[32m+[m[32m            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="upcoming">Upcoming</TabsTrigger>[m
+[32m+[m[32m            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="completed">Completed</TabsTrigger>[m
+[32m+[m[32m            <TabsTrigger className="flex-1 min-w-[140px] sm:flex-none" value="cancelled">Cancelled</TabsTrigger>[m
+           </TabsList>[m
+ [m
+           <TabsContent value={activeTab}>[m
+             {/* Bookings Grid */}[m
+[31m-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">[m
+[32m+[m[32m            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">[m
+               {filteredBookings.map((booking) => ([m
+                 <Card key={booking.id} className="overflow-hidden hover:shadow-lg transition-shadow">[m
+                   <div className="p-4">[m
+[31m-                    <div className="flex items-start justify-between mb-3">[m
+[31m-                      <div className="flex-1">[m
+[32m+[m[32m                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-3">[m
+[32m+[m[32m                      <div className="flex-1 min-w-0">[m
+                         <div className="flex items-center gap-2 mb-2">[m
+                           <Badge className={getStatusColor(booking.status)}>[m
+                             {booking.status}[m
+[36m@@ -476,29 +476,31 @@[m [mexport default function BookingsPage() {[m
+                           Booking #{booking.bookingNumber}[m
+                         </p>[m
+                       </div>[m
+[31m-                      <DropdownMenu>[m
+[31m-                        <DropdownMenuTrigger asChild>[m
+[31m-                          <Button size="sm" variant="ghost">[m
+[31m-                            <MoreHorizontal className="h-4 w-4" />[m
+[31m-                          </Button>[m
+[31m-                        </DropdownMenuTrigger>[m
+[31m-                        <DropdownMenuContent align="end">[m
+[31m-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}>[m
+[31m-                            <Eye className="h-4 w-4 mr-2" />[m
+[31m-                            View Details[m
+[31m-                          </DropdownMenuItem>[m
+[31m-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/messages/${booking.id}`)}>[m
+[31m-                            <MessageSquare className="h-4 w-4 mr-2" />[m
+[31m-                            Message[m
+[31m-                          </DropdownMenuItem>[m
+[31m-                          {booking.status === 'COMPLETED' && !booking.reviews?.length && ([m
+[31m-                            <DropdownMenuItem onClick={() => router.push(`/dashboard/reviews/new/${booking.id}`)}>[m
+[31m-                              <Star className="h-4 w-4 mr-2" />[m
+[31m-                              Leave Review[m
+[32m+[m[32m                      <div className="flex justify-end">[m
+[32m+[m[32m                        <DropdownMenu>[m
+[32m+[m[32m                          <DropdownMenuTrigger asChild>[m
+[32m+[m[32m                            <Button size="sm" variant="ghost">[m
+[32m+[m[32m                              <MoreHorizontal className="h-4 w-4" />[m
+[32m+[m[32m                            </Button>[m
+[32m+[m[32m                          </DropdownMenuTrigger>[m
+[32m+[m[32m                          <DropdownMenuContent align="end">[m
+[32m+[m[32m                            <DropdownMenuItem onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}>[m
+[32m+[m[32m                              <Eye className="h-4 w-4 mr-2" />[m
+[32m+[m[32m                              View Details[m
+[32m+[m[32m                            </DropdownMenuItem>[m
+[32m+[m[32m                            <DropdownMenuItem onClick={() => router.push(`/dashboard/messages/${booking.id}`)}>[m
+[32m+[m[32m                              <MessageSquare className="h-4 w-4 mr-2" />[m
+[32m+[m[32m                              Message[m
+                             </DropdownMenuItem>[m
+[31m-                          )}[m
+[31m-                        </DropdownMenuContent>[m
+[31m-                      </DropdownMenu>[m
+[32m+[m[32m                            {booking.status === 'COMPLETED' && !booking.reviews?.length && ([m
+[32m+[m[32m                              <DropdownMenuItem onClick={() => router.push(`/dashboard/reviews/new/${booking.id}`)}>[m
+[32m+[m[32m                                <Star className="h-4 w-4 mr-2" />[m
+[32m+[m[32m                                Leave Review[m
+[32m+[m[32m                              </DropdownMenuItem>[m
+[32m+[m[32m                            )}[m
+[32m+[m[32m                          </DropdownMenuContent>[m
+[32m+[m[32m                        </DropdownMenu>[m
+[32m+[m[32m                      </div>[m
+                     </div>[m
+ [m
+                     {/* Booking Details */}[m
+[36m@@ -552,7 +554,7 @@[m [mexport default function BookingsPage() {[m
+                     </div>[m
+ [m
+                     {/* Actions */}[m
+[31m-                    <div className="flex gap-2">[m
+[32m+[m[32m                    <div className="flex flex-col gap-2 sm:flex-row">[m
+                       {/* Show confirm/reject buttons for pending bookings */}[m
+                       {booking.status === 'PENDING' && booking.paymentStatus === 'COMPLETED' && ([m
+                         <>[m
+[36m@@ -635,25 +637,27 @@[m [mexport default function BookingsPage() {[m
+             <h3 className="text-lg font-semibold mb-4">Extension Request Review</h3>[m
+ [m
+             <div className="space-y-3 mb-6">[m
+[31m-              <div className="flex justify-between">[m
+[31m-                <span className="text-gray-600">Renter:</span>[m
+[31m-                <span className="font-medium">{extensionBooking.renter.name}</span>[m
+[31m-              </div>[m
+[31m-              <div className="flex justify-between">[m
+[31m-                <span className="text-gray-600">Listing:</span>[m
+[31m-                <span className="font-medium">{extensionBooking.listing.title}</span>[m
+[31m-              </div>[m
+[31m-              <div className="flex justify-between">[m
+[31m-                <span className="text-gray-600">Current End:</span>[m
+[31m-                <span className="font-medium">{formatDate(extensionBooking.endDate)}</span>[m
+[31m-              </div>[m
+[31m-              <div className="flex justify-between">[m
+[31m-                <span className="text-gray-600">Total Cost:</span>[m
+[31m-                <span className="font-medium text-coral-600">{formatPrice(extensionBooking.totalAmount)}</span>[m
+[32m+[m[32m              <div className="flex flex-col gap-2 text-sm sm:text-base">[m
+[32m+[m[32m                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">[m
+[32m+[m[32m                  <span className="text-gray-600">Renter:</span>[m
+[32m+[m[32m                  <span className="font-medium">{extensionBooking.renter.name}</span>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">[m
+[32m+[m[32m                  <span className="text-gray-600">Listing:</span>[m
+[32m+[m[32m                  <span className="font-medium">{extensionBooking.listing.title}</span>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">[m
+[32m+[m[32m                  <span className="text-gray-600">Current End:</span>[m
+[32m+[m[32m                  <span className="font-medium">{formatDate(extensionBooking.endDate)}</span>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m                <div className="flex flex-col gap-0 sm:flex-row sm:items-center sm:justify-between">[m
+[32m+[m[32m                  <span className="text-gray-600">Total Cost:</span>[m
+[32m+[m[32m                  <span className="font-medium text-coral-600">{formatPrice(extensionBooking.totalAmount)}</span>[m
+[32m+[m[32m                </div>[m
+               </div>[m
+             </div>[m
+ [m
+[31m-            <div className="flex gap-3">[m
+[32m+[m[32m            <div className="flex flex-col gap-2 sm:flex-row">[m
+               <Button[m
+                 variant="outline"[m
+                 onClick={() => handleDeclineExtension(extensionBooking.id)}[m
+[1mdiff --git a/src/app/dashboard/business/page.tsx b/src/app/dashboard/business/page.tsx[m
+[1mindex 444ce21..4003a1f 100644[m
+[1m--- a/src/app/dashboard/business/page.tsx[m
+[1m+++ b/src/app/dashboard/business/page.tsx[m
+[36m@@ -266,12 +266,12 @@[m [mexport default function BusinessProfilePage() {[m
+     <DashboardLayout user={user}>[m
+       <div className="space-y-6">[m
+         {/* Header */}[m
+[31m-        <div className="flex items-center justify-between">[m
+[32m+[m[32m        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">[m
+           <div>[m
+             <h1 className="text-3xl font-bold text-gray-900">Business Profile</h1>[m
+             <p className="text-gray-600 mt-1">Manage your business information and settings</p>[m
+           </div>[m
+[31m-          <div className="flex gap-2">[m
+[32m+[m[32m          <div className="flex flex-wrap gap-2">[m
+             {editing ? ([m
+               <>[m
+                 <Button variant="outline" onClick={() => setEditing(false)}>[m
+[36m@@ -292,7 +292,7 @@[m [mexport default function BusinessProfilePage() {[m
+         </div>[m
+ [m
+         {/* Status Badge */}[m
+[31m-        <div className="flex items-center gap-2">[m
+[32m+[m[32m        <div className="flex flex-wrap items-center gap-2">[m
+           {business?.verified ? ([m
+             <Badge className="bg-green-100 text-green-800 border-green-200">[m
+               <CheckCircle className="mr-1 h-3 w-3" />[m
+[36m@@ -321,7 +321,7 @@[m [mexport default function BusinessProfilePage() {[m
+             </CardDescription>[m
+           </CardHeader>[m
+           <CardContent className="space-y-4">[m
+[31m-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">[m
+[32m+[m[32m            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">[m
+               <div>[m
+                 <Label htmlFor="business-name">Business Name</Label>[m
+                 {editing ? ([m
+[36m@@ -410,7 +410,7 @@[m [mexport default function BusinessProfilePage() {[m
+             </CardTitle>[m
+           </CardHeader>[m
+           <CardContent>[m
+[31m-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">[m
+[32m+[m[32m            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">[m
+               <div className="md:col-span-2 relative">[m
+                 <Label htmlFor="address">Street Address</Label>[m
+                 {editing ? ([m
+[36m@@ -498,8 +498,8 @@[m [mexport default function BusinessProfilePage() {[m
+               Set your operating hours for each day of the week[m
+             </CardDescription>[m
+           </CardHeader>[m
+[31m-          <CardContent>[m
+[31m-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">[m
+[32m+[m[32m        <CardContent>[m
+[32m+[m[32m          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">[m
+               {Object.entries(business?.business_hours || defaultBusinessHours).map(([day, hours]) => {[m
+                 const parsed = parseHours(hours as string)[m
+                 return ([m
+[36m@@ -575,8 +575,8 @@[m [mexport default function BusinessProfilePage() {[m
+               Upload your business logo and cover image[m
+             </CardDescription>[m
+           </CardHeader>[m
+[31m-          <CardContent>[m
+[31m-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">[m
+[32m+[m[32m        <CardContent>[m
+[32m+[m[32m          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">[m
+               <div>[m
+                 <Label>Logo</Label>[m
+                 <UploadButton.Area clickableId="upload-logo">[m
+[1mdiff --git a/src/app/dashboard/inventory/page.tsx b/src/app/dashboard/inventory/page.tsx[m
+[1mindex 7e42c88..86214e3 100644[m
+[1m--- a/src/app/dashboard/inventory/page.tsx[m
+[1m+++ b/src/app/dashboard/inventory/page.tsx[m
+[36m@@ -199,7 +199,7 @@[m [mexport default function InventoryPage() {[m
+         </div>[m
+ [m
+         {/* Stats Cards */}[m
+[31m-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">[m
+[32m+[m[32m        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">[m
+           <Card>

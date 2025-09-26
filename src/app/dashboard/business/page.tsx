@@ -266,12 +266,12 @@ export default function BusinessProfilePage() {
     <DashboardLayout user={user}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Business Profile</h1>
             <p className="text-gray-600 mt-1">Manage your business information and settings</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {editing ? (
               <>
                 <Button variant="outline" onClick={() => setEditing(false)}>
@@ -292,7 +292,7 @@ export default function BusinessProfilePage() {
         </div>
 
         {/* Status Badge */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {business?.verified ? (
             <Badge className="bg-green-100 text-green-800 border-green-200">
               <CheckCircle className="mr-1 h-3 w-3" />
@@ -321,7 +321,7 @@ export default function BusinessProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="business-name">Business Name</Label>
                 {editing ? (
@@ -410,7 +410,7 @@ export default function BusinessProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2 relative">
                 <Label htmlFor="address">Street Address</Label>
                 {editing ? (
@@ -498,8 +498,8 @@ export default function BusinessProfilePage() {
               Set your operating hours for each day of the week
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {Object.entries(business?.business_hours || defaultBusinessHours).map(([day, hours]) => {
                 const parsed = parseHours(hours as string)
                 return (
@@ -575,8 +575,8 @@ export default function BusinessProfilePage() {
               Upload your business logo and cover image
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <CardContent>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <Label>Logo</Label>
                 <UploadButton.Area clickableId="upload-logo">
