@@ -111,7 +111,7 @@ function getActivityStatus(timestamp?: string | null) {
   const lastSeen = new Date(timestamp)
   const diffInMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60))
   
-  if (diffInMinutes < 5) return { status: 'online', color: 'bg-green-500' }
+  if (diffInMinutes < 5) return { status: 'online', color: 'bg-coral-500' }
   if (diffInMinutes < 30) return { status: 'away', color: 'bg-yellow-500' }
   return { status: 'offline', color: 'bg-gray-400' }
 }
@@ -524,7 +524,7 @@ export default function MessagesPage() {
           key={conversation.id}
           onClick={() => handleSelectConversation(conversation.id)}
           className={`flex w-full items-center gap-3 border-b border-gray-100 px-4 py-4 text-left transition ${
-            isSelected ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50 active:bg-gray-100'
+            isSelected ? 'bg-coral-50 border-coral-200' : 'hover:bg-gray-50 active:bg-gray-100'
           }`}
         >
           <div className="relative">
@@ -542,7 +542,7 @@ export default function MessagesPage() {
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center justify-between">
               <span className={`truncate text-sm font-medium ${
-                isSelected ? 'text-green-700' : 'text-gray-900'
+                isSelected ? 'text-coral-700' : 'text-gray-900'
               }`}>
                 {other?.name ?? conversation.title ?? 'Conversation'}
               </span>
@@ -583,7 +583,7 @@ export default function MessagesPage() {
       return (
         <div className="flex h-full items-center justify-center text-sm text-gray-500">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-2"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral-500 mx-auto mb-2"></div>
             <p>Loading messages...</p>
           </div>
         </div>
@@ -623,7 +623,7 @@ export default function MessagesPage() {
                   <div
                     className={`rounded-2xl px-4 py-2 text-sm shadow-sm ${
                       isOwn
-                        ? 'bg-green-500 text-white rounded-br-md'
+                        ? 'bg-coral-600 text-white rounded-br-md'
                         : 'bg-white text-gray-900 rounded-bl-md border border-gray-200'
                     }`}
                   >
@@ -633,7 +633,7 @@ export default function MessagesPage() {
                     <span>{formatTime(message.created_at)}</span>
                     {isOwn && (
                       <div className="flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full opacity-60 ml-1"></div>
+                        <div className="w-3 h-3 bg-coral-500 rounded-full opacity-60 ml-1"></div>
                       </div>
                     )}
                   </div>
@@ -723,17 +723,17 @@ export default function MessagesPage() {
                     }}
                     placeholder="Type a message..."
                     disabled={sending}
-                    className="min-h-[44px] py-3 px-4 pr-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500 resize-none"
+                    className="min-h-[44px] py-3 px-4 pr-12 rounded-full border-gray-300 focus:border-coral-500 focus:ring-coral-500 resize-none"
                   />
                 </div>
                 <Button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || sending}
-                  className="h-11 w-11 rounded-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  className="h-11 w-11 rounded-full bg-coral-600 hover:bg-coral-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                   size="sm"
                 >
                   {sending ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-coral-200"></div>
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
