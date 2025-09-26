@@ -7,7 +7,7 @@ import { getAuthUser } from '@/lib/auth'
 export async function GET(request: NextRequest) {
   try {
     const supabaseAuth = createRouteHandlerClient({ cookies })
-    const authUser = await getAuthUser(supabaseAuth)
+    const authUser = await getAuthUser()
     if (!authUser || !authUser.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

@@ -226,6 +226,7 @@ CREATE TABLE bookings (
     delivery_type delivery_type,
     delivery_address TEXT,
     delivery_notes TEXT,
+    notes TEXT,
     check_in_report JSONB,
     check_out_report JSONB,
     confirmed_at TIMESTAMP WITH TIME ZONE,

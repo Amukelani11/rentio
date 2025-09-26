@@ -10,7 +10,7 @@ export async function PUT(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
 
     if (!user || !user.roles.includes('BUSINESS_LISTER' as any)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -117,7 +117,7 @@ export async function DELETE(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
 
     if (!user || !user.roles.includes('BUSINESS_LISTER' as any)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

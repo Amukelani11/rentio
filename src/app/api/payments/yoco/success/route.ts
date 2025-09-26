@@ -11,7 +11,7 @@ import { paymentReceiptEmail, bookingStatusEmail, bookingConfirmationEmail, newB
 export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
 
     const url = new URL(request.url)
     const bookingId = url.searchParams.get('bookingId')

@@ -1,406 +1,677 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Send, MessageSquare, User, Clock, CheckCircle } from 'lucide-react'
+import { MessageSquare, Send } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { RealtimeChannel } from '@supabase/supabase-js'
+import { useUserActivity } from '@/hooks/useUserActivity'
+import DashboardLayout from '@/components/layout/DashboardLayout'
 
-interface User {
+type User = {
   id: string
-  name: string
-  email: string
-  avatar?: string
+  name: string | null
+  email: string | null
+  avatar?: string | null
 }
 
-interface Message {
+type ConversationParticipant = {
+  user_id: string
+  user: User
+}
+
+type Conversation = {
+  id: string
+  title?: string | null
+  booking_id?: string | null
+  listing_id?: string | null
+  lastMessage?: string | null
+  lastMessageAt?: string | null
+  conversation_participants?: ConversationParticipant[]
+  business_details?: {
+    id: string
+    name: string | null
+    email: string | null
+  } | null
+}
+
+type Message = {
   id: string
   content: string
   created_at: string
   from_user_id: string
-  sender: {
+  sender?: {
     id: string
-    name: string
-    avatar?: string
-  }
+    name: string | null
+    avatar?: string | null
+  } | null
 }
 
-interface Conversation {
-  id: string
-  title: string
-  booking_id?: string
-  listing_id?: string
-  conversation_participants?: Array<{
-    user_id: string
-    user: {
-      id: string
-      name: string
-      email: string
-      avatar?: string
+type ApiResponse<T> = {
+  success?: boolean
+  data?: T
+  error?: string
+}
+
+type ConversationsPayload = {
+  items: Conversation[]
+}
+
+type MessagesPayload = {
+  items: Message[]
+}
+
+type UserPayload = {
+  user: User
+}
+
+const PAGE_HEIGHT = 'h-[calc(100vh-8rem)]' // Adjusted for dashboard layout
+
+function formatTime(timestamp?: string | null) {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleTimeString('en-ZA', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function formatLastSeen(timestamp?: string | null) {
+  if (!timestamp) return 'Online status unknown'
+  
+  const now = new Date()
+  const lastSeen = new Date(timestamp)
+  
+  // Check if timestamp is valid
+  if (isNaN(lastSeen.getTime())) return 'Online status unknown'
+  
+  const diffInMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60))
+  
+  if (diffInMinutes < 1) return 'Active now'
+  if (diffInMinutes < 5) return 'Active recently'
+  if (diffInMinutes < 60) return `Last seen ${diffInMinutes}m ago`
+  
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) return `Last seen ${diffInHours}h ago`
+  
+  const diffInDays = Math.floor(diffInHours / 24)
+  if (diffInDays < 7) return `Last seen ${diffInDays}d ago`
+  
+  return `Last seen ${lastSeen.toLocaleDateString()}`
+}
+
+function getActivityStatus(timestamp?: string | null) {
+  if (!timestamp) return { status: 'offline', color: 'bg-gray-400' }
+  
+  const now = new Date()
+  const lastSeen = new Date(timestamp)
+  const diffInMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60))
+  
+  if (diffInMinutes < 5) return { status: 'online', color: 'bg-green-500' }
+  if (diffInMinutes < 30) return { status: 'away', color: 'bg-yellow-500' }
+  return { status: 'offline', color: 'bg-gray-400' }
+}
+
+function formatRelativeDate(timestamp?: string | null) {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  if (Number.isNaN(date.getTime())) return ''
+  const now = new Date()
+  const sameDay =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear()
+
+  if (sameDay) {
+    return date.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  return date.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short' })
+}
+
+function getOtherParticipant(conversation: Conversation, currentUserId?: string | null) {
+  if (conversation.business_details) {
+    return {
+      id: conversation.business_details.id,
+      name: conversation.business_details.name ?? 'Business',
+      email: conversation.business_details.email,
+      avatar: null
     }
-  }>
-  lastMessage?: string
-  lastMessageAt?: string
+  }
+
+  const participants = conversation.conversation_participants ?? []
+  const participant = participants.find((item) => item.user_id !== currentUserId)
+  return participant?.user ?? null
 }
 
 export default function MessagesPage() {
   const searchParams = useSearchParams()
-  const conversationId = searchParams.get('id')
-  const bookingId = searchParams.get('booking')
-  const compose = searchParams.get('compose')
-  const composeTo = searchParams.get('to')
+  const conversationIdParam = searchParams.get('id')
+  const bookingIdParam = searchParams.get('booking')
+  const composeToParam = searchParams.get('to')
 
   const [user, setUser] = useState<User | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loadingConversations, setLoadingConversations] = useState(true)
+  const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [rtChannel, setRtChannel] = useState<RealtimeChannel | null>(null)
+  const [participantActivity, setParticipantActivity] = useState<{[userId: string]: string}>({}) // userId -> last_seen_at
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const supabase = useMemo(() => createClient(), [])
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+  // Track user activity for smart email notifications
+  useUserActivity({
+    userId: user?.id || null,
+    conversationId: selectedConversationId,
+    activityType: 'MESSAGES_PAGE'
+  })
 
-  useEffect(() => {
-    fetchData()
-  }, [conversationId, bookingId])
+  const selectedConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === selectedConversationId) ?? null,
+    [conversations, selectedConversationId]
+  )
 
-  const fetchData = async () => {
+  const loadMessages = useCallback(
+    async (conversationId: string) => {
+      setLoadingMessages(true)
+      setErrorMessage(null)
+
+      try {
+        const response = await fetch(`/api/conversations/${conversationId}/messages`)
+        if (!response.ok) {
+          throw new Error('Failed to load messages')
+        }
+
+        const payload: ApiResponse<MessagesPayload> = await response.json()
+        setMessages(payload.data?.items ?? [])
+      } catch (error) {
+        console.error('[MESSAGES] Failed to load messages', error)
+        setMessages([])
+        setErrorMessage('Unable to load messages for this conversation.')
+      } finally {
+        setLoadingMessages(false)
+      }
+    },
+    []
+  )
+
+  const fetchParticipantActivity = useCallback(async (conversationId: string) => {
     try {
-      console.log('📱 [MESSAGES] Fetching data...')
-      
+      const response = await fetch(`/api/conversations/${conversationId}/activity`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          const activityMap: {[userId: string]: string} = {}
+          data.data.forEach((activity: any) => {
+            activityMap[activity.user_id] = activity.last_seen_at
+          })
+          setParticipantActivity(prev => ({ ...prev, ...activityMap }))
+        }
+      } else {
+        console.warn('[MESSAGES] Failed to fetch participant activity:', response.status)
+      }
+    } catch (error) {
+      console.error('[MESSAGES] Failed to fetch participant activity', error)
+    }
+  }, [])
+
+  const refreshConversations = useCallback(async () => {
+    setLoadingConversations(true)
+    setErrorMessage(null)
+
+    try {
+      const response = await fetch('/api/conversations')
+      if (!response.ok) {
+        throw new Error('Failed to load conversations')
+      }
+
+      const payload: ApiResponse<ConversationsPayload> = await response.json()
+      const items = payload.data?.items ?? []
+      setConversations(items)
+      return items
+    } catch (error) {
+      console.error('[MESSAGES] Failed to load conversations', error)
+      setConversations([])
+      setErrorMessage('Unable to load your conversations right now.')
+      return []
+    } finally {
+      setLoadingConversations(false)
+    }
+  }, [])
+
+  const updateUrl = useCallback((conversationId: string) => {
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    url.searchParams.set('id', conversationId)
+    url.searchParams.delete('booking')
+    url.searchParams.delete('compose')
+    url.searchParams.delete('to')
+    window.history.replaceState({}, '', url.toString())
+  }, [])
+
+  const handleSelectConversation = useCallback(
+    async (conversationId: string) => {
+      if (!conversationId) return
+      setSelectedConversationId(conversationId)
+      updateUrl(conversationId)
+      await loadMessages(conversationId)
+      await fetchParticipantActivity(conversationId)
+    },
+    [loadMessages, updateUrl, fetchParticipantActivity]
+  )
+
+  const bootstrap = useCallback(async () => {
+    setLoadingConversations(true)
+    setErrorMessage(null)
+
+    try {
       const [userResponse, conversationsResponse] = await Promise.all([
         fetch('/api/auth/user'),
         fetch('/api/conversations')
       ])
 
       if (userResponse.ok) {
-        const userData = await userResponse.json()
-        setUser(userData.user)
+        const userPayload: UserPayload = await userResponse.json()
+        setUser(userPayload.user)
       }
 
+      let conversationItems: Conversation[] = []
       if (conversationsResponse.ok) {
-        const conversationsData = await conversationsResponse.json()
-        console.log('📋 [MESSAGES] Conversations loaded:', {
-          total: conversationsData.data?.items?.length || 0,
-          conversations: conversationsData.data?.items
-        })
-        setConversations(conversationsData.data.items || [])
+        const payload: ApiResponse<ConversationsPayload> = await conversationsResponse.json()
+        conversationItems = payload.data?.items ?? []
+        setConversations(conversationItems)
+      }
 
-        // Handle booking parameter - create conversation if needed
-        if (bookingId && user) {
-          console.log('🎯 [MESSAGES] Booking parameter detected:', bookingId)
-
-          // Check if conversation already exists for this booking
-          const existingConversation = conversationsData.data?.items?.find((c: Conversation) =>
-            c.booking_id === bookingId
-          )
-
-          if (existingConversation) {
-            console.log('✅ [MESSAGES] Found existing conversation for booking:', existingConversation.id)
-            selectConversation(existingConversation)
-          } else {
-            console.log('🔄 [MESSAGES] No conversation found for booking, creating one...')
-            await createConversationFromBooking(bookingId)
-          }
+      const findAndSelectConversation = async (conversationId?: string | null) => {
+        if (!conversationId) return false
+        const conversationMatch = conversationItems.find((item) => item.id === conversationId)
+        if (conversationMatch) {
+          await handleSelectConversation(conversationMatch.id)
+          return true
         }
-        // Auto-select conversation if ID provided
-        else if (conversationId) {
-          const conversation = conversationsData.data?.items?.find((c: Conversation) => c.id === conversationId)
-          console.log('🎯 [MESSAGES] Auto-selecting conversation:', { conversationId, found: !!conversation })
-          if (conversation) {
-            selectConversation(conversation)
-          }
+        return false
+      }
+
+      const selectedById = await findAndSelectConversation(conversationIdParam)
+      if (selectedById) return
+
+      if (composeToParam) {
+        const matchingConversation = conversationItems.find((item) =>
+          (item.conversation_participants ?? []).some((participant) => participant.user_id === composeToParam)
+        )
+        if (matchingConversation) {
+          await handleSelectConversation(matchingConversation.id)
+          return
         }
-        // Handle compose mode
-        else if (compose && composeTo) {
-          // Try to find a conversation with target participant
-          const conversation = conversationsData.data?.items?.find((c: Conversation) => {
-            const participants = c.conversation_participants || []
-            return participants.some(p => String(p.user_id) === String(composeTo))
+      }
+
+      if (bookingIdParam) {
+        const conversationForBooking = conversationItems.find(
+          (item) => item.booking_id && item.booking_id === bookingIdParam
+        )
+
+        if (conversationForBooking) {
+          await handleSelectConversation(conversationForBooking.id)
+          return
+        }
+
+        try {
+          const response = await fetch(`/api/bookings/${bookingIdParam}/conversation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
           })
-          console.log('💬 [MESSAGES] Compose mode - finding conversation:', { composeTo, found: !!conversation })
-          if (conversation) {
-            selectConversation(conversation)
+
+          if (response.ok) {
+            const payload: ApiResponse<{ conversation: Conversation }> = await response.json()
+            const createdConversationId = payload.data?.conversation?.id
+
+            const updatedConversations = await refreshConversations()
+            const conversationToSelect =
+              updatedConversations.find((item) => item.id === createdConversationId) ??
+              updatedConversations.find((item) => item.booking_id === bookingIdParam)
+
+            if (conversationToSelect) {
+              await handleSelectConversation(conversationToSelect.id)
+              return
+            }
+          } else {
+            console.error('[MESSAGES] Unable to create booking conversation', await response.text())
+            setErrorMessage('Unable to start a new conversation for this booking.')
           }
+        } catch (error) {
+          console.error('[MESSAGES] Failed to create booking conversation', error)
+          setErrorMessage('Unable to start a new conversation for this booking.')
         }
       }
-    } catch (error) {
-      console.error('💥 [MESSAGES] Error fetching data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  const createConversationFromBooking = async (bookingId: string) => {
-    try {
-      console.log('🔄 [MESSAGES] Creating conversation from booking:', bookingId)
-
-      const response = await fetch(`/api/bookings/${bookingId}/conversation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('✅ [MESSAGES] Conversation created successfully:', data)
-
-        // Refresh conversations
-        await fetchData()
+      if (conversationItems.length > 0) {
+        await handleSelectConversation(conversationItems[0].id)
       } else {
-        const errorData = await response.json().catch(() => null)
-        console.error('❌ [MESSAGES] Failed to create conversation:', errorData)
+        setSelectedConversationId(null)
+        setMessages([])
       }
     } catch (error) {
-      console.error('💥 [MESSAGES] Error creating conversation from booking:', error)
+      console.error('[MESSAGES] Failed to initialise messages page', error)
+      setErrorMessage('Something went wrong while loading your messages.')
+    } finally {
+      setLoadingConversations(false)
     }
-  }
+  }, [
+    bookingIdParam,
+    composeToParam,
+    conversationIdParam,
+    handleSelectConversation,
+    refreshConversations
+  ])
 
-  const selectConversation = async (conversation: Conversation) => {
-    console.log('🎯 [MESSAGES] Selecting conversation:', conversation.id)
-    setSelectedConversation(conversation)
-    await fetchMessages(conversation.id)
+  useEffect(() => {
+    bootstrap()
+  }, [bootstrap])
 
-    // Update URL
-    const url = new URL(window.location.href)
-    url.searchParams.set('id', conversation.id)
-    url.searchParams.delete('booking')
-    url.searchParams.delete('compose')
-    url.searchParams.delete('to')
-    window.history.replaceState({}, '', url.toString())
-  }
+  // Simple per-conversation realtime subscription (INSERT only)
+  useEffect(() => {
+    if (!selectedConversationId) return
 
-  const fetchMessages = async (conversationId: string) => {
-    try {
-      console.log('📨 [MESSAGES] Fetching messages for conversation:', conversationId)
-      
-      const response = await fetch(`/api/conversations/${conversationId}/messages`)
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(data.data?.items || [])
-        console.log('📨 [MESSAGES] Messages loaded:', data.data?.items?.length || 0)
-      }
-    } catch (error) {
-      console.error('💥 [MESSAGES] Error fetching messages:', error)
+    // Cleanup any previous channel
+    if (rtChannel) {
+      rtChannel.unsubscribe()
+      setRtChannel(null)
     }
-  }
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || sending) return
+    const channel = supabase
+      .channel(`conv_${selectedConversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversationId}`
+        },
+        (payload) => {
+          const msg = payload.new as Message
+          // Avoid duplicates
+          setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]))
+        }
+      )
+      .subscribe()
 
+    setRtChannel(channel)
+
+    return () => {
+      channel.unsubscribe()
+      setRtChannel(null)
+    }
+  }, [selectedConversationId, supabase])
+
+  // Refresh activity data periodically
+  useEffect(() => {
+    if (!selectedConversationId) return
+
+    const refreshActivity = () => {
+      fetchParticipantActivity(selectedConversationId)
+    }
+
+    // Refresh activity every 30 seconds
+    const interval = setInterval(refreshActivity, 30000)
+    
+    return () => clearInterval(interval)
+  }, [selectedConversationId, fetchParticipantActivity])
+
+  const handleSendMessage = useCallback(async () => {
+    if (!selectedConversation || !newMessage.trim() || sending) return
+
+    const content = newMessage.trim()
     setSending(true)
-    try {
-      console.log('📤 [MESSAGES] Sending message:', newMessage)
+    setErrorMessage(null)
+    setNewMessage('')
 
+    try {
       const response = await fetch(`/api/conversations/${selectedConversation.id}/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: newMessage,
-          message_type: 'TEXT'
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, type: 'TEXT' })
       })
 
-      if (response.ok) {
-        setNewMessage('')
-        await fetchMessages(selectedConversation.id)
-        console.log('✅ [MESSAGES] Message sent successfully')
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null)
+        throw new Error(errorPayload?.error ?? 'Failed to send message')
+      }
+
+      const payload: ApiResponse<{ message: Message }> = await response.json()
+      const createdMessage = payload.data?.message
+
+      if (createdMessage) {
+        setMessages((previous) => [...previous, createdMessage])
       } else {
-        console.error('❌ [MESSAGES] Failed to send message')
+        await loadMessages(selectedConversation.id)
       }
     } catch (error) {
-      console.error('💥 [MESSAGES] Error sending message:', error)
+      console.error('[MESSAGES] Failed to send message', error)
+      const fallbackMessage =
+        error instanceof Error ? error.message : 'Unable to send this message. Please try again.'
+      setErrorMessage(fallbackMessage)
+      setNewMessage(content)
     } finally {
       setSending(false)
     }
-  }
+  }, [loadMessages, newMessage, selectedConversation, sending])
 
-  const getOtherParticipant = (conversation: Conversation) => {
-    const participants = conversation.conversation_participants || []
-    return participants.find(p => p.user_id !== user?.id)?.user
-  }
+  const renderConversationList = () => {
+    if (loadingConversations && conversations.length === 0) {
+      return (
+        <div className="p-4 text-sm text-gray-500">
+          Loading conversations...
+        </div>
+      )
+    }
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-ZA', {
-      hour: '2-digit',
-      minute: '2-digit'
+    if (!loadingConversations && conversations.length === 0) {
+      return (
+        <div className="p-8 text-center text-sm text-gray-500">
+          <MessageSquare className="mx-auto mb-3 h-8 w-8 text-gray-400" />
+          <p>No conversations yet.</p>
+        </div>
+      )
+    }
+
+    return conversations.map((conversation) => {
+      const other = getOtherParticipant(conversation, user?.id)
+      const isSelected = conversation.id === selectedConversationId
+
+      return (
+        <button
+          key={conversation.id}
+          onClick={() => handleSelectConversation(conversation.id)}
+          className={`flex w-full items-center gap-3 border-b px-4 py-3 text-left transition ${
+            isSelected ? 'bg-coral-50' : 'hover:bg-gray-100'
+          }`}
+        >
+          <div className="relative">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={other?.avatar ?? undefined} alt={other?.name ?? 'User avatar'} />
+              <AvatarFallback>{(other?.name ?? 'U').charAt(0)}</AvatarFallback>
+            </Avatar>
+            {other?.id && (
+              <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
+            )}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="truncate text-sm font-medium text-gray-900">
+                {other?.name ?? conversation.title ?? 'Conversation'}
+              </span>
+              <span className="ml-2 shrink-0 text-xs text-gray-500">
+                {formatRelativeDate(conversation.lastMessageAt)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="truncate text-xs text-gray-500">
+                {conversation.lastMessage ?? 'No messages yet'}
+              </p>
+              {other?.id && (
+                <span className="ml-2 shrink-0 text-xs text-gray-400">
+                  {formatLastSeen(participantActivity[other.id])}
+                </span>
+              )}
+            </div>
+          </div>
+        </button>
+      )
     })
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-coral-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading conversations...</p>
+  const renderMessageList = () => {
+    if (!selectedConversation) {
+      return (
+        <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
+          <MessageSquare className="mb-3 h-10 w-10 text-gray-400" />
+          <h3 className="text-base font-medium">No conversation selected</h3>
+          <p className="mt-1 text-sm text-gray-500">Choose a conversation to get started.</p>
         </div>
+      )
+    }
+
+    if (loadingMessages) {
+      return (
+        <div className="flex flex-1 items-center justify-center text-sm text-gray-500">
+          Loading messages...
+        </div>
+      )
+    }
+
+    if (messages.length === 0) {
+      return (
+        <div className="flex flex-1 flex-col items-center justify-center text-gray-500">
+          <MessageSquare className="mb-3 h-10 w-10 text-gray-400" />
+          <p>No messages yet. Start the conversation!</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
+        {messages.map((message) => {
+          const isOwn = message.from_user_id === user?.id
+          return (
+            <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className={`max-w-[75%] rounded-lg px-4 py-3 text-sm ${
+                  isOwn ? 'bg-coral-600 text-white' : 'bg-gray-100 text-gray-900'
+                }`}
+              >
+                <p>{message.content}</p>
+                <span
+                  className={`mt-2 block text-xs ${
+                    isOwn ? 'text-coral-100' : 'text-gray-500'
+                  }`}
+                >
+                  {formatTime(message.created_at)}
+                </span>
+              </div>
+            </div>
+          )
+        })}
       </div>
     )
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      {/* Conversations Sidebar */}
-      <div className="w-1/3 border-r bg-gray-50">
-        <div className="p-4 border-b">
-          <h1 className="text-xl font-semibold">Messages</h1>
+    <DashboardLayout user={user} showHeader={false}>
+      <div className={`flex ${PAGE_HEIGHT}`}>
+      <aside className="flex w-full max-w-sm flex-col border-r bg-gray-50">
+        <div className="border-b px-4 py-4">
+          <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
         </div>
-        
-        <div className="overflow-y-auto">
-          {conversations.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-              <p>No conversations yet</p>
-            </div>
-          ) : (
-            conversations.map((conversation) => {
-              const otherParticipant = getOtherParticipant(conversation)
+        <div className="flex-1 overflow-y-auto">{renderConversationList()}</div>
+      </aside>
+
+      <section className="flex flex-1 flex-col bg-white">
+        {errorMessage && (
+          <div className="border-b bg-red-50 px-4 py-2 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        )}
+
+        {selectedConversation && (
+          <header className="flex items-center gap-3 border-b px-6 py-4">
+            {(() => {
+              const other = getOtherParticipant(selectedConversation, user?.id)
               return (
-                <div
-                  key={conversation.id}
-                  onClick={() => selectConversation(conversation)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-100 ${
-                    selectedConversation?.id === conversation.id ? 'bg-coral-50 border-coral-200' : ''
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
+                <>
+                  <div className="relative">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={otherParticipant?.avatar} />
-                      <AvatarFallback>
-                        {otherParticipant?.name?.charAt(0) || 'U'}
-                      </AvatarFallback>
+                      <AvatarImage src={other?.avatar ?? undefined} />
+                      <AvatarFallback>{(other?.name ?? 'U').charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {otherParticipant?.name || 'Unknown User'}
-                        </p>
-                        {conversation.lastMessageAt && (
-                          <p className="text-xs text-gray-500">
-                            {formatTime(conversation.lastMessageAt)}
-                          </p>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-500 truncate">
-                        {conversation.lastMessage || 'No messages yet'}
+                    {other?.id && (
+                      <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-semibold text-gray-900">
+                      {other?.name ?? selectedConversation.title ?? 'Conversation'}
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-gray-500">
+                        {selectedConversation.booking_id ? 'Booking conversation' : 'Direct message'}
                       </p>
-                      {conversation.booking_id && (
-                        <Badge variant="secondary" className="text-xs mt-1">
-                          Booking Chat
-                        </Badge>
+                      {other?.id && (
+                        <>
+                          <span className="text-xs text-gray-300">•</span>
+                          <span className="text-xs text-gray-500">
+                            {formatLastSeen(participantActivity[other.id])}
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>
-                </div>
+                </>
               )
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {selectedConversation ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b bg-white">
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={getOtherParticipant(selectedConversation)?.avatar} />
-                  <AvatarFallback>
-                    {getOtherParticipant(selectedConversation)?.name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-semibold">
-                    {getOtherParticipant(selectedConversation)?.name || 'Unknown User'}
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    {selectedConversation.booking_id ? 'Booking conversation' : 'Direct message'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p>No messages yet. Start the conversation!</p>
-                </div>
-              ) : (
-                messages.map((message) => {
-                  const isOwn = message.from_user_id === user?.id
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          isOwn
-                            ? 'bg-coral-600 text-white'
-                            : 'bg-gray-200 text-gray-900'
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          isOwn ? 'text-coral-100' : 'text-gray-500'
-                        }`}>
-                          {formatTime(message.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Message Input */}
-            <div className="p-4 border-t bg-white">
-              <div className="flex space-x-2">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  disabled={sending}
-                />
-                <Button
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim() || sending}
-                  className="bg-coral-600 hover:bg-coral-700"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium mb-2">No conversation selected</h3>
-              <p>Choose a conversation from the sidebar to start messaging</p>
-            </div>
-          </div>
+            })()}
+          </header>
         )}
+
+        {renderMessageList()}
+
+        {selectedConversation && (
+          <footer className="border-t px-6 py-4">
+            <div className="flex items-center gap-3">
+              <Input
+                value={newMessage}
+                onChange={(event) => setNewMessage(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault()
+                    handleSendMessage()
+                  }
+                }}
+                placeholder="Type a message..."
+                disabled={sending}
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim() || sending}
+                className="bg-coral-600 hover:bg-coral-700"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </footer>
+        )}
+      </section>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
+

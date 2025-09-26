@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     console.log('[KYC Upload] Starting upload process...')
     
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase as any)
+    const user = await getAuthUser()
     if (!user) {
       console.log('[KYC Upload] No user found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

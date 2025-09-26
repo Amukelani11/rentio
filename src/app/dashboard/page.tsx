@@ -94,10 +94,48 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Clear any mock data; real implementation should fetch from backend
-      setDashboardData(null)
+      // Fetch data for dashboard
+      const [upcomingBookingsResponse, bookingsResponse, listingsResponse] = await Promise.all([
+        fetch('/api/bookings?type=upcoming'),
+        fetch('/api/bookings'),
+        fetch('/api/listings')
+      ])
+
+      let upcomingBookings: any[] = []
+      let totalBookings = 0
+      let activeListings = 0
+
+      if (upcomingBookingsResponse.ok) {
+        const upcomingData = await upcomingBookingsResponse.json()
+        upcomingBookings = upcomingData.data || []
+        console.log('[DASHBOARD] Upcoming bookings response:', upcomingData)
+      console.log('[DASHBOARD] Upcoming bookings array length:', upcomingBookings.length)
+      } else {
+        console.error('[DASHBOARD] Failed to fetch upcoming bookings:', upcomingBookingsResponse.status)
+      }
+
+      if (bookingsResponse.ok) {
+        const bookingsData = await bookingsResponse.json()
+        totalBookings = bookingsData.data?.total || 0
+      }
+
+      if (listingsResponse.ok) {
+        const listingsData = await listingsResponse.json()
+        activeListings = listingsData.data?.items?.filter((listing: any) => listing.status === 'ACTIVE').length || 0
+      }
+
+      // Mock other dashboard data for now
+      setDashboardData({
+        totalEarnings: 0, // TODO: Calculate from payment data
+        activeListings,
+        totalBookings,
+        averageRating: 4.5, // TODO: Calculate from reviews
+        upcomingBookings,
+        recentActivity: [] // TODO: Fetch recent activity
+      })
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      setDashboardData(null)
     } finally {
       setLoading(false);
     }
@@ -110,9 +148,69 @@ export default function Dashboard() {
     return 'Good evening';
   };
 
-  // Minimal dashboard content for customers — metrics removed per request
+  // Dashboard metrics for listers and business owners
   const getRoleBasedContent = () => {
-    return null
+    if (!dashboardData) return null
+
+    const isLister = user.roles.includes(Role.INDIVIDUAL_LISTER) || user.roles.includes(Role.BUSINESS_LISTER)
+
+    if (!isLister) return null
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm dark:border-charcoal-600 dark:bg-charcoal-600/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">R{dashboardData.totalEarnings.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              From all bookings
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm dark:border-charcoal-600 dark:bg-charcoal-600/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Listings</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardData.activeListings}</div>
+            <p className="text-xs text-muted-foreground">
+              Currently available
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm dark:border-charcoal-600 dark:bg-charcoal-600/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardData.totalBookings}</div>
+            <p className="text-xs text-muted-foreground">
+              All time bookings
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm dark:border-charcoal-600 dark:bg-charcoal-600/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
+            <Star className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dashboardData.averageRating.toFixed(1)}</div>
+            <p className="text-xs text-muted-foreground">
+              From customer reviews
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (loading && user) {

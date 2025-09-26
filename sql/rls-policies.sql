@@ -264,21 +264,51 @@ CREATE POLICY "Users can view own booking extensions" ON booking_extensions
         WHERE renter_id = current_setting('app.current_user_id', true)::uuid
     ));
 
-CREATE POLICY "Businesses can view booking extensions for their listings" ON booking_extensions
-    FOR SELECT USING (booking_id IN (
-        SELECT id FROM bookings 
+CREATE POLICY "Businesses can insert booking extensions for their listings" ON booking_extensions
+    FOR INSERT WITH CHECK (booking_id IN (
+        SELECT id FROM bookings
         WHERE listing_id IN (
-            SELECT id FROM listings 
+            SELECT id FROM listings
             WHERE business_id IN (
-                SELECT id FROM businesses 
+                SELECT id FROM businesses
                 WHERE user_id = current_setting('app.current_user_id', true)::uuid
             )
         )
     ));
 
+CREATE POLICY "Businesses can view booking extensions for their listings" ON booking_extensions
+    FOR SELECT USING (booking_id IN (
+        SELECT id FROM bookings
+        WHERE listing_id IN (
+            SELECT id FROM listings
+            WHERE business_id IN (
+                SELECT id FROM businesses
+                WHERE user_id = current_setting('app.current_user_id', true)::uuid
+            )
+        )
+    ));
+
+CREATE POLICY "Businesses can manage booking extensions for their listings" ON booking_extensions
+    FOR ALL USING (booking_id IN (
+        SELECT id FROM bookings
+        WHERE listing_id IN (
+            SELECT id FROM listings
+            WHERE business_id IN (
+                SELECT id FROM businesses
+                WHERE user_id = current_setting('app.current_user_id', true)::uuid
+            )
+        )
+    ));
+
+CREATE POLICY "Users can insert own booking extensions" ON booking_extensions
+    FOR INSERT WITH CHECK (booking_id IN (
+        SELECT id FROM bookings
+        WHERE renter_id = current_setting('app.current_user_id', true)::uuid
+    ));
+
 CREATE POLICY "Users can manage own booking extensions" ON booking_extensions
     FOR ALL USING (booking_id IN (
-        SELECT id FROM bookings 
+        SELECT id FROM bookings
         WHERE renter_id = current_setting('app.current_user_id', true)::uuid
     ));
 
@@ -383,6 +413,13 @@ CREATE POLICY "Users can view messages in their bookings" ON messages
               )
     ));
 
+CREATE POLICY "Users can insert messages in conversations they participate in" ON messages
+    FOR INSERT WITH CHECK (from_user_id = current_setting('app.current_user_id', true)::uuid AND
+        conversation_id IN (
+            SELECT conversation_id FROM conversation_participants
+            WHERE user_id = current_setting('app.current_user_id', true)::uuid
+        ));
+
 CREATE POLICY "Users can manage messages they sent" ON messages
     FOR ALL USING (from_user_id = current_setting('app.current_user_id', true)::uuid);
 
@@ -400,6 +437,12 @@ CREATE POLICY "Business team members can view business messages" ON messages
                 AND status = 'ACTIVE'
             )
         )
+    ));
+
+CREATE POLICY "Users can view messages in conversations they participate in" ON messages
+    FOR SELECT USING (conversation_id IN (
+        SELECT conversation_id FROM conversation_participants
+        WHERE user_id = current_setting('app.current_user_id', true)::uuid
     ));
 
 CREATE POLICY "Admins can manage all messages" ON messages
@@ -477,8 +520,8 @@ CREATE POLICY "Admins can manage all KYC verifications" ON kyc_verifications
     FOR ALL USING (current_setting('app.current_user_role', true) = 'ADMIN');
 
 -- Conversation participants policies
-CREATE POLICY "Users can view conversations they participate in" ON conversation_participants
-    FOR SELECT USING (user_id = current_setting('app.current_user_id', true)::uuid);
+CREATE POLICY "Authenticated users can view conversation participants" ON conversation_participants
+    FOR SELECT USING (auth.role() = 'authenticated'::text);
 
 CREATE POLICY "Users can manage their conversation participation" ON conversation_participants
     FOR ALL USING (user_id = current_setting('app.current_user_id', true)::uuid);

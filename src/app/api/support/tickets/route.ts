@@ -6,7 +6,7 @@ import { getAuthUser } from '@/lib/auth'
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data, error } = await supabase.from('support_tickets').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()

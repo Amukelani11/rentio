@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ExtendBookingModal } from '@/components/ExtendBookingModal'
 
 interface Booking {
   id: string;
@@ -83,6 +84,9 @@ export default function RentalsPage() {
   const [user, setUser] = useState<any>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [extendModalOpen, setExtendModalOpen] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [extendMessage, setExtendMessage] = useState<{ title: string; description?: string } | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,12 +116,14 @@ export default function RentalsPage() {
           console.log('📋 Bookings API response:', bookingsData);
           console.log('📊 Bookings count:', bookingsData.data?.items?.length || 0);
           console.log('📝 Raw bookings data:', bookingsData.data?.items);
-          
+
           // Debug the first booking's listing structure
           if (bookingsData.data?.items?.length > 0) {
             const firstBooking = bookingsData.data.items[0];
             console.log('🔍 First booking detailed structure:', {
               id: firstBooking.id,
+              status: firstBooking.status,
+              renter_id: firstBooking.renter_id,
               listingId: firstBooking.listing_id,
               listing: firstBooking.listing,
               listingUser: firstBooking.listing?.user,
@@ -126,8 +132,10 @@ export default function RentalsPage() {
               listingBusinessId: firstBooking.listing?.business_id,
             });
           }
-          
-          setBookings(bookingsData.data?.items || []);
+
+          const bookings = bookingsData.data?.items || [];
+          console.log('📋 Setting bookings:', bookings.length, 'bookings');
+          setBookings(bookings);
         } else {
           const errorData = await bookingsResponse.json();
           console.error('❌ Bookings fetch failed:', errorData);
@@ -157,6 +165,23 @@ export default function RentalsPage() {
     past: rentals.past.length,
     requests: rentals.requests.length,
     allBookings: bookings.map(b => ({ id: b.id, status: b.status, title: b.listing?.title }))
+  });
+
+  // Debug each booking's categorization
+  bookings.forEach(booking => {
+    const isActive = ['CONFIRMED', 'IN_PROGRESS'].includes(booking.status);
+    const isPast = ['COMPLETED', 'CANCELLED'].includes(booking.status);
+    const isRequest = ['PENDING'].includes(booking.status);
+
+    console.log('🔍 Booking categorization:', {
+      id: booking.id,
+      status: booking.status,
+      isActive,
+      isPast,
+      isRequest,
+      title: booking.listing?.title,
+      endDate: booking.end_date
+    });
   });
 
   const StatusBadge = ({ status }: { status: string }) => {
@@ -246,10 +271,30 @@ export default function RentalsPage() {
 
   async function handleExtend(item: Booking) {
     try {
-      // Navigate to booking detail page where extend flow lives
-      router.push(`/dashboard/bookings/${item.id}`)
+      setSelectedBooking(item)
+      setExtendModalOpen(true)
     } catch (e) {
       console.error('Extend action error', e)
+    }
+  }
+
+  function handleExtendSuccess(payload?: { message: string; details?: string; booking?: any; extension?: { days: number; cost: number; newEndDate: string } }) {
+    // Refresh bookings data after successful extension
+    const refreshBookings = async () => {
+      try {
+        const bookingsResponse = await fetch('/api/bookings?status=ALL')
+        if (bookingsResponse.ok) {
+          const bookingsData = await bookingsResponse.json()
+          setBookings(bookingsData.data?.items || [])
+        }
+      } catch (error) {
+        console.error('Failed to refresh bookings:', error)
+      }
+    }
+    refreshBookings()
+
+    if (payload?.message) {
+      setExtendMessage(payload)
     }
   }
 
@@ -356,6 +401,12 @@ export default function RentalsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-extrabold tracking-tight">My Rentals</h1>
         </div>
+        {extendMessage && (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+            <div className="font-medium">{extendMessage.title}</div>
+            {extendMessage.description && <p className="mt-1">{extendMessage.description}</p>}
+          </div>
+        )}
         <Tabs defaultValue="active">
           <TabsList>
             <TabsTrigger value="active">Active ({rentals.active.length})</TabsTrigger>
@@ -397,6 +448,13 @@ export default function RentalsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ExtendBookingModal
+        booking={selectedBooking}
+        open={extendModalOpen}
+        onOpenChange={setExtendModalOpen}
+        onSuccess={handleExtendSuccess}
+      />
     </DashboardLayout>
   )
 }

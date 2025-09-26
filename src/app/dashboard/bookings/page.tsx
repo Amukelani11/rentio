@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,6 +91,7 @@ interface Booking {
 
 export default function BookingsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,10 +99,28 @@ export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [activeTab, setActiveTab] = useState('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [extensionModalOpen, setExtensionModalOpen] = useState(false);
+  const [extensionBooking, setExtensionBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     fetchData();
   }, [statusFilter]);
+
+  // Check for extension requests in URL parameters
+  useEffect(() => {
+    const extensionId = searchParams.get('extension');
+    const listingId = searchParams.get('listing');
+
+    if (extensionId && bookings.length > 0) {
+      const booking = bookings.find(b => b.id === extensionId);
+      if (booking) {
+        setExtensionBooking(booking);
+        setExtensionModalOpen(true);
+        // Clear URL parameters after showing modal
+        router.replace('/dashboard/bookings', { scroll: false });
+      }
+    }
+  }, [searchParams, bookings, router]);
 
   const fetchData = async () => {
     try {
@@ -183,6 +202,73 @@ export default function BookingsPage() {
     } catch (error) {
       console.error('Error rejecting booking:', error);
       alert('An error occurred while rejecting the booking');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAcceptExtension = async (bookingId: string) => {
+    try {
+      setActionLoading(bookingId);
+
+      const response = await fetch(`/api/bookings/${bookingId}/extension-action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'accept' }),
+      });
+
+      if (response.ok) {
+        // Refresh bookings data
+        fetchData();
+        setExtensionModalOpen(false);
+        setExtensionBooking(null);
+        console.log('Extension accepted successfully');
+        alert('Extension accepted successfully!');
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to accept extension:', errorData.error);
+        alert(`Failed to accept extension: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error accepting extension:', error);
+      alert('An error occurred while accepting the extension');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeclineExtension = async (bookingId: string) => {
+    try {
+      const reason = prompt('Please provide a reason for declining this extension request:');
+      if (!reason) return; // User cancelled
+
+      setActionLoading(bookingId);
+
+      const response = await fetch(`/api/bookings/${bookingId}/extension-action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'decline', reason }),
+      });
+
+      if (response.ok) {
+        // Refresh bookings data
+        fetchData();
+        setExtensionModalOpen(false);
+        setExtensionBooking(null);
+        console.log('Extension declined successfully');
+        alert('Extension declined successfully');
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to decline extension:', errorData.error);
+        alert(`Failed to decline extension: ${errorData.error}`);
+      }
+    } catch (error) {
+      console.error('Error declining extension:', error);
+      alert('An error occurred while declining the extension');
     } finally {
       setActionLoading(null);
     }
@@ -541,6 +627,71 @@ export default function BookingsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Extension Review Modal */}
+      {extensionModalOpen && extensionBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Extension Request Review</h3>
+
+            <div className="space-y-3 mb-6">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Renter:</span>
+                <span className="font-medium">{extensionBooking.renter.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Listing:</span>
+                <span className="font-medium">{extensionBooking.listing.title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Current End:</span>
+                <span className="font-medium">{formatDate(extensionBooking.endDate)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Cost:</span>
+                <span className="font-medium text-coral-600">{formatPrice(extensionBooking.totalAmount)}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => handleDeclineExtension(extensionBooking.id)}
+                disabled={actionLoading === extensionBooking.id}
+                className="flex-1"
+              >
+                {actionLoading === extensionBooking.id ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-1" />
+                ) : (
+                  <ThumbsDown className="h-4 w-4 mr-1" />
+                )}
+                Decline
+              </Button>
+              <Button
+                onClick={() => handleAcceptExtension(extensionBooking.id)}
+                disabled={actionLoading === extensionBooking.id}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {actionLoading === extensionBooking.id ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
+                ) : (
+                  <ThumbsUp className="h-4 w-4 mr-1" />
+                )}
+                Accept
+              </Button>
+            </div>
+
+            <Button
+              variant="ghost"
+              onClick={() => setExtensionModalOpen(false)}
+              disabled={actionLoading === extensionBooking.id}
+              className="w-full mt-3"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

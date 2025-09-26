@@ -9,7 +9,7 @@ export async function POST(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -92,15 +92,11 @@ export async function POST(
           otherUserId = teamMembers[0].user_id
           console.log('🏢 [BOOKING-CONVERSATION] Business team member:', otherUserId)
         } else {
-          // Fallback: use any admin user or the system user
-          const { data: adminUser } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', 'kgahliso.sample@rentio.test')
-            .single()
-
-          otherUserId = adminUser?.id
-          console.log('👑 [BOOKING-CONVERSATION] Fallback admin user:', otherUserId)
+          console.log('⚠️ [BOOKING-CONVERSATION] No team members found for business:', booking.listing.business_id)
+          return NextResponse.json({
+            success: true,
+            data: { conversation: null }
+          })
         }
       }
     } else {

@@ -225,7 +225,20 @@ export default function RentalDetailPage() {
             <div className="absolute inset-0 bg-black/40" onClick={() => setShowExtendModal(false)} />
             <div className="relative z-10 w-full max-w-md rounded-xl border bg-white p-5 shadow-xl dark:border-charcoal-600 dark:bg-charcoal-700">
               <h3 className="text-lg font-semibold">Request Extension</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Select the new return date and time.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Select the new return date and time for your rental extension.</p>
+
+              {/* Current Rental Period Indicator */}
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+                  <span className="text-sm font-medium">Currently Renting</span>
+                </div>
+                <div className="mt-1 text-xs text-blue-700">
+                  {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
+                  <span className="ml-2">({booking.duration} days)</span>
+                </div>
+              </div>
+
               <div className="mt-4 space-y-2">
                 <label className="text-sm">New return date/time</label>
                 <input
@@ -233,8 +246,14 @@ export default function RentalDetailPage() {
                   className="w-full rounded-md border px-3 py-2 text-sm dark:bg-charcoal-600"
                   value={extendDate}
                   min={new Date(new Date(booking.end_date).getTime() + 60 * 60 * 1000).toISOString().slice(0,16)}
-                  onChange={(e) => setExtendDate(e.target.value)}
+                  onChange={(e) => {
+                    setExtendDate(e.target.value)
+                    setExtendSuccess('') // Clear success message when user changes date
+                  }}
                 />
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ You can only extend to dates after {new Date(booking.end_date).toLocaleDateString()}
+                </p>
               </div>
               <div className="mt-5 flex items-center justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowExtendModal(false)} disabled={submitting}>Close</Button>

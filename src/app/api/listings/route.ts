@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     // Route handler client to ensure RLS/auth session is consistent
     const supabaseAuth = createRouteHandlerClient({ cookies })
     // Use internal auth user (ensures user exists in our users table)
-    const user = await getAuthUser(supabaseAuth)
+    const user = await getAuthUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

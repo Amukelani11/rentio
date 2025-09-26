@@ -9,7 +9,7 @@ import { bookingConfirmationEmail } from '@/emails/templates'
 export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const listingId = searchParams.get('listingId')
     const renterId = searchParams.get('renterId')
     const status = searchParams.get('status')
+    const type = searchParams.get('type') // 'upcoming' for dashboard
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const from = (page - 1) * limit
@@ -40,15 +41,39 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(from, to)
 
-    // RLS policies handle the filtering automatically, so we don't need to add additional filters
-    // The policies will ensure users only see their own bookings and bookings for their listings
+    // Handle different query types
+    if (type === 'upcoming') {
+      // For dashboard upcoming bookings - get bookings starting from today onwards
+      const today = new Date().toISOString().split('T')[0]
+      console.log('[BOOKINGS] Looking for CONFIRMED upcoming bookings from date:', today)
+      // First, let's see all bookings with their statuses for debugging
+      const debugQuery = supabase
+        .from('bookings')
+        .select('id, start_date, end_date, status, listing:listings(title)')
+        .gte('start_date', today)
+        .order('start_date', { ascending: true })
+      
+      const { data: allFutureBookings } = await debugQuery
+      console.log('[BOOKINGS] All future bookings (any status):', JSON.stringify(allFutureBookings, null, 2))
+      
+      query = query
+        .eq('renter_id', user.id)  // Only show bookings where user is the renter
+        .gte('start_date', today)
+        .eq('status', 'CONFIRMED')  // Only show confirmed bookings that are upcoming
+        .order('start_date', { ascending: true })
+        .limit(5) // Only show next 5 upcoming bookings
+    } else {
+      // Standard query handling - only show bookings where the user is the renter
+      // This excludes bookings for their own listings (which they manage in a different section)
+      query = query.eq('renter_id', user.id)
 
-    if (listingId) query = query.eq('listing_id', listingId)
-    if (renterId) query = query.eq('renter_id', renterId)
-    if (status && status !== 'ALL') query = query.eq('status', status)
+      if (listingId) query = query.eq('listing_id', listingId)
+      if (renterId) query = query.eq('renter_id', renterId)
+      if (status && status !== 'ALL') query = query.eq('status', status)
+    }
 
-    console.log('Fetching bookings for user:', user.id, 'with filters:', { listingId, renterId, status })
-    
+    console.log('Fetching bookings for user:', user.id, 'with filters:', { listingId, renterId, status, type })
+
     const { data: bookings, error, count } = await query
 
     if (error) {
@@ -57,6 +82,28 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('Bookings found:', bookings?.length || 0, 'Total count:', count)
+    
+    if (type === 'upcoming') {
+      console.log('[BOOKINGS] Raw upcoming bookings:', JSON.stringify(bookings, null, 2))
+    }
+
+    // Format upcoming bookings for dashboard
+    if (type === 'upcoming') {
+      const upcomingBookings = (bookings || []).map(booking => ({
+        id: booking.id,
+        title: booking.listing?.title || 'Untitled Listing',
+        startDate: booking.start_date,
+        endDate: booking.end_date,
+        status: booking.status
+      }))
+
+      console.log('[BOOKINGS] Formatted upcoming bookings:', upcomingBookings)
+
+      return NextResponse.json({
+        success: true,
+        data: upcomingBookings
+      })
+    }
 
     return NextResponse.json({
       success: true,
@@ -80,7 +127,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase)
+    const user = await getAuthUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

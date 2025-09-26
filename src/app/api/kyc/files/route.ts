@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     console.log('[KYC Files] Starting request...')
     
     const supabase = createRouteHandlerClient({ cookies })
-    const user = await getAuthUser(supabase as any)
+    const user = await getAuthUser()
     
     if (!user) {
       console.log('[KYC Files] No user found')
