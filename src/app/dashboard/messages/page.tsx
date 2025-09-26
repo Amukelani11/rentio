@@ -165,7 +165,7 @@ export default function MessagesPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [rtChannel, setRtChannel] = useState<RealtimeChannel | null>(null)
   const [participantActivity, setParticipantActivity] = useState<{[userId: string]: string}>({}) // userId -> last_seen_at
-  const [showConversationList, setShowConversationList] = useState(false)
+  const [showConversationList, setShowConversationList] = useState(true)
   const [messagesEndRef, setMessagesEndRef] = useState<HTMLDivElement | null>(null)
 
   const supabase = useMemo(() => createClient(), [])
@@ -267,11 +267,17 @@ export default function MessagesPage() {
       updateUrl(conversationId)
       await loadMessages(conversationId)
       await fetchParticipantActivity(conversationId)
-      // On mobile, hide conversation list when selecting a conversation
+      // On mobile, show the conversation view instead of list
       setShowConversationList(false)
     },
     [loadMessages, updateUrl, fetchParticipantActivity]
   )
+
+  const handleBackToConversations = useCallback(() => {
+    setShowConversationList(true)
+    setSelectedConversationId(null)
+    setMessages([])
+  }, [])
 
   const bootstrap = useCallback(async () => {
     setLoadingConversations(true)
@@ -306,7 +312,10 @@ export default function MessagesPage() {
       }
 
       const selectedById = await findAndSelectConversation(conversationIdParam)
-      if (selectedById) return
+      if (selectedById) {
+        setShowConversationList(false)
+        return
+      }
 
       if (composeToParam) {
         const matchingConversation = conversationItems.find((item) =>
@@ -314,6 +323,7 @@ export default function MessagesPage() {
         )
         if (matchingConversation) {
           await handleSelectConversation(matchingConversation.id)
+          setShowConversationList(false)
           return
         }
       }
@@ -345,6 +355,7 @@ export default function MessagesPage() {
 
             if (conversationToSelect) {
               await handleSelectConversation(conversationToSelect.id)
+              setShowConversationList(false)
               return
             }
           } else {
@@ -357,9 +368,13 @@ export default function MessagesPage() {
         }
       }
 
-      if (conversationItems.length > 0) {
-        await handleSelectConversation(conversationItems[0].id)
-      } else {
+      if (conversationItems.length > 0 && !selectedConversationId) {
+        // On desktop, auto-select first conversation. On mobile, keep showing list.
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+        if (!isMobile) {
+          await handleSelectConversation(conversationItems[0].id)
+        }
+      } else if (!selectedConversationId) {
         setSelectedConversationId(null)
         setMessages([])
       }
@@ -635,30 +650,100 @@ export default function MessagesPage() {
   return (
     <DashboardLayout user={user} showHeader={false}>
       <div className={`flex h-screen bg-gray-50`}>
-        {/* Mobile Conversation List Overlay */}
+        {/* Mobile Conversation List - Default View */}
         {showConversationList && (
-          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden">
-            <div className="absolute left-0 top-0 h-full w-80 bg-white shadow-2xl transform transition-transform">
-              <div className="flex items-center justify-between border-b p-4">
-                <h1 className="text-lg font-semibold text-gray-900">Messages</h1>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowConversationList(false)}
-                  className="h-8 w-8 p-0"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                {renderConversationList()}
-              </div>
+          <div className="flex h-full w-full flex-col md:hidden">
+            <div className="border-b bg-white px-4 py-4">
+              <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
             </div>
-            <div className="flex-1" onClick={() => setShowConversationList(false)} />
+            <div className="flex-1 overflow-y-auto bg-white">
+              {renderConversationList()}
+            </div>
           </div>
         )}
 
-        {/* Desktop Sidebar */}
+        {/* Mobile Conversation View */}
+        {!showConversationList && selectedConversation && (
+          <div className="flex h-full w-full flex-col md:hidden">
+            {/* Mobile Header with Back Button */}
+            <div className="flex items-center gap-3 border-b bg-white p-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToConversations}
+                className="h-8 w-8 p-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+
+              {(() => {
+                const other = getOtherParticipant(selectedConversation, user?.id)
+                return (
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={other?.avatar ?? undefined} />
+                        <AvatarFallback className="bg-gray-200">
+                          {(other?.name ?? 'U').charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {other?.id && (
+                        <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-sm font-semibold text-gray-900 truncate">
+                        {other?.name ?? selectedConversation.title ?? 'Conversation'}
+                      </h2>
+                      {other?.id && (
+                        <p className="text-xs text-gray-500 truncate">
+                          {formatLastSeen(participantActivity[other.id])}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+
+            {renderMessageList()}
+
+            {/* Message Input */}
+            <footer className="border-t bg-white p-4">
+              <div className="flex items-end gap-3">
+                <div className="flex-1 relative">
+                  <Input
+                    value={newMessage}
+                    onChange={(event) => setNewMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        handleSendMessage()
+                      }
+                    }}
+                    placeholder="Type a message..."
+                    disabled={sending}
+                    className="min-h-[44px] py-3 px-4 pr-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500 resize-none"
+                  />
+                </div>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || sending}
+                  className="h-11 w-11 rounded-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                  size="sm"
+                >
+                  {sending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </footer>
+          </div>
+        )}
+
+        {/* Desktop Layout */}
         <aside className="hidden md:flex md:w-80 md:flex-col md:border-r md:bg-white">
           <div className="border-b px-6 py-4">
             <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
@@ -668,58 +753,16 @@ export default function MessagesPage() {
           </div>
         </aside>
 
-        {/* Main Chat Area */}
-        <section className="flex flex-1 flex-col bg-white md:bg-gray-50">
+        {/* Desktop Chat Area */}
+        <section className="hidden md:flex md:flex-1 md:flex-col md:bg-white">
           {errorMessage && (
             <div className="border-b bg-red-50 px-4 py-2 text-sm text-red-700">
               {errorMessage}
             </div>
           )}
 
-          {/* Mobile Header */}
-          <div className="flex items-center gap-3 border-b bg-white p-4 md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowConversationList(true)}
-              className="h-8 w-8 p-0"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-
-            {selectedConversation && (() => {
-              const other = getOtherParticipant(selectedConversation, user?.id)
-              return (
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="relative">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={other?.avatar ?? undefined} />
-                      <AvatarFallback className="bg-gray-200">
-                        {(other?.name ?? 'U').charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    {other?.id && (
-                      <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-sm font-semibold text-gray-900 truncate">
-                      {other?.name ?? selectedConversation.title ?? 'Conversation'}
-                    </h2>
-                    {other?.id && (
-                      <p className="text-xs text-gray-500 truncate">
-                        {formatLastSeen(participantActivity[other.id])}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )
-            })()}
-          </div>
-
-          {/* Desktop Header */}
           {selectedConversation && (
-            <header className="hidden md:flex items-center gap-3 border-b bg-white px-6 py-4">
+            <header className="flex items-center gap-3 border-b px-6 py-4">
               {(() => {
                 const other = getOtherParticipant(selectedConversation, user?.id)
                 return (
@@ -761,36 +804,27 @@ export default function MessagesPage() {
 
           {renderMessageList()}
 
-          {/* Message Input */}
           {selectedConversation && (
-            <footer className="border-t bg-white p-4">
-              <div className="flex items-end gap-3 max-w-4xl mx-auto">
-                <div className="flex-1 relative">
-                  <Input
-                    value={newMessage}
-                    onChange={(event) => setNewMessage(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault()
-                        handleSendMessage()
-                      }
-                    }}
-                    placeholder="Type a message..."
-                    disabled={sending}
-                    className="min-h-[44px] py-3 px-4 pr-12 rounded-full border-gray-300 focus:border-green-500 focus:ring-green-500 resize-none"
-                  />
-                </div>
+            <footer className="border-t px-6 py-4">
+              <div className="flex items-center gap-3">
+                <Input
+                  value={newMessage}
+                  onChange={(event) => setNewMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                  placeholder="Type a message..."
+                  disabled={sending}
+                />
                 <Button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || sending}
-                  className="h-11 w-11 rounded-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                  size="sm"
+                  className="bg-coral-600 hover:bg-coral-700"
                 >
-                  {sending ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </footer>
