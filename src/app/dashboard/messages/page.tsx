@@ -48,6 +48,13 @@ type Message = {
     name: string | null
     avatar?: string | null
   } | null
+  attachments?: Array<{
+    id: string
+    url: string
+    filename: string
+    size: number
+    type: string
+  }>
 }
 
 type ApiResponse<T> = {

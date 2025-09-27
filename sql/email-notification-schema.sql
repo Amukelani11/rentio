@@ -111,3 +111,6 @@ COMMENT ON FUNCTION update_user_activity IS 'Updates user activity timestamp whe
 COMMENT ON FUNCTION should_send_notification IS 'Determines if a user should receive an email notification based on activity and cooldown periods';
 
 
+
+
+

@@ -294,7 +294,10 @@ export default function RentalsPage() {
     refreshBookings()
 
     if (payload?.message) {
-      setExtendMessage(payload)
+      setExtendMessage({
+        title: payload.message,
+        description: payload.details
+      })
     }
   }
 

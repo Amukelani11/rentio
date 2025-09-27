@@ -1,5 +1,31 @@
 import * as React from 'react'
 
+// Import email components
+import {
+  BookingConfirmationEmail,
+  PaymentReceiptEmail,
+  DepositStatusEmail,
+  BookingStatusEmail,
+  NewBookingNotificationEmail,
+} from './Transactional'
+
+import {
+  MessageReceivedEmail,
+  KYCStatusEmail,
+  ListingReviewEmail,
+  SupportTicketEmail,
+  RatingRequestEmail,
+  StockAlertEmail,
+} from './Notifications'
+
+import {
+  WelcomeEmail,
+  PromotionEmail,
+  AnnouncementEmail,
+  NewsletterEmail,
+  ReengagementEmail,
+} from './Marketing'
+
 // Main email exports using the new design system
 export {
   EmailLayout,
