@@ -113,3 +113,6 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Mobile app project (separate React Native project)
+rentio-mobile/
