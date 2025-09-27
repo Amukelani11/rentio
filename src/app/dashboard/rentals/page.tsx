@@ -342,13 +342,13 @@ export default function RentalsPage() {
   }
 
   const RentalCard = ({ item }: { item: Booking }) => (
-    <Card className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm dark:border-charcoal-600 dark:bg-charcoal-600/60">
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          <div className="h-24 w-24 rounded-xl bg-gray-100 overflow-hidden">
+    <Card className="rounded-xl border border-slate-200 bg-white/80 backdrop-blur-sm sm:rounded-2xl dark:border-charcoal-600 dark:bg-charcoal-600/60">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex gap-3 sm:gap-4">
+          <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
             {item.listing.images && item.listing.images.length > 0 ? (
-              <img 
-                src={item.listing.images[0]} 
+              <img
+                src={item.listing.images[0]}
                 alt={item.listing.title}
                 className="w-full h-full object-cover"
               />
@@ -358,28 +358,28 @@ export default function RentalsPage() {
               </div>
             )}
           </div>
-          <div className="flex-1">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold">{item.listing.title}</h3>
-                <p className="text-sm text-muted-foreground">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-sm sm:text-base break-words line-clamp-1" title={item.listing.title}>{item.listing.title}</h3>
+                <p className="text-xs text-muted-foreground sm:text-sm break-words">
                   {formatDateRange(item.start_date, item.end_date)}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground sm:text-sm break-words">
                   R{item.total_amount} • Deposit R{item.deposit_amount}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground break-words truncate" title={item.listing.location}>
                   {item.listing.location}
                 </p>
               </div>
               <StatusBadge status={item.status} />
             </div>
-            <div className="mt-3 flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/rentals/${item.id}`)}>View</Button>
-              <Button variant="outline" size="sm" onClick={() => handleChat(item)}>Chat</Button>
-              <Button variant="outline" size="sm" onClick={() => handleExtend(item)}>Extend</Button>
+            <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2">
+              <Button variant="outline" size="sm" onClick={() => router.push(`/dashboard/rentals/${item.id}`)} className="text-xs sm:text-sm">View</Button>
+              <Button variant="outline" size="sm" onClick={() => handleChat(item)} className="text-xs sm:text-sm">Chat</Button>
+              <Button variant="outline" size="sm" onClick={() => handleExtend(item)} className="text-xs sm:text-sm">Extend</Button>
               {['CONFIRMED', 'IN_PROGRESS'].includes(item.status) && (
-                <Button size="sm" onClick={() => handleReturn(item)}>Return</Button>
+                <Button size="sm" onClick={() => handleReturn(item)} className="text-xs sm:text-sm">Return</Button>
               )}
             </div>
           </div>

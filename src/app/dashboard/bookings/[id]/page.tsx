@@ -300,24 +300,24 @@ export default function BookingDetailPage() {
     <DashboardLayout user={user} showHeader={false}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center space-x-3 min-w-0">
             <Link href="/dashboard/bookings">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold">Booking Details</h1>
-              <p className="text-gray-600">Booking #{booking.bookingNumber}</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl font-bold sm:text-2xl lg:text-3xl truncate">Booking Details</h1>
+              <p className="text-sm text-gray-600 sm:text-base truncate">Booking #{booking.bookingNumber}</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge className={getStatusColor(booking.status)}>
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <Badge className={`${getStatusColor(booking.status)} text-xs sm:text-sm`}>
               {booking.status}
             </Badge>
-            <Badge variant="outline" className={getPaymentStatusColor(booking.paymentStatus)}>
+            <Badge variant="outline" className={`${getPaymentStatusColor(booking.paymentStatus)} text-xs sm:text-sm`}>
               {booking.paymentStatus}
             </Badge>
           </div>
@@ -328,79 +328,79 @@ export default function BookingDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Booking Info */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Package className="h-5 w-5 mr-2" />
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center text-base sm:text-lg">
+                  <Package className="h-4 w-4 sm:h-5 sm:mr-2" />
                   Booking Information
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Calendar className="h-4 w-4 mr-2" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-gray-600 sm:text-sm">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
                       <span>Rental Period</span>
                     </div>
-                    <p className="font-semibold">
+                    <p className="font-semibold text-sm sm:text-base break-words">
                       {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
                     </p>
-                    <p className="text-sm text-gray-600">{booking.duration} days</p>
-                  </div>
-                  
-                  <div>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span>Booking Created</span>
-                    </div>
-                    <p className="font-semibold">{formatDateTime(booking.createdAt)}</p>
+                    <p className="text-xs text-gray-600 sm:text-sm">{booking.duration} days</p>
                   </div>
 
-                  <div>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <User className="h-4 w-4 mr-2" />
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-gray-600 sm:text-sm">
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
+                      <span>Booking Created</span>
+                    </div>
+                    <p className="font-semibold text-sm sm:text-base break-words">{formatDateTime(booking.createdAt)}</p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-gray-600 sm:text-sm">
+                      <User className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
                       <span>Renter</span>
                     </div>
-                    <p className="font-semibold">{booking.renter.name}</p>
-                    <p className="text-sm text-gray-600">{booking.renter.email}</p>
+                    <p className="font-semibold text-sm sm:text-base break-words truncate" title={booking.renter.name}>{booking.renter.name}</p>
+                    <p className="text-xs text-gray-600 sm:text-sm break-words truncate" title={booking.renter.email}>{booking.renter.email}</p>
                     {booking.renter.phone && (
-                      <p className="text-sm text-gray-600">{booking.renter.phone}</p>
+                      <p className="text-xs text-gray-600 sm:text-sm break-words truncate" title={booking.renter.phone}>{booking.renter.phone}</p>
                     )}
                   </div>
 
-                  <div>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <User className="h-4 w-4 mr-2" />
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-gray-600 sm:text-sm">
+                      <User className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
                       <span>Owner</span>
                     </div>
-                    <p className="font-semibold">
+                    <p className="font-semibold text-sm sm:text-base break-words truncate" title={booking.listing.user?.name || booking.listing.business?.name}>
                       {booking.listing.user?.name || booking.listing.business?.name}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs text-gray-600 sm:text-sm break-words truncate" title={booking.listing.user?.email || booking.listing.business?.email}>
                       {booking.listing.user?.email || booking.listing.business?.email}
                     </p>
                   </div>
                 </div>
 
                 {booking.deliveryAddress && (
-                  <div className="mt-4">
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <MapPin className="h-4 w-4 mr-2" />
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex items-center text-xs text-gray-600 mb-2 sm:text-sm">
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
                       <span>Delivery Address</span>
                     </div>
-                    <p className="font-semibold">{booking.deliveryAddress}</p>
+                    <p className="font-semibold text-sm sm:text-base break-words" title={booking.deliveryAddress}>{booking.deliveryAddress}</p>
                     {booking.deliveryNotes && (
-                      <p className="text-sm text-gray-600 mt-1">{booking.deliveryNotes}</p>
+                      <p className="text-xs text-gray-600 mt-1 sm:text-sm break-words" title={booking.deliveryNotes}>{booking.deliveryNotes}</p>
                     )}
                   </div>
                 )}
 
                 {booking.notes && (
-                  <div className="mt-4">
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <FileText className="h-4 w-4 mr-2" />
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex items-center text-xs text-gray-600 mb-2 sm:text-sm">
+                      <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
                       <span>Notes</span>
                     </div>
-                    <p className="text-sm">{booking.notes}</p>
+                    <p className="text-xs sm:text-sm break-words" title={booking.notes}>{booking.notes}</p>
                   </div>
                 )}
               </CardContent>
@@ -408,22 +408,22 @@ export default function BookingDetailPage() {
 
             {/* Item Details */}
             <Card>
-              <CardHeader>
-                <CardTitle>Rented Item</CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base sm:text-lg">Rented Item</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-start space-x-4">
-                  <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <Package className="h-10 w-10 text-gray-400" />
+                <div className="flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Package className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{booking.listing.title}</h3>
-                    <p className="text-gray-600 mb-2">{booking.listing.description}</p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <span>{booking.listing.category.name}</span>
-                      <span>•</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base sm:text-lg break-words truncate" title={booking.listing.title}>{booking.listing.title}</h3>
+                    <p className="text-gray-600 mb-2 text-xs sm:text-sm break-words line-clamp-2" title={booking.listing.description}>{booking.listing.description}</p>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                      <span className="truncate">{booking.listing.category.name}</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>{formatPrice(booking.listing.priceDaily)}/day</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>Qty: {booking.quantity}</span>
                     </div>
                   </div>
@@ -433,46 +433,46 @@ export default function BookingDetailPage() {
 
             {/* Timeline */}
             <Card>
-              <CardHeader>
-                <CardTitle>Timeline</CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base sm:text-lg">Timeline</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-start space-x-3 sm:space-x-4">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                     </div>
-                    <div>
-                      <p className="font-semibold">Booking Created</p>
-                      <p className="text-sm text-gray-600">{formatDateTime(booking.createdAt)}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm sm:text-base">Booking Created</p>
+                      <p className="text-xs text-gray-600 sm:text-sm break-words">{formatDateTime(booking.createdAt)}</p>
                     </div>
                   </div>
 
                   {booking.payments.map((payment, index) => (
-                    <div key={payment.id} className="flex items-start space-x-4">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        payment.status === 'COMPLETED' ? 'bg-green-100' : 
-                        payment.status === 'PROCESSING' ? 'bg-orange-100' : 
+                    <div key={payment.id} className="flex items-start space-x-3 sm:space-x-4">
+                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        payment.status === 'COMPLETED' ? 'bg-green-100' :
+                        payment.status === 'PROCESSING' ? 'bg-orange-100' :
                         'bg-yellow-100'
                       }`}>
-                        <CreditCard className={`h-4 w-4 ${
-                          payment.status === 'COMPLETED' ? 'text-green-600' : 
-                          payment.status === 'PROCESSING' ? 'text-orange-600' : 
+                        <CreditCard className={`h-3 w-3 sm:h-4 sm:w-4 ${
+                          payment.status === 'COMPLETED' ? 'text-green-600' :
+                          payment.status === 'PROCESSING' ? 'text-orange-600' :
                           'text-yellow-600'
                         }`} />
                       </div>
-                      <div>
-                        <p className="font-semibold">Payment {payment.status}</p>
-                        <p className="text-sm text-gray-600">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm sm:text-base">Payment {payment.status}</p>
+                        <p className="text-xs text-gray-600 sm:text-sm break-words">
                           {formatDateTime(payment.createdAt)} • {formatPrice(payment.amount)}
                         </p>
                         {payment.depositHold && (
-                          <p className="text-sm text-blue-600">
+                          <p className="text-xs text-blue-600 sm:text-sm break-words">
                             Deposit held: {formatPrice(booking.depositAmount)}
                           </p>
                         )}
                         {payment.depositReleased && (
-                          <p className="text-sm text-green-600">
+                          <p className="text-xs text-green-600 sm:text-sm break-words">
                             Deposit released
                           </p>
                         )}
@@ -481,25 +481,25 @@ export default function BookingDetailPage() {
                   ))}
 
                   {booking.status === 'IN_PROGRESS' && (
-                    <div className="flex items-start space-x-4">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Truck className="h-4 w-4 text-blue-600" />
+                    <div className="flex items-start space-x-3 sm:space-x-4">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Truck className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                       </div>
-                      <div>
-                        <p className="font-semibold">Rental in Progress</p>
-                        <p className="text-sm text-gray-600">Item is currently being rented</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm sm:text-base">Rental in Progress</p>
+                        <p className="text-xs text-gray-600 sm:text-sm break-words">Item is currently being rented</p>
                       </div>
                     </div>
                   )}
 
                   {booking.status === 'COMPLETED' && (
-                    <div className="flex items-start space-x-4">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                    <div className="flex items-start space-x-3 sm:space-x-4">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
                       </div>
-                      <div>
-                        <p className="font-semibold">Rental Completed</p>
-                        <p className="text-sm text-gray-600">Rental period ended successfully</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm sm:text-base">Rental Completed</p>
+                        <p className="text-xs text-gray-600 sm:text-sm break-words">Rental period ended successfully</p>
                       </div>
                     </div>
                   )}
@@ -509,42 +509,40 @@ export default function BookingDetailPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Payment Summary */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <DollarSign className="h-5 w-5 mr-2" />
+              <CardHeader className="pb-3 sm:pb-4">
+                <CardTitle className="flex items-center text-sm sm:text-base">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:mr-2" />
                   Payment Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span>Rental Fee</span>
-                    <span>{formatPrice(booking.subtotal)}</span>
+              <CardContent className="space-y-2 sm:space-y-3">
+                <div className="flex justify-between text-xs sm:text-sm">
+                  <span className="truncate pr-2">Rental Fee</span>
+                  <span className="flex-shrink-0">{formatPrice(booking.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-xs sm:text-sm">
+                  <span className="truncate pr-2">Service Fee</span>
+                  <span className="flex-shrink-0">{formatPrice(booking.serviceFee)}</span>
+                </div>
+                {booking.deliveryFee > 0 && (
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="truncate pr-2">Delivery Fee</span>
+                    <span className="flex-shrink-0">{formatPrice(booking.deliveryFee)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Service Fee</span>
-                    <span>{formatPrice(booking.serviceFee)}</span>
+                )}
+                {booking.depositAmount > 0 && (
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="truncate pr-2">Deposit</span>
+                    <span className="flex-shrink-0">{formatPrice(booking.depositAmount)}</span>
                   </div>
-                  {booking.deliveryFee > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span>Delivery Fee</span>
-                      <span>{formatPrice(booking.deliveryFee)}</span>
-                    </div>
-                  )}
-                  {booking.depositAmount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span>Deposit</span>
-                      <span>{formatPrice(booking.depositAmount)}</span>
-                    </div>
-                  )}
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between font-semibold">
-                      <span>Total Paid</span>
-                      <span className="text-coral-600">{formatPrice(booking.totalAmount)}</span>
-                    </div>
+                )}
+                <div className="border-t pt-2 sm:pt-3">
+                  <div className="flex justify-between font-semibold text-sm sm:text-base">
+                    <span className="truncate pr-2">Total Paid</span>
+                    <span className="text-coral-600 flex-shrink-0">{formatPrice(booking.totalAmount)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -552,31 +550,31 @@ export default function BookingDetailPage() {
 
             {/* Actions */}
             <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
+              <CardHeader className="pb-3 sm:pb-4">
+                <CardTitle className="text-sm sm:text-base">Actions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full text-xs sm:text-sm" size="sm">
                     <Link href={`/dashboard/messages/${booking.id}`}>
-                      <MessageSquare className="h-4 w-4 mr-2" />
+                      <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                       Message
                     </Link>
                   </Button>
 
                   {booking.status === 'COMPLETED' && !booking.reviews?.length && (
-                    <Button variant="outline" asChild className="w-full">
+                    <Button variant="outline" asChild className="w-full text-xs sm:text-sm" size="sm">
                       <Link href={`/dashboard/reviews/new/${booking.id}`}>
-                        <Star className="h-4 w-4 mr-2" />
+                        <Star className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         Leave Review
                       </Link>
                     </Button>
                   )}
 
                   {booking.status === 'PENDING' && isOwner && (
-                    <Button variant="outline" asChild className="w-full">
+                    <Button variant="outline" asChild className="w-full text-xs sm:text-sm" size="sm">
                       <Link href={`/dashboard/listings/${booking.listing.id}/calendar`}>
-                        <Calendar className="h-4 w-4 mr-2" />
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         Manage Calendar
                       </Link>
                     </Button>
@@ -584,32 +582,35 @@ export default function BookingDetailPage() {
 
                   {booking.payments[0]?.depositHold && !booking.payments[0].depositReleased && isOwner && (
                     <div className="space-y-2 pt-2 border-t">
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
+                      <Button
+                        variant="outline"
+                        className="w-full text-xs sm:text-sm"
+                        size="sm"
                         onClick={() => handleAction('release_deposit')}
                       >
-                        <Shield className="h-4 w-4 mr-2" />
+                        <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         Release Deposit
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        className="w-full text-red-600"
+                      <Button
+                        variant="outline"
+                        className="w-full text-red-600 text-xs sm:text-sm"
+                        size="sm"
                         onClick={() => handleAction('retain_deposit')}
                       >
-                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                         Retain Deposit
                       </Button>
                     </div>
                   )}
 
                   {booking.status === 'CONFIRMED' && isRenter && (
-                    <Button 
-                      variant="outline" 
-                      className="w-full text-red-600"
+                    <Button
+                      variant="outline"
+                      className="w-full text-red-600 text-xs sm:text-sm"
+                      size="sm"
                       onClick={() => handleAction('refund')}
                     >
-                      <XCircle className="h-4 w-4 mr-2" />
+                      <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                       Request Refund
                     </Button>
                   )}
@@ -620,19 +621,19 @@ export default function BookingDetailPage() {
             {/* Review */}
             {booking.reviews && booking.reviews.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Review</CardTitle>
+                <CardHeader className="pb-3 sm:pb-4">
+                  <CardTitle className="text-sm sm:text-base">Review</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {booking.reviews.map((review) => (
                     <div key={review.id} className="flex items-start space-x-2">
-                      <Star className="h-4 w-4 text-yellow-500 mt-0.5" />
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-semibold">{review.rating}/5</span>
-                          <span className="text-sm text-gray-600">• {review.title}</span>
+                      <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center space-x-1 sm:space-x-2">
+                          <span className="font-semibold text-xs sm:text-sm">{review.rating}/5</span>
+                          <span className="text-xs text-gray-600 sm:text-sm truncate">• {review.title}</span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{review.comment}</p>
+                        <p className="text-xs text-gray-600 mt-1 sm:text-sm break-words" title={review.comment}>{review.comment}</p>
                       </div>
                     </div>
                   ))}

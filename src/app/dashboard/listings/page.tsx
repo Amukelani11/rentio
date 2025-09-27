@@ -257,79 +257,79 @@ export default function ListingsPage() {
         </Card>
 
         {/* Listings Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3">
           {filteredListings.map((listing) => (
             <Card key={listing.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative h-48 bg-gray-200 flex items-center justify-center">
-                <ImageIcon className="h-16 w-16 text-gray-400" />
+              <div className="relative h-40 sm:h-48 bg-gray-200 flex items-center justify-center">
+                <ImageIcon className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400" />
                 {listing.images && listing.images.length > 0 && (
                   <img src={listing.images[0]} alt={listing.title} className="object-cover w-full h-full absolute inset-0" />
                 )}
-                <div className="absolute top-2 left-2 flex space-x-2">
+                <div className="absolute top-2 left-2 flex flex-wrap gap-1 sm:gap-2">
                   {listing.featured && (
-                    <Badge className="bg-coral-600">Featured</Badge>
+                    <Badge className="bg-coral-600 text-xs sm:text-sm">Featured</Badge>
                   )}
                   {listing.verified && (
-                    <Badge className="bg-green-600">Verified</Badge>
+                    <Badge className="bg-green-600 text-xs sm:text-sm">Verified</Badge>
                   )}
                 </div>
                 <div className="absolute top-2 right-2">
-                  <Badge className={getStatusColor(listing.status)}>
+                  <Badge className={`${getStatusColor(listing.status)} text-xs sm:text-sm`}>
                     {listing.status}
                   </Badge>
                 </div>
               </div>
-              
-              <CardContent className="p-4">
-                <div className="mb-3">
-                  <h3 className="font-semibold text-lg mb-1 line-clamp-1">{listing.title}</h3>
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
-                    <span className="flex items-center">
+
+              <CardContent className="p-3 sm:p-4">
+                <div className="mb-3 min-w-0">
+                  <h3 className="font-semibold text-base sm:text-lg mb-1 line-clamp-1 break-words" title={listing.title}>{listing.title}</h3>
+                  <div className="flex flex-wrap items-center text-xs text-gray-600 mb-2 sm:text-sm">
+                    <span className="flex items-center min-w-0">
                       {listing.categories?.icon ? (
-                        <span className="mr-1">{listing.categories.icon}</span>
+                        <span className="mr-1 flex-shrink-0">{listing.categories.icon}</span>
                       ) : (
-                        <Package className="h-4 w-4 mr-1" />
+                        <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
                       )}
-                      {listing.categories?.name || 'Uncategorized'}
+                      <span className="truncate">{listing.categories?.name || 'Uncategorized'}</span>
                     </span>
-                    <span className="mx-2">•</span>
-                    <span>{listing.totalReviews} reviews</span>
+                    <span className="mx-1 sm:mx-2 flex-shrink-0">•</span>
+                    <span className="flex-shrink-0">{listing.totalReviews} reviews</span>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-xl font-bold text-coral-600">
-                      {formatPrice(listing.priceDaily)}
-                      <span className="text-sm font-normal text-gray-600">/day</span>
+                    <div className="text-lg sm:text-xl font-bold text-coral-600 min-w-0">
+                      <span className="truncate block">{formatPrice(listing.priceDaily)}</span>
+                      <span className="text-xs sm:text-sm font-normal text-gray-600">/day</span>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                    <div className="flex items-center text-sm flex-shrink-0 ml-2">
+                      <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 mr-1" />
                       <span>{listing.averageRating ? listing.averageRating.toFixed(1) : '0.0'}</span>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs text-gray-600 sm:text-sm break-words">
                     {listing.views} views • {listing.bookingsCount} bookings
                   </div>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" asChild>
+
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex gap-1 sm:gap-2 flex-1">
+                    <Button size="sm" variant="outline" asChild className="flex-1 min-w-0">
                       <Link href={`/browse/${listing.slug}`}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                        <span className="truncate">View</span>
                       </Link>
                     </Button>
-                    <Button size="sm" variant="outline" asChild>
+                    <Button size="sm" variant="outline" asChild className="flex-1 min-w-0">
                       <Link href={`/dashboard/listings/${listing.id}/edit`}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
+                        <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                        <span className="truncate">Edit</span>
                       </Link>
                     </Button>
                   </div>
-                  
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
+                      <Button size="sm" variant="ghost" className="flex-shrink-0">
+                        <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -345,7 +345,7 @@ export default function ListingsPage() {
                           Analytics
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => handleDelete(listing.id)}
                         className="text-red-600"
                       >
