@@ -151,11 +151,12 @@ a { color: #E53237; }
 
   /* Word break utilities */
   .break-words {
-    @apply break-words;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .break-all {
-    @apply break-all;
+    word-break: break-all;
   }
 
   /* Text overflow with tooltip support */
