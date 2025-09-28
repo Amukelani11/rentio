@@ -25,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     }
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    const id = params.id
+    const { id: id } = await params
     const { data: listing, error } = await admin
       .from('listings')
       .select(`
@@ -65,7 +65,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    const id = params.id
+    const { id: id } = await params
     const { data: existing, error: fetchError } = await admin
       .from('listings')
       .select('*')
@@ -156,7 +156,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     }
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    const id = params.id
+    const { id: id } = await params
     const { data: existing, error: fetchError } = await admin
       .from('listings')
       .select('*')

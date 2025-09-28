@@ -19,6 +19,8 @@ interface SitemapOptions {
 }
 
 export function generateSitemap(options: SitemapOptions = {}) {
+  // This function generates sitemap XML for SEO purposes
+  // Renamed to avoid conflicts with Next.js internal generate functions
   const baseUrl = options.baseUrl || siteConfig.url
   const currentDate = new Date().toISOString().split('T')[0]
 
