@@ -26,6 +26,7 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import RentalAgreementModal from '@/components/RentalAgreementModal';
 
 interface Booking {
   id: string;
@@ -109,6 +110,7 @@ export default function BookingDetailPage() {
   const [user, setUser] = useState<any>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [agreementModalOpen, setAgreementModalOpen] = useState(false);
 
   useEffect(() => {
     if (!bookingId) {
@@ -562,6 +564,16 @@ export default function BookingDetailPage() {
                     </Link>
                   </Button>
 
+                  <Button
+                    variant="outline"
+                    className="w-full text-xs sm:text-sm"
+                    size="sm"
+                    onClick={() => setAgreementModalOpen(true)}
+                  >
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    Rental Agreement
+                  </Button>
+
                   {booking.status === 'COMPLETED' && !booking.reviews?.length && (
                     <Button variant="outline" asChild className="w-full text-xs sm:text-sm" size="sm">
                       <Link href={`/dashboard/reviews/new/${booking.id}`}>
@@ -643,6 +655,14 @@ export default function BookingDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Rental Agreement Modal */}
+      <RentalAgreementModal
+        bookingId={booking.id}
+        isOpen={agreementModalOpen}
+        onClose={() => setAgreementModalOpen(false)}
+        userType={isRenter ? 'renter' : 'lister'}
+      />
     </DashboardLayout>
   );
 }
