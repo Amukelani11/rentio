@@ -185,6 +185,10 @@ export default function ListingDetailPage() {
   const sendQuickMessage = async () => {
     if (!composeText.trim()) return;
 
+    console.log('🚀 Starting sendQuickMessage...')
+    console.log('📝 Message text:', composeText.trim())
+    console.log('🏠 Listing data:', listing)
+
     try {
       // Check authentication
       const auth = await fetch('/api/auth/user')
@@ -193,42 +197,59 @@ export default function ListingDetailPage() {
         router.push(`/auth/signin?redirect=${encodeURIComponent(back)}`)
         return
       }
-      const user = await auth.json()
-      if (!user?.id) {
+      const userData = await auth.json()
+      if (!userData?.user?.id) {
         router.push('/auth/signin')
         return
       }
 
+      const user = userData.user
+      console.log('👤 User authenticated:', user.id)
+
       const listerId = (listing as any)?.businessId || (listing as any)?.userId || ''
       const listingId = (listing as any)?.id || ''
       
+      console.log('🔍 Lister ID lookup:', { 
+        businessId: (listing as any)?.businessId, 
+        userId: (listing as any)?.userId, 
+        listerId,
+        listingId 
+      })
+      
       if (!listerId || !listingId) {
+        console.error('❌ Missing listerId or listingId:', { listerId, listingId })
         alert('Unable to identify listing owner. Please try again.')
         setComposeOpen(false)
         return
       }
 
       // Send message and create conversation
+      console.log('📤 Sending message to API...')
+      const messageData = {
+        toUserId: listerId,
+        listingId: listingId,
+        content: composeText.trim(),
+        listingTitle: listing?.title,
+      }
+      console.log('📦 Message payload:', messageData)
+
       const response = await fetch('/api/messages/direct', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          toUserId: listerId,
-          listingId: listingId,
-          content: composeText.trim(),
-          listingTitle: listing?.title,
-        }),
+        body: JSON.stringify(messageData),
       });
+
+      console.log('📡 API response status:', response.status)
 
       if (response.ok) {
         const result = await response.json();
-        // Redirect to the conversation
-        router.push(`/dashboard/messages?conversation=${result.data.conversationId}`);
+        console.log('✅ Message sent successfully:', result)
+        alert('Message sent! The lister will be notified. You can view replies in your dashboard messages.');
       } else {
         const error = await response.json();
-        console.error('Failed to send message:', error);
+        console.error('❌ Failed to send message:', error);
         alert('Failed to send message. Please try again.');
       }
     } catch (error) {

@@ -1,8 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const serviceClient = createClient(supabaseUrl, supabaseServiceKey)
+
+// Initialize Google Generative AI
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
 export interface AgreementData {
   renterName: string
@@ -33,7 +38,7 @@ export interface GeneratedAgreement {
   data: AgreementData
 }
 
-const AGREEMENT_TEMPLATE = `
+        const AGREEMENT_TEMPLATE = `
 RENTAL AGREEMENT
 
 This Rental Agreement ("Agreement") is entered into on {CURRENT_DATE} between:
@@ -44,7 +49,7 @@ Email: {renterEmail}
 
 LISTER/BUSINESS:
 {listerName}
-{businessName && `Business: ${businessName}`}
+{businessNameLine}
 Email: {listerEmail}
 
 ITEM DETAILS:
@@ -57,7 +62,7 @@ Security Deposit: R{depositAmount}
 
 DELIVERY/PICKUP:
 Delivery Type: {deliveryType}
-{deliveryAddress && `Delivery Address: ${deliveryAddress}`}
+{deliveryAddressLine}
 Pickup Location: {pickupLocation}
 
 TERMS AND CONDITIONS:
@@ -139,8 +144,8 @@ export async function generateAgreement(bookingId: string): Promise<GeneratedAgr
       damagePolicy: getDamagePolicy()
     }
 
-    // Generate agreement content using AI (for now, use template)
-    const content = generateAgreementContent(agreementData)
+            // Generate agreement content using AI
+            const content = await generateAgreementContent(agreementData)
 
     // Generate unique agreement number
     const agreementNumber = `RA-${Date.now()}-${bookingId.slice(-8).toUpperCase()}`
@@ -157,32 +162,78 @@ export async function generateAgreement(bookingId: string): Promise<GeneratedAgr
   }
 }
 
-function generateAgreementContent(data: AgreementData): string {
-  const currentDate = new Date().toLocaleDateString('en-ZA')
+        async function generateAgreementContent(data: AgreementData): Promise<string> {
+          try {
+            const prompt = `
+Generate a comprehensive rental agreement for a peer-to-peer rental platform in South Africa. 
 
-  return AGREEMENT_TEMPLATE
-    .replace('{CURRENT_DATE}', currentDate)
-    .replace('{renterName}', data.renterName)
-    .replace('{renterEmail}', data.renterEmail)
-    .replace('{listerName}', data.listerName)
-    .replace('{businessName}', data.businessName || '')
-    .replace('{listerEmail}', data.listerEmail)
-    .replace('{itemName}', data.itemName)
-    .replace('{itemDescription}', data.itemDescription)
-    .replace('{startDate}', data.startDate)
-    .replace('{endDate}', data.endDate)
-    .replace('{duration}', data.duration.toString())
-    .replace('{dailyRate}', data.dailyRate.toString())
-    .replace('{totalAmount}', data.totalAmount.toString())
-    .replace('{depositAmount}', data.depositAmount.toString())
-    .replace('{deliveryType}', data.deliveryType)
-    .replace('{deliveryAddress}', data.deliveryAddress || 'N/A')
-    .replace('{pickupLocation}', data.pickupLocation)
-    .replace('{depositPolicy}', data.depositPolicy)
-    .replace('{cancellationPolicy}', data.cancellationPolicy)
-    .replace('{damagePolicy}', data.damagePolicy)
-    .replace('{agreementNumber}', generateAgreementNumber())
-}
+RENTAL DETAILS:
+- Renter: ${data.renterName} (${data.renterEmail})
+- Lister: ${data.listerName} (${data.listerEmail})
+${data.businessName ? `- Business: ${data.businessName}` : ''}
+- Item: ${data.itemName}
+- Description: ${data.itemDescription}
+- Rental Period: ${data.startDate} to ${data.endDate} (${data.duration} days)
+- Daily Rate: R${data.dailyRate}
+- Total Cost: R${data.totalAmount}
+- Security Deposit: R${data.depositAmount}
+- Delivery Type: ${data.deliveryType}
+${data.deliveryAddress ? `- Delivery Address: ${data.deliveryAddress}` : ''}
+- Pickup Location: ${data.pickupLocation}
+
+REQUIREMENTS:
+1. Use South African law and terminology
+2. Include comprehensive terms and conditions
+3. Cover security deposits, cancellation policies, damage policies
+4. Include liability and insurance clauses
+5. Add late return penalties
+6. Include prohibited uses
+7. Make it legally binding but user-friendly
+8. Format as a professional legal document
+9. Include signature lines for both parties
+10. Add a unique agreement number: ${generateAgreementNumber()}
+
+Generate a complete, professional rental agreement that covers all legal aspects of this rental transaction.
+            `
+
+            const result = await model.generateContent(prompt)
+            const response = await result.response
+            return response.text()
+          } catch (error) {
+            console.error('Error generating agreement with AI:', error)
+            // Fallback to template if AI fails
+            return generateAgreementContentFallback(data)
+          }
+        }
+
+        function generateAgreementContentFallback(data: AgreementData): string {
+          const currentDate = new Date().toLocaleDateString('en-ZA')
+          const businessNameLine = data.businessName ? `Business: ${data.businessName}` : ''
+          const deliveryAddressLine = data.deliveryAddress ? `Delivery Address: ${data.deliveryAddress}` : ''
+
+          return AGREEMENT_TEMPLATE
+            .replace('{CURRENT_DATE}', currentDate)
+            .replace('{renterName}', data.renterName)
+            .replace('{renterEmail}', data.renterEmail)
+            .replace('{listerName}', data.listerName)
+            .replace('{businessNameLine}', businessNameLine)
+            .replace('{listerEmail}', data.listerEmail)
+            .replace('{itemName}', data.itemName)
+            .replace('{itemDescription}', data.itemDescription)
+            .replace('{startDate}', data.startDate)
+            .replace('{endDate}', data.endDate)
+            .replace('{duration}', data.duration.toString())
+            .replace('{dailyRate}', data.dailyRate.toString())
+            .replace('{totalAmount}', data.totalAmount.toString())
+            .replace('{depositAmount}', data.depositAmount.toString())
+            .replace('{deliveryType}', data.deliveryType)
+            .replace('{deliveryAddressLine}', deliveryAddressLine)
+            .replace('{pickupLocation}', data.pickupLocation)
+            .replace('{depositPolicy}', data.depositPolicy)
+            .replace('{cancellationPolicy}', data.cancellationPolicy)
+            .replace('{damagePolicy}', data.damagePolicy)
+            .replace('{agreementNumber}', generateAgreementNumber())
+        }
 
 function generateAgreementNumber(): string {
   return `RA-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`
@@ -209,6 +260,7 @@ function getCancellationPolicy(): string {
 
 function getDamagePolicy(): string {
   return `Renter is responsible for any damage beyond normal wear and tear. Damage assessment will be done by the lister upon return. Renter may be liable for repair or replacement costs.`
+}
 
 export async function saveAgreement(bookingId: string, agreement: GeneratedAgreement): Promise<void> {
   const { error } = await serviceClient

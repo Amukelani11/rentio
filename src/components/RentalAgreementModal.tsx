@@ -11,13 +11,15 @@ interface RentalAgreementModalProps {
   isOpen: boolean
   onClose: () => void
   userType: 'renter' | 'lister'
+  onSigned?: () => void
 }
 
 export default function RentalAgreementModal({
   bookingId,
   isOpen,
   onClose,
-  userType
+  userType,
+  onSigned
 }: RentalAgreementModalProps) {
   const [agreement, setAgreement] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -70,7 +72,11 @@ export default function RentalAgreementModal({
       if (data.success) {
         alert('Agreement signed successfully!')
         onClose()
-        window.location.reload() // Refresh to show updated status
+        if (onSigned) {
+          onSigned()
+        } else {
+          window.location.reload() // Fallback for other uses
+        }
       } else {
         alert(data.error || 'Failed to sign agreement')
       }

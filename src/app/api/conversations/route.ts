@@ -1,7 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { getAuthUser } from '@/lib/auth'
+
+function extractListingImage(listing: any): string | null {
+  if (!listing) return null
+
+  const candidates: string[] = []
+  const pushIfString = (value: unknown) => {
+    if (typeof value === 'string') {
+      const trimmed = value.trim()
+      if (trimmed.length > 0) candidates.push(trimmed)
+    }
+  }
+
+  if (Array.isArray(listing.images)) {
+    listing.images.forEach(pushIfString)
+  }
+
+  return candidates.length > 0 ? candidates[0] : null
+}
+
+function selectLatestMessageState(messages: any[]): { content: string | null; createdAt: string | null; readAt: string | null; fromUserId: string | null } {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return { content: null, createdAt: null, readAt: null, fromUserId: null }
+  }
+
+  const sorted = [...messages].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  const latest = sorted[0]
+
+  return {
+    content: latest?.content ?? null,
+    createdAt: latest?.created_at ?? null,
+    readAt: latest?.read_at ?? null,
+    fromUserId: latest?.from_user_id ?? null,
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,6 +47,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+
+    const hasServiceCreds = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+    const serviceClient = hasServiceCreds
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string)
+      : null
     const bookingId = searchParams.get('bookingId')
     const userId = searchParams.get('userId')
     const page = parseInt(searchParams.get('page') || '1')
@@ -52,7 +92,17 @@ export async function GET(request: NextRequest) {
     // Get conversations
     const { data: conversations, error: conversationsError } = await supabase
       .from('conversations')
-      .select('*')
+      .select(`
+        *,
+        listing:listings!conversations_listing_id_fkey (
+          id,
+          title,
+          slug,
+          images,
+          user:users(id, name),
+          business:businesses(id, name)
+        )
+      `)
       .in('id', conversationIds)
       .order('updated_at', { ascending: false })
       .range(from, to)
@@ -71,7 +121,6 @@ export async function GET(request: NextRequest) {
       console.log('🎯 [CONVERSATIONS] Filtered by booking:', bookingId, 'found:', filteredConversations?.length || 0)
     }
 
-    // Get participants for each conversation
     const conversationsWithParticipants = await Promise.all(
       (filteredConversations || []).map(async (conversation) => {
         const { data: participants } = await supabase
@@ -83,26 +132,67 @@ export async function GET(request: NextRequest) {
           `)
           .eq('conversation_id', conversation.id)
 
+        let listingDetails: any = null
+
+        const buildListingDetails = (listingData?: any) => {
+          if (!listingData) return null
+          return {
+            id: listingData.id,
+            title: listingData.title ?? null,
+            slug: listingData.slug ?? null,
+            image: extractListingImage(listingData),
+            ownerName: listingData.business?.name ?? listingData.user?.name ?? null,
+            ownerType: listingData.business?.name ? 'business' : 'individual',
+            ownerUserId: listingData.user?.id ?? null
+          }
+        }
+
+        const conversationListing = (conversation as any).listing
+
+        if (conversationListing) {
+          listingDetails = buildListingDetails(conversationListing)
+        } else if (conversation.listing_id && serviceClient) {
+          const { data: listingData } = await serviceClient
+            .from('listings')
+            .select(`
+              id,
+              title,
+              slug,
+              images,
+              user:users(id, name),
+              business:businesses(id, name)
+            `)
+            .eq('id', conversation.listing_id)
+            .maybeSingle()
+
+          listingDetails = buildListingDetails(listingData)
+        }
+
         return {
           ...conversation,
           conversation_participants: participants || [],
+          listing_details: listingDetails,
         }
       })
     )
 
-    // Get latest message for each conversation
     const conversationsWithMessages = await Promise.all(
       (conversationsWithParticipants || []).map(async (conversation) => {
         let messageQuery = supabase
           .from('messages')
           .select(`
-            *,
+            id,
+            content,
+            created_at,
+            is_read,
+            read_at,
+            from_user_id,
+            to_user_id,
             sender:users!from_user_id(id, name, avatar)
           `)
           .order('created_at', { ascending: false })
           .limit(1)
 
-        // Handle both booking-based and direct conversations
         if (conversation.booking_id) {
           messageQuery = messageQuery.eq('booking_id', conversation.booking_id)
         } else {
@@ -111,10 +201,20 @@ export async function GET(request: NextRequest) {
 
         const { data: latestMessage } = await messageQuery.single()
 
+        const { count: unreadCount } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('conversation_id', conversation.id)
+          .eq('is_read', false)
+          .eq('to_user_id', user.id)
+
         return {
           ...conversation,
           lastMessage: latestMessage?.content || null,
           lastMessageAt: latestMessage?.created_at || null,
+          lastMessageReadAt: latestMessage?.read_at || null,
+          lastMessageFrom: latestMessage?.from_user_id || null,
+          unreadCount: unreadCount ?? 0,
           messages: latestMessage ? [latestMessage] : []
         }
       })

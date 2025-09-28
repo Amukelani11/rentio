@@ -19,6 +19,7 @@ export interface MessageReceivedData {
   conversationUrl: string
   listingTitle?: string
   timestamp: string
+  listingImageUrl?: string
 }
 
 export function MessageReceivedEmail({ data }: { data: MessageReceivedData }) {
@@ -38,17 +39,33 @@ export function MessageReceivedEmail({ data }: { data: MessageReceivedData }) {
 
       <EmailCard background="primary" padding="md">
         <EmailHeading level={3}>Message Details</EmailHeading>
-        <EmailText>
-          <strong>From:</strong> {data.fromName}
-        </EmailText>
-        {data.listingTitle && (
-          <EmailText>
-            <strong>Regarding:</strong> {data.listingTitle}
-          </EmailText>
-        )}
-        <EmailText>
-          <strong>Time:</strong> {data.timestamp}
-        </EmailText>
+
+        <EmailSection direction="row" align="start" gap="md">
+          {data.listingImageUrl && (
+            <img
+              src={data.listingImageUrl}
+              alt={data.listingTitle || 'Listing image'}
+              width="96"
+              height="96"
+              style={{ borderRadius: 12, objectFit: 'cover', width: 96, height: 96 }}
+            />
+          )}
+
+          <div>
+            <EmailText>
+              <strong>From:</strong> {data.fromName}
+            </EmailText>
+            {data.listingTitle && (
+              <EmailText>
+                <strong>Regarding:</strong> {data.listingTitle}
+              </EmailText>
+            )}
+            <EmailText>
+              <strong>Time:</strong> {data.timestamp}
+            </EmailText>
+          </div>
+        </EmailSection>
+
         <EmailCard background="white" padding="sm" border={false}>
           <EmailText color="secondary" size="sm">
             "{data.preview}"

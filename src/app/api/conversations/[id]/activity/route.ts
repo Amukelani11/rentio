@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { getAuthUser } from '@/lib/auth'
 
@@ -9,6 +10,10 @@ export async function GET(
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
+    const serviceClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
     const user = await getAuthUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -50,7 +55,7 @@ export async function GET(
     // Get activity for all participants
     const participantIds = participants.map(p => p.user_id)
     
-    const { data: activities, error: activitiesError } = await supabase
+    const { data: activities, error: activitiesError } = await serviceClient
       .from('user_activity_log')
       .select('user_id, last_seen_at, last_active_at')
       .in('user_id', participantIds)

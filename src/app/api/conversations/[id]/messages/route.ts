@@ -211,6 +211,13 @@ export async function POST(
 
     console.log('[MESSAGES][POST] Message created successfully:', message.id)
 
+    await supabase
+      .from('messages')
+      .update({ is_read: true })
+      .eq('conversation_id', conversationId)
+      .eq('is_read', false)
+      .eq('to_user_id', user.id)
+
     conversationRecord.conversation_participants = participants
 
     // For testing, you can temporarily enable forceSend to bypass activity checks
