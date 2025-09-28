@@ -8,18 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Filter, 
-  MapPin, 
-  Star, 
-  DollarSign, 
+import {
+  Search,
+  Filter,
+  MapPin,
+  Star,
+  DollarSign,
   Calendar,
   Users,
   Truck,
   Clock,
   Heart,
-  Image as ImageIcon
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { Listing, ListingSearchParams } from '@/types';
 
@@ -41,6 +42,7 @@ export default function BrowsePage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [favorites, setFavorites] = useState<string[]>([])
   const [loading, setLoading] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Initialize filters with static defaults to avoid SSR/CSR mismatch,
   // then sync from search params on client mount.
@@ -171,14 +173,43 @@ export default function BrowsePage() {
       </div>
 
       <div className="container mx-auto px-4 pb-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            className="w-full flex items-center justify-center"
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            {mobileFiltersOpen ? 'Hide Filters' : 'Show Filters'}
+          </Button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 relative">
+          {/* Mobile Filters Backdrop */}
+          {mobileFiltersOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setMobileFiltersOpen(false)}
+            />
+          )}
+
           {/* Filters Sidebar */}
-          <div className="lg:w-64 flex-shrink-0">
+          <div className={`lg:w-64 flex-shrink-0 ${mobileFiltersOpen ? 'fixed lg:relative top-0 left-0 w-80 h-full z-50 lg:z-auto bg-white lg:bg-transparent overflow-y-auto' : 'hidden lg:block'}`}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <Filter className="mr-2 h-5 w-5" />
                   Filters
+                  {/* Mobile close button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="lg:hidden ml-auto"
+                    onClick={() => setMobileFiltersOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
