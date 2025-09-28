@@ -295,7 +295,7 @@ export default function BrowsePage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral-600"></div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredListings.map((listing) => (
                   <Link key={listing.id} href={`/browse/${listing.slug}`} className="block">
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
