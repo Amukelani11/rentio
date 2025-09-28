@@ -5,8 +5,11 @@ import SiteHeader from '@/components/layout/SiteHeader'
 import RatingModalWrapper from '@/components/RatingModalWrapper'
 import { createMetadata, createWebSiteSchema, createOrganizationSchema, createLocalBusinessSchema } from '@/lib/seo'
 import JsonLd from '@/components/SEO/JsonLd'
+import { Suspense } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = createMetadata({
   title: 'South Africa\'s Premier Rental Marketplace',
@@ -98,7 +101,9 @@ export default function RootLayout({
       </head>
       <body className="bg-gray-50">
         <SiteHeader />
-        {children}
+        <Suspense fallback={null}>
+          {children}
+        </Suspense>
         <RatingModalWrapper />
       </body>
     </html>
