@@ -92,6 +92,11 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
 
+        {/* Favicon */}
+        <link rel="icon" href="/assets/rentioicon.png" />
+        <link rel="apple-touch-icon" href="/assets/rentioicon.png" />
+        <link rel="shortcut icon" href="/assets/rentioicon.png" />
+
         {/* Theme color for mobile browsers */}
         <meta name="theme-color" content="#FF6B6B" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
