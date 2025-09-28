@@ -1,17 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ['localhost'],
-    unoptimized: true,
+  // Try to work around the generate function issue
+  experimental: {
+    // Disable features that might cause the generate function issue
+    serverComponentsExternalPackages: [],
   },
-  env: {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    DATABASE_URL: process.env.DATABASE_URL,
-    STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY,
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  webpack: (config, { isServer }) => {
+    // Add polyfills for potential missing functions
+    if (isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        crypto: false,
+      }
+    }
+    return config
   },
-  trailingSlash: false,
 }
 
 module.exports = nextConfig

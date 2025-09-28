@@ -8,7 +8,7 @@
         "--project-ref=cwanreihurpjjqypxdyk"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_09b5d283b42e9281ca85a05524789dabf778a6fc"
+        "SUPABASE_ACCESS_TOKEN": "sbp_09b5d283b42e9281ca85a05524789dabf778a6fc
       }
     }
   }
