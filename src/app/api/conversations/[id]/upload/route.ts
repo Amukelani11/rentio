@@ -17,7 +17,7 @@ const ALLOWED_FILE_TYPES = [
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -26,7 +26,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversationId = params.id
+    const { id: conversationId } = await params
     const formData = await request.formData()
     const file = formData.get('file') as File | null
 
