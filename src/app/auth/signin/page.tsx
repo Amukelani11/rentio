@@ -65,13 +65,13 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const supabase = createClient();
+    const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`,
-        },
-      });
+      provider: 'google',
+      options: {
+          redirectTo: `${window.location.origin}/api/auth/google/callback${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`,
+      },
+    });
       
       if (error) {
         setError(error.message);
