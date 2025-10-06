@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { getAuthUser } from '@/lib/auth'
+import { sendEmail } from '@/lib/resend'
+import { messageReceivedEmail } from '@/emails/templates'
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     const user = await getAuthUser()
+    
+    // Create service role client to bypass RLS for business lookup
+    const supabaseService = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -28,14 +37,56 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check if the recipient exists
-    const { data: recipient } = await supabase
+    // Check if the recipient exists (could be user_id or business owner)
+    let recipient = null
+    
+    // First try to find as a direct user
+    console.log('🔍 Looking for direct user with ID:', toUserId)
+    const { data: directUser, error: directUserError } = await supabase
       .from('users')
-      .select('id, name')
+      .select('id, name, email')
       .eq('id', toUserId)
       .single()
 
-    console.log('👤 Recipient lookup:', { recipient })
+    console.log('👤 Direct user lookup result:', { directUser, directUserError })
+
+    if (directUser) {
+      recipient = directUser
+      console.log('✅ Found as direct user')
+    } else {
+      // If not found as user, check if it's a business owner
+      console.log('🔍 Looking for business with ID:', toUserId)
+      const { data: business, error: businessError } = await supabaseService
+        .from('businesses')
+        .select('id, name, user_id')
+        .eq('id', toUserId)
+        .single()
+
+      console.log('🏢 Business lookup result:', { business, businessError })
+
+      if (business) {
+        console.log('🔍 Looking for business owner with user_id:', business.user_id)
+        // Get the business owner's user details
+        const { data: businessOwner, error: businessOwnerError } = await supabaseService
+          .from('users')
+          .select('id, name, email')
+          .eq('id', business.user_id)
+          .single()
+
+        console.log('👤 Business owner lookup result:', { businessOwner, businessOwnerError })
+
+        if (businessOwner) {
+          recipient = businessOwner
+          console.log('✅ Found as business owner')
+        } else {
+          console.log('❌ Business owner not found')
+        }
+      } else {
+        console.log('❌ Business not found')
+      }
+    }
+
+    console.log('👤 Final recipient lookup:', { recipient, toUserId })
 
     if (!recipient) {
       console.error('❌ Recipient not found:', toUserId)
@@ -45,7 +96,7 @@ export async function POST(request: NextRequest) {
     // Check if the listing exists and belongs to the recipient
     const { data: listing } = await supabase
       .from('listings')
-      .select('id, title, user_id, business_id')
+      .select('id, title, user_id, business_id, display_image, featured_image, cover_image, hero_image, primary_image, thumbnail_image, main_image, images, image_urls')
       .eq('id', listingId)
       .single()
 
@@ -116,7 +167,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Create a new conversation for this listing (without booking)
       console.log('🆕 Creating new conversation...')
-      const { data: newConversation, error: conversationError } = await supabase
+      const { data: newConversation, error: conversationError } = await supabaseService
         .from('conversations')
         .insert({
           listing_id: listingId,
@@ -139,12 +190,12 @@ export async function POST(request: NextRequest) {
       // Add participants
       const participantInserts = [
         { conversation_id: conversationId, user_id: user.id },
-        { conversation_id: conversationId, user_id: toUserId },
+        { conversation_id: conversationId, user_id: recipient.id },
       ]
 
       console.log('👥 Adding participants:', participantInserts)
 
-      const { error: participantsError } = await supabase
+      const { error: participantsError } = await supabaseService
         .from('conversation_participants')
         .insert(participantInserts)
 
@@ -166,7 +217,7 @@ export async function POST(request: NextRequest) {
         booking_id: bookingId,
         conversation_id: conversationId,
         from_user_id: user.id,
-        to_user_id: toUserId,
+        to_user_id: recipient.id,
         content,
         type: 'TEXT',
         topic: `listing_${listingId}`,
@@ -200,7 +251,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('notifications')
       .insert({
-        user_id: toUserId,
+        user_id: recipient.id,
         type: 'MESSAGE_RECEIVED',
         title: 'New Message',
         message: `You have a new message from ${user.name} about "${listing.title}"`,
@@ -209,8 +260,69 @@ export async function POST(request: NextRequest) {
           messageId: message.id,
           listingId,
         },
-        channels: ['PUSH'],
+        channels: ['PUSH', 'EMAIL'],
       })
+
+    const extractListingImage = (listingData: any): string | null => {
+      if (!listingData) return null
+
+      const candidates: string[] = []
+      const pushIfString = (value: unknown) => {
+        if (typeof value === 'string') {
+          const trimmed = value.trim()
+          if (trimmed.length > 0) candidates.push(trimmed)
+        }
+      }
+
+      pushIfString(listingData.display_image)
+      pushIfString(listingData.featured_image)
+      pushIfString(listingData.cover_image)
+      pushIfString(listingData.hero_image)
+      pushIfString(listingData.primary_image)
+      pushIfString(listingData.thumbnail_image)
+      pushIfString(listingData.main_image)
+
+      if (Array.isArray(listingData.images)) {
+        listingData.images.forEach(pushIfString)
+      }
+
+      if (Array.isArray((listingData as any)?.image_urls)) {
+        (listingData as any).image_urls.forEach(pushIfString)
+      }
+
+      return candidates.length > 0 ? candidates[0] : null
+    }
+
+    const listingImageUrl = extractListingImage(listing)
+
+    // Send email notification to recipient
+    try {
+      console.log('📧 Sending email notification to:', recipient.name)
+
+      const conversationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://rentio.co.za'}/dashboard/messages?conversation=${conversationId}`
+      const messagePreview = content.length > 100 ? `${content.substring(0, 100)}...` : content
+
+      const emailHTML = messageReceivedEmail({
+        name: recipient.name,
+        fromName: user.name,
+        preview: messagePreview,
+        conversationUrl,
+        listingTitle: listing.title,
+        timestamp: new Date().toLocaleString('en-ZA'),
+        listingImageUrl
+      })
+
+      await sendEmail({
+        to: recipient.email,
+        subject: `💬 New message from ${user.name} about "${listing.title}"`,
+        html: emailHTML,
+      })
+
+      console.log('✅ Email notification sent successfully')
+    } catch (emailError) {
+      console.error('❌ Failed to send email notification:', emailError)
+      // Don't fail the entire operation if email fails
+    }
 
     console.log('🎉 Direct message API completed successfully:', {
       conversationId,

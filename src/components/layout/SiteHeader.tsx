@@ -55,6 +55,7 @@ export default function SiteHeader() {
             <div className="flex items-center gap-2">
               {user ? (
                 <nav className="hidden sm:flex items-center gap-4">
+                  <Link href="/browse" className="text-gray-800 hover:text-coral-600 dark:text-slate-100">Browse</Link>
                   <Link href="/dashboard" className="text-gray-800 hover:text-coral-600 dark:text-slate-100">Dashboard</Link>
                   <Link href="/dashboard/listings" className="text-white bg-coral-600 hover:bg-coral-700 px-3 py-1 rounded-md">List Item</Link>
                 </nav>

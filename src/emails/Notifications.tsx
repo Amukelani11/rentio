@@ -12,13 +12,14 @@ import {
   SITE_URL,
 } from './EmailLayout'
 
-interface MessageReceivedData {
+export interface MessageReceivedData {
   name: string
   fromName: string
   preview: string
   conversationUrl: string
   listingTitle?: string
   timestamp: string
+  listingImageUrl?: string
 }
 
 export function MessageReceivedEmail({ data }: { data: MessageReceivedData }) {
@@ -38,17 +39,33 @@ export function MessageReceivedEmail({ data }: { data: MessageReceivedData }) {
 
       <EmailCard background="primary" padding="md">
         <EmailHeading level={3}>Message Details</EmailHeading>
-        <EmailText>
-          <strong>From:</strong> {data.fromName}
-        </EmailText>
-        {data.listingTitle && (
-          <EmailText>
-            <strong>Regarding:</strong> {data.listingTitle}
-          </EmailText>
-        )}
-        <EmailText>
-          <strong>Time:</strong> {data.timestamp}
-        </EmailText>
+
+        <EmailSection direction="row" align="start" gap="md">
+          {data.listingImageUrl && (
+            <img
+              src={data.listingImageUrl}
+              alt={data.listingTitle || 'Listing image'}
+              width="96"
+              height="96"
+              style={{ borderRadius: 12, objectFit: 'cover', width: 96, height: 96 }}
+            />
+          )}
+
+          <div>
+            <EmailText>
+              <strong>From:</strong> {data.fromName}
+            </EmailText>
+            {data.listingTitle && (
+              <EmailText>
+                <strong>Regarding:</strong> {data.listingTitle}
+              </EmailText>
+            )}
+            <EmailText>
+              <strong>Time:</strong> {data.timestamp}
+            </EmailText>
+          </div>
+        </EmailSection>
+
         <EmailCard background="white" padding="sm" border={false}>
           <EmailText color="secondary" size="sm">
             "{data.preview}"
@@ -71,7 +88,7 @@ export function MessageReceivedEmail({ data }: { data: MessageReceivedData }) {
   )
 }
 
-interface KYCStatusData {
+export interface KYCStatusData {
   name: string
   status: 'VERIFIED' | 'REJECTED' | 'PENDING'
   reason?: string
@@ -84,7 +101,7 @@ export function KYCStatusEmail({ data }: { data: KYCStatusData }) {
       case 'VERIFIED': return 'success'
       case 'REJECTED': return 'error'
       case 'PENDING': return 'warning'
-      default: return 'secondary'
+      default: return 'primary'
     }
   }
 
@@ -106,7 +123,7 @@ export function KYCStatusEmail({ data }: { data: KYCStatusData }) {
       case 'PENDING':
         return 'warning' as const
       default:
-        return 'gray' as const
+        return 'primary' as const
     }
   }
 
@@ -169,7 +186,7 @@ export function KYCStatusEmail({ data }: { data: KYCStatusData }) {
   )
 }
 
-interface ListingReviewData {
+export interface ListingReviewData {
   ownerName: string
   listingTitle: string
   status: 'SUBMITTED' | 'APPROVED' | 'REJECTED'
@@ -184,7 +201,7 @@ export function ListingReviewEmail({ data }: { data: ListingReviewData }) {
       case 'APPROVED': return 'success'
       case 'REJECTED': return 'error'
       case 'SUBMITTED': return 'warning'
-      default: return 'secondary'
+      default: return 'primary'
     }
   }
 
@@ -272,7 +289,7 @@ export function ListingReviewEmail({ data }: { data: ListingReviewData }) {
   )
 }
 
-interface SupportTicketData {
+export interface SupportTicketData {
   name: string
   ticketId: string
   status: 'OPEN' | 'CLOSED' | 'IN_PROGRESS' | 'RESOLVED'
@@ -285,10 +302,10 @@ export function SupportTicketEmail({ data }: { data: SupportTicketData }) {
   const getStatusColor = () => {
     switch (data.status) {
       case 'OPEN': return 'warning'
-      case 'CLOSED': return 'secondary'
+      case 'CLOSED': return 'primary'
       case 'IN_PROGRESS': return 'primary'
       case 'RESOLVED': return 'success'
-      default: return 'secondary'
+      default: return 'primary'
     }
   }
 
@@ -356,7 +373,7 @@ export function SupportTicketEmail({ data }: { data: SupportTicketData }) {
   )
 }
 
-interface RatingRequestData {
+export interface RatingRequestData {
   renterName: string
   listingTitle: string
   ownerName: string
@@ -435,7 +452,7 @@ export function RatingRequestEmail({ data }: { data: RatingRequestData }) {
   )
 }
 
-interface StockAlertData {
+export interface StockAlertData {
   recipientName: string
   businessName: string
   itemName: string
@@ -454,7 +471,7 @@ export function StockAlertEmail({ data }: { data: StockAlertData }) {
       case 'LOW_STOCK': return 'warning'
       case 'REORDER_POINT': return 'primary'
       case 'MAINTENANCE_DUE': return 'warning'
-      default: return 'secondary'
+      default: return 'primary'
     }
   }
 

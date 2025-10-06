@@ -6,9 +6,10 @@ import { getAuthUser } from '@/lib/auth'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createRouteHandlerClient({ cookies })
     const user = await getAuthUser()
 
@@ -59,7 +60,7 @@ export async function PUT(
     const { data: existingRule, error: ruleError } = await serviceClient
       .from('pricing_rules')
       .select('id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('business_id', business.id)
       .single()
 
@@ -87,7 +88,7 @@ export async function PUT(
         is_active,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -113,9 +114,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createRouteHandlerClient({ cookies })
     const user = await getAuthUser()
 
@@ -148,7 +150,7 @@ export async function DELETE(
     const { error: deleteError } = await serviceClient
       .from('pricing_rules')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('business_id', business.id)
 
     if (deleteError) {

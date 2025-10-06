@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Truck, Shield, CheckCircle, ArrowLeft } from 'lucide-react'
+import { MapPin, Truck, Shield, CheckCircle, ArrowLeft, FileText } from 'lucide-react'
+import RentalAgreementModal from '@/components/RentalAgreementModal'
 
 export default function CheckoutPage() {
   const searchParams = useSearchParams()
@@ -21,6 +22,9 @@ export default function CheckoutPage() {
   const [listing, setListing] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [agreementModalOpen, setAgreementModalOpen] = useState(false)
+  const [agreementSigned, setAgreementSigned] = useState(false)
+  const [pendingBooking, setPendingBooking] = useState<any>(null)
 
   useEffect(() => {
     async function run() {
@@ -161,13 +165,27 @@ export default function CheckoutPage() {
 
       const bookingResult = await bookingResponse.json()
       const booking = bookingResult.data.booking
+      
+      // Store the booking and show agreement modal
+      setPendingBooking(booking)
+      setAgreementModalOpen(true)
+      
+    } catch (error) {
+      console.error('Booking error:', error)
+      alert('An error occurred while processing your booking')
+    }
+  }
 
+  const handleAgreementSigned = async () => {
+    if (!pendingBooking) return
+    
+    try {
       // Now create Yoco checkout session
       const checkoutResponse = await fetch('/api/payments/yoco/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bookingId: booking.id,
+          bookingId: pendingBooking.id,
           amountInCents: Math.round(total * 100), // Convert to cents
           currency: 'ZAR',
           metadata: {
@@ -190,8 +208,8 @@ export default function CheckoutPage() {
       window.location.href = checkoutResult.data.redirectUrl
       
     } catch (error) {
-      console.error('Booking error:', error)
-      alert('An error occurred while processing your booking')
+      console.error('Payment error:', error)
+      alert('An error occurred while creating payment session')
     }
   }
 
@@ -332,14 +350,29 @@ export default function CheckoutPage() {
               </div>
 
               <Button className="w-full" size="lg" disabled={!canPayWithKyc} onClick={handleBooking}>
-                Complete Booking
+                {agreementSigned ? 'Proceed to Payment' : 'Review & Sign Agreement'}
               </Button>
               <div className="text-xs text-gray-600 flex items-center"><CheckCircle className="h-4 w-4 mr-1 text-green-600" />Secure checkout. Deposit protected.</div>
-              <div className="text-xs text-gray-500">By continuing you agree to our terms and rental policies.</div>
+              <div className="text-xs text-gray-500">You must read and sign the rental agreement before payment.</div>
             </CardContent>
           </Card>
         </div>
       </div>
+      
+      {/* Rental Agreement Modal */}
+      {pendingBooking && (
+        <RentalAgreementModal
+          bookingId={pendingBooking.id}
+          isOpen={agreementModalOpen}
+          onClose={() => setAgreementModalOpen(false)}
+          userType="renter"
+          onSigned={() => {
+            setAgreementSigned(true)
+            setAgreementModalOpen(false)
+            handleAgreementSigned()
+          }}
+        />
+      )}
     </div>
   )
 }

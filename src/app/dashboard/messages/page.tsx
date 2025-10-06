@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -28,14 +28,24 @@ type Conversation = {
   title?: string | null
   booking_id?: string | null
   listing_id?: string | null
-  lastMessage?: string | null
-  lastMessageAt?: string | null
-  conversation_participants?: ConversationParticipant[]
+  listing_details?: {
+    id: string | null
+    title: string | null
+    slug?: string | null
+    image?: string | null
+    ownerName?: string | null
+    ownerType?: 'business' | 'individual' | null
+    ownerUserId?: string | null
+  } | null
   business_details?: {
     id: string
     name: string | null
     email: string | null
   } | null
+  lastMessage?: string | null
+  lastMessageAt?: string | null
+  unreadCount?: number
+  conversation_participants?: ConversationParticipant[]
 }
 
 type Message = {
@@ -48,6 +58,13 @@ type Message = {
     name: string | null
     avatar?: string | null
   } | null
+  attachments?: Array<{
+    id: string
+    url: string
+    filename: string
+    size: number
+    type: string
+  }>
 }
 
 type ApiResponse<T> = {
@@ -134,6 +151,17 @@ function formatRelativeDate(timestamp?: string | null) {
 }
 
 function getOtherParticipant(conversation: Conversation, currentUserId?: string | null) {
+  if (conversation.listing_details) {
+    const title = conversation.listing_details.title ?? 'Listing'
+    const owner = conversation.listing_details.ownerName ?? ''
+    return {
+      id: conversation.listing_details.ownerUserId ?? conversation.listing_details.id ?? conversation.listing_id ?? undefined,
+      name: owner ? `${title} • ${owner}` : title,
+      email: null,
+      avatar: conversation.listing_details.image ?? null
+    }
+  }
+
   if (conversation.business_details) {
     return {
       id: conversation.business_details.id,
@@ -169,6 +197,8 @@ export default function MessagesPage() {
   const [messagesEndRef, setMessagesEndRef] = useState<HTMLDivElement | null>(null)
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([])
   const [dragOver, setDragOver] = useState(false)
+  const [typingParticipants, setTypingParticipants] = useState<Record<string, Record<string, { name: string; expiresAt: number }>>>({})
+    const typingDebounceRef = useRef<number>(0)
 
   const supabase = useMemo(() => createClient(), [])
 
@@ -266,6 +296,7 @@ export default function MessagesPage() {
     async (conversationId: string) => {
       if (!conversationId) return
       setSelectedConversationId(conversationId)
+      setTypingParticipants({})
       updateUrl(conversationId)
       await loadMessages(conversationId)
       await fetchParticipantActivity(conversationId)
@@ -409,7 +440,14 @@ export default function MessagesPage() {
     }
 
     const channel = supabase
-      .channel(`conv_${selectedConversationId}`)
+      .channel(`conv_${selectedConversationId}`, {
+        config: {
+          broadcast: { ack: true },
+          presence: { key: user?.id ?? 'anonymous' }
+        }
+      })
+
+    channel
       .on(
         'postgres_changes',
         {
@@ -418,12 +456,33 @@ export default function MessagesPage() {
           table: 'messages',
           filter: `conversation_id=eq.${selectedConversationId}`
         },
-        (payload) => {
+        async (payload) => {
           const msg = payload.new as Message
-          // Avoid duplicates
-          setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]))
+          if (msg.from_user_id === user?.id) {
+            await refreshConversations()
+            return
+          }
+          await loadMessages(selectedConversationId)
+          await refreshConversations()
+          await fetchParticipantActivity(selectedConversationId)
         }
       )
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (!payload?.userId || payload.userId === user?.id || !payload.conversationId) return
+        setTypingParticipants((prev) => {
+          const existing = prev[payload.conversationId] || {}
+          return {
+            ...prev,
+            [payload.conversationId]: {
+              ...existing,
+              [payload.userId]: {
+                name: payload.name ?? 'Someone',
+                expiresAt: Date.now() + 4000
+              }
+            }
+          }
+        })
+      })
       .subscribe()
 
     setRtChannel(channel)
@@ -432,7 +491,30 @@ export default function MessagesPage() {
       channel.unsubscribe()
       setRtChannel(null)
     }
-  }, [selectedConversationId, supabase])
+  }, [selectedConversationId, supabase, user?.id, loadMessages, refreshConversations, fetchParticipantActivity])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTypingParticipants((prev) => {
+        const now = Date.now()
+        const updated: typeof prev = {}
+        for (const [convId, entries] of Object.entries(prev)) {
+          const nextEntries: Record<string, { name: string; expiresAt: number }> = {}
+          Object.entries(entries).forEach(([participantId, info]) => {
+            if (info.expiresAt > now) {
+              nextEntries[participantId] = info
+            }
+          })
+          if (Object.keys(nextEntries).length > 0) {
+            updated[convId] = nextEntries
+          }
+        }
+        return updated
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Refresh activity data periodically
   useEffect(() => {
@@ -521,6 +603,34 @@ export default function MessagesPage() {
       return null
     }
   }, [selectedConversation])
+
+  const notifyTyping = useCallback(() => {
+    if (!rtChannel || !user || !selectedConversationId) return
+    const now = Date.now()
+    if (now - typingDebounceRef.current < 2000) return
+    typingDebounceRef.current = now
+
+    setTypingParticipants((prev) => ({
+      ...prev,
+      [selectedConversationId]: {
+        ...(prev[selectedConversationId] || {}),
+        [user.id]: {
+          name: user.name ?? 'You',
+          expiresAt: now + 4000
+        }
+      }
+    }))
+
+    rtChannel.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: {
+        userId: user.id,
+        name: user.name ?? 'Someone',
+        conversationId: selectedConversationId
+      }
+    })
+  }, [rtChannel, user, selectedConversationId])
 
   const handleSendMessage = useCallback(async () => {
     if (!selectedConversation || (!newMessage.trim() && uploadingFiles.length === 0) || sending) return
@@ -626,6 +736,10 @@ export default function MessagesPage() {
     return conversations.map((conversation) => {
       const other = getOtherParticipant(conversation, user?.id)
       const isSelected = conversation.id === selectedConversationId
+      const entries = typingParticipants[conversation.id] || {}
+      const typingNames = Object.entries(entries)
+        .filter(([participantId]) => participantId !== user?.id)
+        .map(([, info]) => info.name)
 
       return (
         <button
@@ -637,13 +751,18 @@ export default function MessagesPage() {
         >
           <div className="relative">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={other?.avatar ?? undefined} alt={other?.name ?? 'User avatar'} />
+              <AvatarImage src={other?.avatar ?? undefined} alt={other?.name ?? 'Conversation avatar'} />
               <AvatarFallback className="bg-gray-200 text-gray-600">
                 {(other?.name ?? 'U').charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             {other?.id && (
               <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getActivityStatus(participantActivity[other.id]).color}`} />
+            )}
+            {(conversation.unreadCount ?? 0) > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral-600 px-1 text-xs font-semibold text-white">
+                {conversation.unreadCount}
+              </span>
             )}
           </div>
 
@@ -660,7 +779,9 @@ export default function MessagesPage() {
             </div>
             <div className="flex items-center justify-between">
               <p className="truncate text-xs text-gray-500">
-                {conversation.lastMessage ?? 'No messages yet'}
+                {typingNames.length > 0
+                  ? `${typingNames.join(', ')} typing...`
+                  : conversation.lastMessage ?? 'No messages yet'}
               </p>
               {other?.id && (
                 <span className="ml-2 shrink-0 text-xs text-gray-400">
@@ -714,12 +835,13 @@ export default function MessagesPage() {
           {messages.map((message, index) => {
             const isOwn = message.from_user_id === user?.id
             const showAvatar = !isOwn && (index === 0 || messages[index - 1].from_user_id !== message.from_user_id)
+            const messageAvatar = selectedConversation?.listing_details?.image ?? message.sender?.avatar ?? undefined
 
             return (
               <div key={message.id} className={`flex gap-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
                 {!isOwn && showAvatar && (
                   <Avatar className="h-8 w-8 mt-1">
-                    <AvatarImage src={message.sender?.avatar ?? undefined} />
+                    <AvatarImage src={messageAvatar} />
                     <AvatarFallback className="bg-gray-200 text-xs">
                       {(message.sender?.name ?? 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -833,7 +955,7 @@ export default function MessagesPage() {
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="relative">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={other?.avatar ?? undefined} />
+                  <AvatarImage src={other?.avatar ?? undefined} />
                         <AvatarFallback className="bg-gray-200">
                           {(other?.name ?? 'U').charAt(0).toUpperCase()}
                         </AvatarFallback>
@@ -903,7 +1025,10 @@ export default function MessagesPage() {
                 <div className="flex-1 relative">
                   <Input
                     value={newMessage}
-                    onChange={(event) => setNewMessage(event.target.value)}
+                    onChange={(event) => {
+                      setNewMessage(event.target.value)
+                      notifyTyping()
+                    }}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' && !event.shiftKey) {
                         event.preventDefault()
@@ -1002,8 +1127,17 @@ export default function MessagesPage() {
                       </h2>
                       <div className="flex items-center gap-2">
                         <p className="text-xs text-gray-500">
-                          {selectedConversation.booking_id ? 'Booking conversation' : 'Direct message'}
+                      {selectedConversation.booking_id
+                        ? 'Booking conversation'
+                        : selectedConversation.listing_details
+                          ? 'Listing conversation'
+                          : 'Direct message'}
                         </p>
+                        {selectedConversation.unreadCount && selectedConversation.unreadCount > 0 && (
+                          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-coral-600 px-1 text-xs font-semibold text-white">
+                            {selectedConversation.unreadCount}
+                          </span>
+                        )}
                         {other?.id && (
                           <>
                             <span className="text-xs text-gray-300">•</span>
@@ -1066,7 +1200,10 @@ export default function MessagesPage() {
                 <div className="flex-1 relative">
                   <Input
                     value={newMessage}
-                    onChange={(event) => setNewMessage(event.target.value)}
+                    onChange={(event) => {
+                      setNewMessage(event.target.value)
+                      notifyTyping()
+                    }}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' && !event.shiftKey) {
                         event.preventDefault()

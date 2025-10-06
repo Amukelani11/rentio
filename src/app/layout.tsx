@@ -5,8 +5,11 @@ import SiteHeader from '@/components/layout/SiteHeader'
 import RatingModalWrapper from '@/components/RatingModalWrapper'
 import { createMetadata, createWebSiteSchema, createOrganizationSchema, createLocalBusinessSchema } from '@/lib/seo'
 import JsonLd from '@/components/SEO/JsonLd'
+import { Suspense } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = createMetadata({
   title: 'South Africa\'s Premier Rental Marketplace',
@@ -92,13 +95,23 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
 
+        {/* Favicon */}
+        <link rel="icon" href="/assets/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png" />
+        <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+        <link rel="manifest" href="/assets/site.webmanifest" />
+        <link rel="shortcut icon" href="/assets/favicon.ico" />
+
         {/* Theme color for mobile browsers */}
         <meta name="theme-color" content="#FF6B6B" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="bg-gray-50">
         <SiteHeader />
-        {children}
+        <Suspense fallback={null}>
+          {children}
+        </Suspense>
         <RatingModalWrapper />
       </body>
     </html>

@@ -8,18 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Search, 
-  Filter, 
-  MapPin, 
-  Star, 
-  DollarSign, 
+import {
+  Search,
+  Filter,
+  MapPin,
+  Star,
+  DollarSign,
   Calendar,
   Users,
   Truck,
   Clock,
   Heart,
-  Image as ImageIcon
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { Listing, ListingSearchParams } from '@/types';
 
@@ -41,6 +42,7 @@ export default function BrowsePage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [favorites, setFavorites] = useState<string[]>([])
   const [loading, setLoading] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Initialize filters with static defaults to avoid SSR/CSR mismatch,
   // then sync from search params on client mount.
@@ -171,14 +173,43 @@ export default function BrowsePage() {
       </div>
 
       <div className="container mx-auto px-4 pb-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            className="w-full flex items-center justify-center"
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            {mobileFiltersOpen ? 'Hide Filters' : 'Show Filters'}
+          </Button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 relative">
+          {/* Mobile Filters Backdrop */}
+          {mobileFiltersOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setMobileFiltersOpen(false)}
+            />
+          )}
+
           {/* Filters Sidebar */}
-          <div className="lg:w-64 flex-shrink-0">
+          <div className={`lg:w-64 flex-shrink-0 ${mobileFiltersOpen ? 'fixed lg:relative top-0 left-0 w-80 h-full z-50 lg:z-auto bg-white lg:bg-transparent overflow-y-auto' : 'hidden lg:block'}`}>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
                   <Filter className="mr-2 h-5 w-5" />
                   Filters
+                  {/* Mobile close button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="lg:hidden ml-auto"
+                    onClick={() => setMobileFiltersOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -295,131 +326,138 @@ export default function BrowsePage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral-600"></div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredListings.map((listing) => (
-                  <Card key={listing.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-                    <div className="relative">
-                      {getCover(listing) ? (
-                        <img src={getCover(listing)!} alt={listing.title} className="h-48 w-full object-contain bg-gray-50" />
-                      ) : (
-                        <div className="h-48 bg-gray-200 flex items-center justify-center">
-                          <ImageIcon className="h-16 w-16 text-gray-400" />
-                        </div>
-                      )}
-                      {listing.featured && (
-                        <Badge className="absolute top-2 left-2 bg-coral-600">
-                          Featured
-                        </Badge>
-                      )}
-                      {listing.instantBook && (
-                        <Badge className="absolute top-2 left-2 bg-green-600 text-white flex items-center" style={{ marginTop: listing.featured ? '2.5rem' : '0' }}>
-                          <Clock className="h-3 w-3 mr-1" />
-                          Instant Book
-                        </Badge>
-                      )}
-                      {listing.verified && (
-                        <Badge className="absolute top-2 right-2 bg-green-600/30 border border-green-600 text-green-800">
-                          Verified
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                <Link href={`/browse/${listing.slug}`} className="font-semibold text-lg line-clamp-1 hover:underline">{listing.title}</Link>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                          <span>{listing.averageRating ? listing.averageRating.toFixed(1) : 'New'}</span>
-                        </div>
-                      </div>
-                      
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                        {listing.description}
-                      </p>
-                      
-                      <div className="flex items-center text-sm text-gray-600 mb-3">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span className="line-clamp-1">{listing.location}</span>
-                      </div>
-
-
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <div className="text-2xl font-bold text-coral-600">
-                            {formatPrice(listing.priceDaily)}
-                            <span className="text-sm font-normal text-gray-600">/day</span>
+                  <Link key={listing.id} href={`/browse/${listing.slug}`} className="block">
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
+                      <div className="relative">
+                        {getCover(listing) ? (
+                          <img src={getCover(listing)!} alt={listing.title} className="h-48 w-full object-contain bg-gray-50" />
+                        ) : (
+                          <div className="h-48 bg-gray-200 flex items-center justify-center">
+                            <ImageIcon className="h-16 w-16 text-gray-400" />
                           </div>
-                          {listing.priceWeekly ? (
-                            <div className="text-sm text-gray-600">
-                              {formatPrice(listing.priceWeekly)}/week
-                            </div>
-                          ) : (
-                            <div className="text-sm text-gray-600">
-                              {formatPrice(listing.priceDaily * 7 * (1 - (((listing as any).weekly_discount ?? listing.weeklyDiscount ?? 0) / 100)) )}/week
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="text-right">
-                          <div className="text-sm text-gray-600">
-                            Deposit: {formatPrice(typeof listing.depositValue === 'number' ? listing.depositValue : ((listing as any).deposit_value ? parseFloat((listing as any).deposit_value) : 0))}
-                          </div>
-                          {listing.instantBook && (
-                            <Badge className="text-xs bg-green-600 text-white">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Instant Book
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          {listing.deliveryOptions?.deliveryAvailable && (
-                            <Badge variant="outline" className="text-xs">
-                              <Truck className="h-3 w-3 mr-1" />
-                              Delivery
-                            </Badge>
-                          )}
-                          <Badge variant="outline" className="text-xs">
-                            {(listing as any).categories?.name || 'Uncategorized'}
+                        )}
+                        {listing.featured && (
+                          <Badge className="absolute top-2 left-2 bg-coral-600">
+                            Featured
                           </Badge>
-                          {(listing as any).business_id && (
-                            <Link 
-                              href={`/store/${createBusinessSlug((listing as any).business?.name || '')}`}
-                              className="text-xs"
-                            >
-                              <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100">
-                                🏪 Store
-                              </Badge>
-                            </Link>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Button size="sm" asChild>
-                            <Link href={`/browse/${listing.slug}`}>View Details</Link>
-                          </Button>
-                          <button aria-label="wishlist" className={`text-gray-600 hover:text-coral-600 ${favorites.includes(listing.id) ? 'text-coral-600' : ''}`} onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              if (favorites.includes(listing.id)) {
-                                await fetch(`/api/favorites?listingId=${listing.id}`, { method: 'DELETE' })
-                                setFavorites(prev => prev.filter(id => id !== listing.id))
-                              } else {
-                                await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: listing.id }) })
-                                setFavorites(prev => [...prev, listing.id])
-                              }
-                            } catch (err) {
-                              console.error('Wishlist toggle failed', err)
-                            }
-                          }}>
-                            <Heart className="h-4 w-4" />
-                          </button>
-                        </div>
+                        )}
+                        {listing.instantBook && (
+                          <Badge className="absolute top-2 left-2 bg-green-600 text-white flex items-center" style={{ marginTop: listing.featured ? '2.5rem' : '0' }}>
+                            <Clock className="h-3 w-3 mr-1" />
+                            Instant Book
+                          </Badge>
+                        )}
+                        {listing.verified && (
+                          <Badge className="absolute top-2 right-2 bg-green-600/30 border border-green-600 text-green-800">
+                            Verified
+                          </Badge>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-lg line-clamp-1 hover:underline">{listing.title}</h3>
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                            <span>{listing.averageRating ? listing.averageRating.toFixed(1) : 'New'}</span>
+                          </div>
+                        </div>
+
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          {listing.description}
+                        </p>
+
+                        <div className="flex items-center text-sm text-gray-600 mb-3">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          <span className="line-clamp-1">{listing.location}</span>
+                        </div>
+
+
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <div className="text-2xl font-bold text-coral-600">
+                              {formatPrice(listing.priceDaily)}
+                              <span className="text-sm font-normal text-gray-600">/day</span>
+                            </div>
+                            {listing.priceWeekly ? (
+                              <div className="text-sm text-gray-600">
+                                {formatPrice(listing.priceWeekly)}/week
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-600">
+                                {formatPrice(listing.priceDaily * 7 * (1 - (((listing as any).weekly_discount ?? listing.weeklyDiscount ?? 0) / 100)) )}/week
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-sm text-gray-600">
+                              Deposit: {formatPrice(typeof listing.depositValue === 'number' ? listing.depositValue : ((listing as any).deposit_value ? parseFloat((listing as any).deposit_value) : 0))}
+                            </div>
+                            {listing.instantBook && (
+                              <Badge className="text-xs bg-green-600 text-white">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Instant Book
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            {listing.deliveryOptions?.deliveryAvailable && (
+                              <Badge variant="outline" className="text-xs">
+                                <Truck className="h-3 w-3 mr-1" />
+                                Delivery
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              {(listing as any).categories?.name || 'Uncategorized'}
+                            </Badge>
+                            {(listing as any).business_id && (
+                              <Link
+                                href={`/store/${createBusinessSlug((listing as any).business?.name || '')}`}
+                                className="text-xs"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100">
+                                  🏪 Store
+                                </Badge>
+                              </Link>
+                            )}
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Button size="sm" variant="outline" onClick={(e) => e.stopPropagation()}>
+                              <Link href={`/browse/${listing.slug}`}>View Details</Link>
+                            </Button>
+                            <button
+                              aria-label="wishlist"
+                              className={`text-gray-600 hover:text-coral-600 ${favorites.includes(listing.id) ? 'text-coral-600' : ''}`}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  if (favorites.includes(listing.id)) {
+                                    await fetch(`/api/favorites?listingId=${listing.id}`, { method: 'DELETE' })
+                                    setFavorites(prev => prev.filter(id => id !== listing.id))
+                                  } else {
+                                    await fetch('/api/favorites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: listing.id }) })
+                                    setFavorites(prev => [...prev, listing.id])
+                                  }
+                                } catch (err) {
+                                  console.error('Wishlist toggle failed', err)
+                                }
+                              }}
+                            >
+                              <Heart className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             )}

@@ -12,7 +12,7 @@ import {
   SITE_URL,
 } from './EmailLayout'
 
-interface WelcomeEmailData {
+export interface WelcomeEmailData {
   name: string
   role?: string
   onboardingUrl?: string
@@ -132,7 +132,7 @@ export function WelcomeEmail({ data }: { data: WelcomeEmailData }) {
   )
 }
 
-interface PromotionEmailData {
+export interface PromotionEmailData {
   name: string
   promotionTitle: string
   promotionDescription: string
@@ -219,7 +219,7 @@ export function PromotionEmail({ data }: { data: PromotionEmailData }) {
   )
 }
 
-interface AnnouncementEmailData {
+export interface AnnouncementEmailData {
   title: string
   message: string
   features?: Array<{
@@ -291,7 +291,7 @@ export function AnnouncementEmail({ data }: { data: AnnouncementEmailData }) {
   )
 }
 
-interface NewsletterEmailData {
+export interface NewsletterEmailData {
   name: string
   month: string
   topListings?: Array<{
@@ -428,7 +428,7 @@ export function NewsletterEmail({ data }: { data: NewsletterEmailData }) {
   )
 }
 
-interface ReengagementEmailData {
+export interface ReengagementEmailData {
   name: string
   lastActive?: string
   recommendations?: Array<{

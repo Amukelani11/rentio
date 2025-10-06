@@ -12,7 +12,7 @@ import {
   SITE_URL,
 } from './EmailLayout'
 
-interface BookingConfirmationData {
+export interface BookingConfirmationData {
   renterName: string
   listingTitle: string
   startDate: string
@@ -133,7 +133,7 @@ export function BookingConfirmationEmail({ data }: { data: BookingConfirmationDa
   )
 }
 
-interface PaymentReceiptData {
+export interface PaymentReceiptData {
   name: string
   amount: string
   bookingNumber?: string
@@ -194,7 +194,7 @@ export function PaymentReceiptEmail({ data }: { data: PaymentReceiptData }) {
   )
 }
 
-interface DepositStatusData {
+export interface DepositStatusData {
   name: string
   amount: string
   action: 'RELEASED' | 'RETAINED'
@@ -274,7 +274,7 @@ export function DepositStatusEmail({ data }: { data: DepositStatusData }) {
   )
 }
 
-interface BookingStatusData {
+export interface BookingStatusData {
   name: string
   listingTitle: string
   status: 'CONFIRMED' | 'PENDING' | 'CANCELLED' | 'COMPLETED' | 'REJECTED'
@@ -291,7 +291,7 @@ export function BookingStatusEmail({ data }: { data: BookingStatusData }) {
       case 'CANCELLED': return 'error'
       case 'COMPLETED': return 'success'
       case 'REJECTED': return 'error'
-      default: return 'secondary'
+      default: return 'primary'
     }
   }
 
@@ -363,7 +363,7 @@ export function BookingStatusEmail({ data }: { data: BookingStatusData }) {
   )
 }
 
-interface NewBookingNotificationData {
+export interface NewBookingNotificationData {
   ownerName: string
   renterName: string
   renterEmail: string

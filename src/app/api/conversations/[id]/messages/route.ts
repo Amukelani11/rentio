@@ -58,7 +58,7 @@ function mapParticipants(rows: any[] | null | undefined): ParticipantRecord[] {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -67,7 +67,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversationId = params.id
+    const { id: conversationId } = await params
 
     const { data: participant, error: participantError } = await supabase
       .from('conversation_participants')
@@ -110,7 +110,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -119,7 +119,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversationId = params.id
+    const { id: conversationId } = await params
     const body = await request.json().catch(() => ({}))
     const content = typeof body.content === 'string' ? body.content.trim() : ''
     const messageType = normalizeMessageType(body.type)
@@ -210,6 +210,13 @@ export async function POST(
     }
 
     console.log('[MESSAGES][POST] Message created successfully:', message.id)
+
+    await supabase
+      .from('messages')
+      .update({ is_read: true })
+      .eq('conversation_id', conversationId)
+      .eq('is_read', false)
+      .eq('to_user_id', user.id)
 
     conversationRecord.conversation_participants = participants
 
