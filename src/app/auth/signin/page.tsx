@@ -64,13 +64,21 @@ export default function SignIn() {
   };
 
   const handleGoogleSignIn = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`,
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`,
+        },
+      });
+      
+      if (error) {
+        setError(error.message);
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to sign in with Google');
+    }
   };
 
   const handleSendOtp = async () => {

@@ -62,13 +62,21 @@ export default function SignUp() {
   };
 
   const handleGoogleSignUp = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      if (error) {
+        setError(error.message);
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to sign up with Google');
+    }
   };
 
   useEffect(() => {
